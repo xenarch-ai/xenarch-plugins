@@ -1,0 +1,82 @@
+/**
+ * Xenarch admin settings page styles.
+ *
+ * Minimal styling that extends the default WordPress admin UI.
+ */
+
+.xenarch-settings {
+	max-width: 800px;
+}
+
+/* Card containers */
+.xenarch-card,
+.xenarch-status-card {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	padding: 20px 24px;
+	margin-top: 20px;
+}
+
+.xenarch-card h2,
+.xenarch-status-card h2 {
+	margin-top: 0;
+	padding-top: 0;
+	font-size: 1.2em;
+}
+
+/* Status table */
+.xenarch-status-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.xenarch-status-table td {
+	padding: 8px 0;
+	border-bottom: 1px solid #f0f0f1;
+}
+
+.xenarch-status-table tr:last-child td {
+	border-bottom: none;
+}
+
+.xenarch-status-table td:first-child {
+	font-weight: 600;
+	width: 140px;
+	color: #1d2327;
+}
+
+/* Status indicator dots */
+.xenarch-status-dot {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	margin-right: 6px;
+	vertical-align: middle;
+}
+
+.xenarch-status-green {
+	background-color: #00a32a;
+}
+
+.xenarch-status-red {
+	background-color: #d63638;
+}
+
+/* Code display */
+.xenarch-status-table code {
+	background: #f0f0f1;
+	padding: 2px 6px;
+	border-radius: 3px;
+	font-size: 13px;
+}
+
+/* Form tweaks within cards */
+.xenarch-card .form-table th {
+	padding-left: 0;
+}
+
+.xenarch-card .submit {
+	padding-left: 0;
+}
