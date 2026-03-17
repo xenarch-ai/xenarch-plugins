@@ -2,7 +2,7 @@
 /**
  * Xenarch API client.
  *
- * Wraps all communication with the xenarch.bot REST API using the
+ * Wraps all communication with the xenarch.dev REST API using the
  * WordPress HTTP API (wp_remote_post / wp_remote_get).
  *
  * @package Xenarch
@@ -34,7 +34,7 @@ class Xenarch_Api {
 		 *
 		 * @param string $base_url Default API base URL.
 		 */
-		$this->base_url = apply_filters( 'xenarch_api_base', 'https://xenarch.bot' );
+		$this->base_url = apply_filters( 'xenarch_api_base', 'https://xenarch.dev' );
 	}
 
 	/**
