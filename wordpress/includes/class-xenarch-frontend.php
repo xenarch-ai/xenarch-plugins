@@ -43,7 +43,7 @@ class Xenarch_Frontend {
 		 *
 		 * @param string $cdn_url Default CDN URL.
 		 */
-		$cdn_url = apply_filters( 'xenarch_cdn_url', 'https://cdn.xenarch.bot' );
+		$cdn_url = apply_filters( 'xenarch_cdn_url', 'https://cdn.xenarch.dev' );
 
 		$script_url = trailingslashit( $cdn_url ) . 'l.js';
 
