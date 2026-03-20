@@ -30,8 +30,11 @@ define( 'XENARCH_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
  * Load plugin includes.
  */
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-api.php';
+require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-bot-detect.php';
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-admin.php';
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-frontend.php';
+require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-gate.php';
+require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-discovery.php';
 
 /**
  * Activation hook — set default options.
@@ -56,6 +59,11 @@ function xenarch_activate() {
 	if ( false === get_option( 'xenarch_payout_wallet' ) ) {
 		add_option( 'xenarch_payout_wallet', '' );
 	}
+
+	// Register rewrite rules before flushing so they get written.
+	$discovery = new Xenarch_Discovery();
+	$discovery->add_rewrite_rules();
+	flush_rewrite_rules();
 }
 register_activation_hook( __FILE__, 'xenarch_activate' );
 
@@ -66,7 +74,8 @@ register_activation_hook( __FILE__, 'xenarch_activate' );
  * Data cleanup happens only on uninstall (see uninstall.php).
  */
 function xenarch_deactivate() {
-	// No-op: keep settings for potential reactivation.
+	// Remove rewrite rules added by the plugin.
+	flush_rewrite_rules();
 }
 register_deactivation_hook( __FILE__, 'xenarch_deactivate' );
 
@@ -81,5 +90,11 @@ function xenarch_init() {
 
 	// Frontend l.js loading.
 	new Xenarch_Frontend();
+
+	// Server-side bot gating (returns 402 for detected AI crawlers).
+	new Xenarch_Gate();
+
+	// Discovery documents (/.well-known/pay.json and /.well-known/xenarch.md).
+	new Xenarch_Discovery();
 }
 add_action( 'plugins_loaded', 'xenarch_init' );

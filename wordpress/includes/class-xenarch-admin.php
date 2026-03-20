@@ -275,6 +275,50 @@ class Xenarch_Admin {
 							</td>
 						</tr>
 					<?php endif; ?>
+					<tr>
+						<td><?php esc_html_e( 'Server-side gating', 'xenarch' ); ?></td>
+						<td>
+							<?php if ( $has_site ) : ?>
+								<span class="xenarch-status-dot xenarch-status-green"></span>
+								<?php
+								printf(
+									/* translators: %d: number of bot signatures */
+									esc_html__( 'Active — blocking %d bot signatures', 'xenarch' ),
+									count( Xenarch_Bot_Detect::get_signatures() ) + count( Xenarch_Bot_Detect::get_fetcher_signatures() )
+								);
+								?>
+							<?php else : ?>
+								<span class="xenarch-status-dot xenarch-status-red"></span>
+								<?php esc_html_e( 'Inactive — add your site first', 'xenarch' ); ?>
+							<?php endif; ?>
+						</td>
+					</tr>
+					<tr>
+						<td><?php esc_html_e( 'pay.json', 'xenarch' ); ?></td>
+						<td>
+							<?php if ( $has_site ) : ?>
+								<a href="<?php echo esc_url( get_site_url() . '/.well-known/pay.json' ); ?>" target="_blank">
+									<?php echo esc_html( get_site_url() . '/.well-known/pay.json' ); ?>
+								</a>
+							<?php else : ?>
+								<span class="xenarch-status-dot xenarch-status-red"></span>
+								<?php esc_html_e( 'Not available', 'xenarch' ); ?>
+							<?php endif; ?>
+						</td>
+					</tr>
+					<tr>
+						<td><?php esc_html_e( 'xenarch.md', 'xenarch' ); ?></td>
+						<td>
+							<?php if ( $has_site ) : ?>
+								<a href="<?php echo esc_url( get_site_url() . '/.well-known/xenarch.md' ); ?>" target="_blank">
+									<?php echo esc_html( get_site_url() . '/.well-known/xenarch.md' ); ?>
+								</a>
+							<?php else : ?>
+								<span class="xenarch-status-dot xenarch-status-red"></span>
+								<?php esc_html_e( 'Not available', 'xenarch' ); ?>
+							<?php endif; ?>
+						</td>
+					</tr>
 				</table>
 			</div>
 
