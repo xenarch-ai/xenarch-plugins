@@ -34,7 +34,7 @@ class Xenarch_Api {
 		 *
 		 * @param string $base_url Default API base URL.
 		 */
-		$this->base_url = apply_filters( 'xenarch_api_base', 'https://xenarch.dev' );
+		$this->base_url = apply_filters( 'xenarch_api_base', 'https://api.xenarch.dev' );
 	}
 
 	/**
@@ -131,6 +131,32 @@ class Xenarch_Api {
 		return $this->get( '/v1/publishers/me', $this->auth_headers() );
 	}
 
+	/**
+	 * Create a gate for a URL path.
+	 *
+	 * @param string $url              URL path (e.g. "/article/xyz").
+	 * @param string $detection_method Detection method (e.g. "ua_match").
+	 * @return array|WP_Error Gate data on success, WP_Error on failure.
+	 */
+	public function create_gate( $url, $detection_method = 'ua_match' ) {
+		$site_token = get_option( 'xenarch_site_token', '' );
+
+		$headers = array(
+			'X-Site-Token' => $site_token,
+		);
+
+		return $this->post(
+			'/v1/gates',
+			array(
+				'url'              => $url,
+				'detection_method' => $detection_method,
+			),
+			$headers,
+			'POST',
+			true // Allow 402 as success.
+		);
+	}
+
 	// ------------------------------------------------------------------
 	// Internal helpers
 	// ------------------------------------------------------------------
@@ -151,13 +177,14 @@ class Xenarch_Api {
 	/**
 	 * Perform a POST (or PUT) request.
 	 *
-	 * @param string $endpoint API endpoint path (e.g. "/v1/publishers").
-	 * @param array  $body     Request body (will be JSON-encoded).
-	 * @param array  $headers  Additional headers.
-	 * @param string $method   HTTP method (POST or PUT).
+	 * @param string $endpoint  API endpoint path (e.g. "/v1/publishers").
+	 * @param array  $body      Request body (will be JSON-encoded).
+	 * @param array  $headers   Additional headers.
+	 * @param string $method    HTTP method (POST or PUT).
+	 * @param bool   $allow_402 Whether to treat HTTP 402 as a success (for gate creation).
 	 * @return array|WP_Error
 	 */
-	private function post( $endpoint, $body = array(), $headers = array(), $method = 'POST' ) {
+	private function post( $endpoint, $body = array(), $headers = array(), $method = 'POST', $allow_402 = false ) {
 		$url = $this->base_url . $endpoint;
 
 		$headers['Content-Type'] = 'application/json';
@@ -171,7 +198,7 @@ class Xenarch_Api {
 
 		$response = wp_remote_post( $url, $args );
 
-		return $this->handle_response( $response );
+		return $this->handle_response( $response, $allow_402 );
 	}
 
 	/**
@@ -197,10 +224,11 @@ class Xenarch_Api {
 	/**
 	 * Parse and validate an API response.
 	 *
-	 * @param array|WP_Error $response wp_remote_* response.
+	 * @param array|WP_Error $response  wp_remote_* response.
+	 * @param bool           $allow_402 Whether to treat HTTP 402 as success.
 	 * @return array|WP_Error
 	 */
-	private function handle_response( $response ) {
+	private function handle_response( $response, $allow_402 = false ) {
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}
@@ -211,6 +239,11 @@ class Xenarch_Api {
 
 		if ( $code >= 200 && $code < 300 ) {
 			return is_array( $data ) ? $data : array();
+		}
+
+		// Gate creation returns 402 with the gate data — treat as success.
+		if ( $allow_402 && 402 === $code && is_array( $data ) ) {
+			return $data;
 		}
 
 		$message = isset( $data['message'] ) ? $data['message'] : 'Unknown API error';
