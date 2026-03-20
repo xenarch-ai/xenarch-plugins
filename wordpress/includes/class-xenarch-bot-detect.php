@@ -78,8 +78,7 @@ class Xenarch_Bot_Detect {
 		'bedrockbot',
 		'NovaAct',
 
-		// Apple
-		'Applebot',
+		// Apple (only Extended — regular Applebot is a search crawler)
 		'Applebot-Extended',
 
 		// Microsoft / Azure
@@ -133,6 +132,37 @@ class Xenarch_Bot_Detect {
 		'Scrapy',
 		'img2dataset',
 		'Webzio-Extended',
+		'ScrapingBee',
+		'ScrapingAnt',
+		'ScrapingBot',
+		'ZenRows',
+		'Scrapfly',
+		'ScrapeGraphAI',
+		'WebScraper',
+		'ParseHub',
+		'Octoparse',
+		'BrowseAI',
+		'DataForSEO',
+		'Screaming Frog',
+		'Netpeak',
+		'Ahrefs',
+		'AhrefsBot',
+		'MJ12bot',
+		'DotBot',
+		'Rogerbot',
+		'BLEXBot',
+		'MegaIndex',
+		'Nimbostratus',
+		'Seekport',
+
+		// AI Reader / RAG Tools
+		'JinaReader',
+		'Jina-AI',
+		'LlamaIndex',
+		'LangChain',
+		'Embedchain',
+		'Unstructured',
+		'Haystack',
 
 		// Social / Preview Bots
 		'Twitterbot',
@@ -141,6 +171,11 @@ class Xenarch_Bot_Detect {
 		'TelegramBot',
 		'Slackbot',
 		'Discordbot',
+		'SkypeUriPreview',
+		'Viber',
+		'Line/',
+		'Pinterest',
+		'Snapchat',
 
 		// Other Known Bots
 		'Timpibot',
@@ -157,6 +192,11 @@ class Xenarch_Bot_Detect {
 		'VelenPublicWebCrawler',
 		'ZanistaBot',
 		'HeadlessChrome',
+		'PhantomJS',
+		'Headless',
+		'Selenium',
+		'Puppeteer',
+		'Playwright',
 	);
 
 	/**
@@ -263,7 +303,9 @@ class Xenarch_Bot_Detect {
 		}
 
 		// 4. Browser-claiming UA → run header scoring (Tier B).
-		if ( false !== stripos( $user_agent, 'Mozilla/' ) ) {
+		// Exempt search engine crawlers that use Mozilla/ UAs (Googlebot, Bingbot, etc.).
+		// These crawlers won't send Sec-Fetch-* headers but must not be gated.
+		if ( false !== stripos( $user_agent, 'Mozilla/' ) && ! self::is_search_crawler( $user_agent ) ) {
 			$score   = 0;
 			$signals = array();
 
@@ -354,5 +396,34 @@ class Xenarch_Bot_Detect {
 	 */
 	public static function get_fetcher_signatures() {
 		return self::$fetcher_signatures;
+	}
+
+	/**
+	 * Check if a UA belongs to a legitimate search engine crawler.
+	 * These crawlers use Mozilla/ UAs but don't send Sec-Fetch-* headers,
+	 * so they must be exempted from header scoring to avoid false gating.
+	 *
+	 * @param string $user_agent The User-Agent string.
+	 * @return bool
+	 */
+	private static function is_search_crawler( $user_agent ) {
+		$search_crawlers = array(
+			'Googlebot',
+			'Bingbot',
+			'Slurp',        // Yahoo
+			'DuckDuckBot',
+			'Baiduspider',
+			'YandexBot',
+			'Sogou',
+			'Applebot',
+		);
+
+		foreach ( $search_crawlers as $crawler ) {
+			if ( false !== stripos( $user_agent, $crawler ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
