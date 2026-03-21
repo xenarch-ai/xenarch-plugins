@@ -26,7 +26,6 @@ class Xenarch_Gate_Response {
 			'xenarch'          => true,
 			'requested_path'   => $request_path,
 			'detection_method' => $detection_method,
-			'message'          => 'Payment required for automated access.',
 		);
 	}
 

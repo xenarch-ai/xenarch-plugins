@@ -42,6 +42,11 @@ class Xenarch_Discovery {
 			'index.php?xenarch_discovery=xenarch_md',
 			'top'
 		);
+		add_rewrite_rule(
+			'^pay\.json$',
+			'index.php?xenarch_discovery=pay_json',
+			'top'
+		);
 	}
 
 	/**

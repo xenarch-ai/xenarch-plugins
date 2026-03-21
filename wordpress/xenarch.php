@@ -62,6 +62,9 @@ function xenarch_activate() {
 	if ( false === get_option( 'xenarch_payout_wallet' ) ) {
 		add_option( 'xenarch_payout_wallet', '' );
 	}
+	if ( false === get_option( 'xenarch_gate_unknown_traffic' ) ) {
+		add_option( 'xenarch_gate_unknown_traffic', '1' );
+	}
 	if ( false === get_option( Xenarch_Browser_Proof::SECRET_OPTION ) && function_exists( 'wp_generate_password' ) ) {
 		add_option( Xenarch_Browser_Proof::SECRET_OPTION, wp_generate_password( 64, true, true ) );
 	}

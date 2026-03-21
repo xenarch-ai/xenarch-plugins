@@ -54,7 +54,7 @@ class Xenarch_Gate {
 
 		// Never gate /.well-known paths (discovery docs).
 		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
-		if ( 0 === strpos( $request_uri, '/.well-known/' ) ) {
+		if ( 0 === strpos( $request_uri, '/.well-known/' ) || '/pay.json' === $request_uri ) {
 			return;
 		}
 
@@ -69,6 +69,12 @@ class Xenarch_Gate {
 		$headers    = self::get_request_headers();
 		$detection  = Xenarch_Bot_Detect::detect_full( $user_agent, $headers, $this->get_request_context( $request_uri, $user_agent ) );
 		$this->record_detection_event( $request_uri, $detection );
+
+		// Allow unknown non-browser traffic through if toggle is off (webhooks etc.).
+		if ( 'unknown_non_browser' === $detection['traffic_class']
+		     && get_option( 'xenarch_gate_unknown_traffic', '1' ) !== '1' ) {
+			return;
+		}
 
 		if ( 'allow' === $detection['decision'] ) {
 			return;
@@ -205,19 +211,21 @@ class Xenarch_Gate {
 			$path = empty( $path ) ? '/' : $path;
 			$gate = Xenarch_Gate_Response::build_fallback_gate_payload( $path, $detection['method'] );
 		} else {
-			$site_url = get_site_url();
-			$gate['instructions_url'] = $site_url . '/.well-known/xenarch.md';
-			$gate['pay_json_url']     = $site_url . '/.well-known/pay.json';
 			if ( ! isset( $gate['xenarch'] ) ) {
 				$gate['xenarch'] = true;
 			}
 		}
+
+		$gate = $this->enrich_gate_payload( $gate );
 
 		status_header( 402 );
 		header( 'Content-Type: application/json; charset=utf-8' );
 		header( 'Cache-Control: no-store, private' );
 		header( 'X-Xenarch-Bot: ' . $detection['method'] );
 		header( 'X-Xenarch-Decision: block' );
+		foreach ( $this->get_discovery_headers() as $name => $value ) {
+			header( $name . ': ' . $value );
+		}
 		echo wp_json_encode( $gate );
 		exit;
 	}
@@ -241,7 +249,7 @@ class Xenarch_Gate {
 		}
 
 		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '/';
-		if ( 0 === strpos( $request_uri, '/.well-known/' ) ) {
+		if ( 0 === strpos( $request_uri, '/.well-known/' ) || '/pay.json' === $request_uri ) {
 			return $response;
 		}
 
@@ -254,6 +262,12 @@ class Xenarch_Gate {
 		$headers    = self::get_request_headers();
 		$detection  = Xenarch_Bot_Detect::detect_full( $user_agent, $headers, $this->get_request_context( $request_uri, $user_agent ) );
 		$this->record_detection_event( $request_uri, $detection );
+
+		// Allow unknown non-browser traffic through if toggle is off (webhooks etc.).
+		if ( 'unknown_non_browser' === $detection['traffic_class']
+		     && get_option( 'xenarch_gate_unknown_traffic', '1' ) !== '1' ) {
+			return $response;
+		}
 
 		if ( 'allow' === $detection['decision'] ) {
 			return $response;
@@ -282,15 +296,54 @@ class Xenarch_Gate {
 			$gate = Xenarch_Gate_Response::build_fallback_gate_payload( $path, $detection['method'] );
 		}
 
+		$gate = $this->enrich_gate_payload( $gate );
+
 		return new WP_REST_Response(
 			$gate,
 			402,
-			array(
-				'Cache-Control'      => 'no-store, private',
-				'X-Xenarch-Bot'      => $detection['method'],
-				'X-Xenarch-Decision' => 'block',
+			array_merge(
+				array(
+					'Cache-Control'      => 'no-store, private',
+					'X-Xenarch-Bot'      => $detection['method'],
+					'X-Xenarch-Decision' => 'block',
+				),
+				$this->get_discovery_headers()
 			)
 		);
+	}
+
+	/**
+	 * Build HTTP headers that help agents discover payment info.
+	 *
+	 * @return array Header name => value pairs.
+	 */
+	private function get_discovery_headers() {
+		$site_url     = get_site_url();
+		$pay_json_url = $site_url . '/.well-known/pay.json';
+		$xenarch_md   = $site_url . '/.well-known/xenarch.md';
+
+		return array(
+			'Link'        => '<' . $pay_json_url . '>; rel="payment-terms", <' . $xenarch_md . '>; rel="payment-instructions"',
+			'X-Pay-Json'  => $pay_json_url,
+			'X-Xenarch'   => 'payment-required; pay_json="' . $pay_json_url . '"',
+		);
+	}
+
+	/**
+	 * Enrich a gate payload with discovery URLs and a human/LLM-readable message.
+	 *
+	 * @param array $gate Gate payload.
+	 * @return array Enriched gate payload.
+	 */
+	private function enrich_gate_payload( $gate ) {
+		$site_url     = get_site_url();
+		$pay_json_url = $site_url . '/.well-known/pay.json';
+
+		$gate['pay_json_url']     = $pay_json_url;
+		$gate['instructions_url'] = $site_url . '/.well-known/xenarch.md';
+		$gate['message']          = 'Payment required. Fetch ' . $pay_json_url . ' for pricing, payment address, and integration tools. Full instructions at ' . $site_url . '/.well-known/xenarch.md';
+
+		return $gate;
 	}
 
 	/**
