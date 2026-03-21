@@ -37,6 +37,11 @@ class Xenarch_Gate_Response {
 	 * @return string
 	 */
 	public static function build_challenge_html( $request_path, $cookie_value ) {
+		// Prevent open redirect: ensure path is local (starts with / but not //).
+		if ( empty( $request_path ) || '/' !== $request_path[0] || 0 === strpos( $request_path, '//' ) ) {
+			$request_path = '/';
+		}
+
 		$cookie_name   = Xenarch_Browser_Proof::COOKIE_NAME;
 		$target        = self::json_encode_for_script( $request_path );
 		$cookie        = self::json_encode_for_script( $cookie_value );
@@ -57,10 +62,12 @@ class Xenarch_Gate_Response {
 	 * @return string
 	 */
 	private static function json_encode_for_script( $value ) {
+		$flags = JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP;
+
 		if ( function_exists( 'wp_json_encode' ) ) {
-			return wp_json_encode( (string) $value, JSON_UNESCAPED_SLASHES );
+			return wp_json_encode( (string) $value, $flags );
 		}
 
-		return json_encode( (string) $value, JSON_UNESCAPED_SLASHES );
+		return json_encode( (string) $value, $flags );
 	}
 }

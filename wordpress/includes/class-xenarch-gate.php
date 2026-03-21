@@ -395,11 +395,11 @@ class Xenarch_Gate {
 		if ( function_exists( 'getallheaders' ) ) {
 			$headers = getallheaders();
 			if ( isset( $headers['Authorization'] ) ) {
-				return $headers['Authorization'];
+				return sanitize_text_field( $headers['Authorization'] );
 			}
 			// Some servers lowercase it.
 			if ( isset( $headers['authorization'] ) ) {
-				return $headers['authorization'];
+				return sanitize_text_field( $headers['authorization'] );
 			}
 		}
 
