@@ -189,17 +189,13 @@ class Xenarch_Admin {
 			}
 		}
 
-		// Push payout wallet to API if provided.
-		if ( ! empty( $wallet ) ) {
-			$password = isset( $_POST['xenarch_confirm_password'] ) ? sanitize_text_field( wp_unslash( $_POST['xenarch_confirm_password'] ) ) : '';
+		// Push payout wallet to API if provided and site is registered.
+		if ( ! empty( $site_id ) && ! empty( $wallet ) ) {
+			$payout_result = $this->api->update_payout( $wallet );
 
-			if ( ! empty( $password ) ) {
-				$payout_result = $this->api->update_payout( $wallet, $password );
-
-				if ( is_wp_error( $payout_result ) ) {
-					add_settings_error( 'xenarch', 'payout_error', $payout_result->get_error_message() );
-					return;
-				}
+			if ( is_wp_error( $payout_result ) ) {
+				add_settings_error( 'xenarch', 'payout_error', $payout_result->get_error_message() );
+				return;
 			}
 		}
 
@@ -340,7 +336,7 @@ class Xenarch_Admin {
 			<?php if ( $has_site ) : ?>
 				<!-- Gating Settings -->
 				<div class="xenarch-card">
-					<h2><?php esc_html_e( 'Gating', 'xenarch' ); ?></h2>
+					<h2><?php esc_html_e( 'Additional Gating', 'xenarch' ); ?></h2>
 					<form method="post" action="">
 						<?php wp_nonce_field( 'xenarch_save_gating' ); ?>
 						<input type="hidden" name="xenarch_action" value="save_gating" />
@@ -352,7 +348,13 @@ class Xenarch_Admin {
 							<div>
 								<div class="xenarch-toggle-label"><?php esc_html_e( 'Gate unknown traffic', 'xenarch' ); ?></div>
 								<div class="xenarch-toggle-description">
-									<?php esc_html_e( 'When enabled, requests from unrecognized User-Agents (not a known bot, browser, or search crawler) receive HTTP 402. Disable if webhooks (Stripe, Slack, etc.) are being incorrectly gated.', 'xenarch' ); ?>
+									<?php
+									printf(
+										/* translators: %d: number of bot signatures */
+										esc_html__( 'In addition to the %d known bot signatures always gated by Xenarch, this option also gates requests from unrecognized User-Agents. Disable if third-party webhooks (Stripe, Slack, etc.) are being incorrectly gated.', 'xenarch' ),
+										count( Xenarch_Bot_Detect::get_signatures() ) + count( Xenarch_Bot_Detect::get_fetcher_signatures() )
+									);
+									?>
 								</div>
 							</div>
 						</div>
@@ -467,22 +469,6 @@ class Xenarch_Admin {
 									/>
 									<p class="description">
 										<?php esc_html_e( 'Your USDC wallet address on Base network.', 'xenarch' ); ?>
-									</p>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row">
-									<label for="xenarch_confirm_password"><?php esc_html_e( 'Confirm Password', 'xenarch' ); ?></label>
-								</th>
-								<td>
-									<input
-										type="password"
-										id="xenarch_confirm_password"
-										name="xenarch_confirm_password"
-										class="regular-text"
-									/>
-									<p class="description">
-										<?php esc_html_e( 'Required when changing payout wallet. Leave blank if only updating price.', 'xenarch' ); ?>
 									</p>
 								</td>
 							</tr>

@@ -103,21 +103,17 @@ class Xenarch_Api {
 	/**
 	 * Update payout wallet for the authenticated publisher.
 	 *
-	 * @param string $wallet   Wallet address (0x...).
-	 * @param string $password Publisher password for confirmation.
+	 * @param string $wallet Wallet address (0x...).
 	 * @return array|WP_Error
 	 */
-	public function update_payout( $wallet, $password ) {
-		$headers = $this->auth_headers();
-		$headers['X-Confirm-Password'] = $password;
-
+	public function update_payout( $wallet ) {
 		return $this->post(
 			'/v1/publishers/me/payout',
 			array(
 				'wallet'  => $wallet,
 				'network' => 'base',
 			),
-			$headers,
+			$this->auth_headers(),
 			'PUT'
 		);
 	}
