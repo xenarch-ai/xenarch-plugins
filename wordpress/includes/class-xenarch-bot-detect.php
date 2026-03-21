@@ -2,10 +2,11 @@
 /**
  * Xenarch bot detection.
  *
- * Detects AI bots via three tiers:
- * - Tier A1: Known AI crawler User-Agent signatures (100+)
- * - Tier A2: HTTP client library signatures (definitive bot indicators)
- * - Tier B:  Header scoring for browser-spoofing detection
+ * Classifies non-human traffic via:
+ * - Known AI crawler User-Agent signatures
+ * - Known HTTP client library signatures
+ * - Browser-header consistency scoring
+ * - Browser proof validation for suspicious browser-like requests
  *
  * Source: ai-robots-txt (https://github.com/ai-robots-txt/ai.robots.txt) + manual additions.
  *
@@ -227,8 +228,7 @@ class Xenarch_Bot_Detect {
 	);
 
 	/**
-	 * Header scoring threshold for browser-spoofing detection.
-	 * Score >= this value = bot.
+	 * Header scoring threshold for a hard block.
 	 */
 	const HEADER_SCORE_THRESHOLD = 6;
 
@@ -260,124 +260,105 @@ class Xenarch_Bot_Detect {
 	}
 
 	/**
-	 * Full detection with header scoring.
-	 * Returns rich result with method, score, and signal details.
+	 * Full traffic classification with header scoring and browser proof.
 	 *
 	 * @param string $user_agent The User-Agent header value.
 	 * @param array  $headers    Associative array of HTTP headers.
-	 * @return array Detection result: is_bot, method, score, signal.
+	 * @param array  $context    Additional request context.
+	 * @return array Detection result with backwards-compatible fields.
 	 */
-	public static function detect_full( $user_agent, $headers = array() ) {
-		// 1. Empty UA → instant bot.
+	public static function detect_full( $user_agent, $headers = array(), $context = array() ) {
+		// 1. Empty UA → instant block.
 		if ( empty( $user_agent ) ) {
-			return array(
-				'is_bot' => true,
-				'method' => 'empty_ua',
-				'score'  => 0,
-				'signal' => 'empty_ua',
-			);
+			return self::build_result( 'block', 'known_fetcher', 'empty_ua', 0, array( 'empty_ua' ) );
 		}
 
-		// 2. AI crawler signature match → instant bot.
+		// 2. AI crawler signature match → instant block.
 		foreach ( self::$signatures as $signature ) {
 			if ( false !== stripos( $user_agent, $signature ) ) {
-				return array(
-					'is_bot' => true,
-					'method' => 'ua_match',
-					'score'  => 0,
-					'signal' => $signature,
-				);
+				return self::build_result( 'block', self::traffic_class_for_signature( $signature ), 'ua_match', 0, array( $signature ) );
 			}
 		}
 
-		// 3. HTTP client library match → instant bot.
+		// 3. Trusted search crawler → always allow.
+		if ( self::is_search_crawler( $user_agent ) ) {
+			return self::build_result( 'allow', 'trusted_search_crawler', 'search_allowlist', 0, array() );
+		}
+
+		// 4. HTTP client library match → instant block.
 		foreach ( self::$fetcher_signatures as $signature ) {
 			if ( false !== stripos( $user_agent, $signature ) ) {
-				return array(
-					'is_bot' => true,
-					'method' => 'fetcher_ua',
-					'score'  => 0,
-					'signal' => $signature,
-				);
+				return self::build_result( 'block', 'known_fetcher', 'fetcher_ua', 0, array( $signature ) );
 			}
 		}
 
-		// 4. Browser-claiming UA → run header scoring (Tier B).
-		// Exempt search engine crawlers that use Mozilla/ UAs (Googlebot, Bingbot, etc.).
-		// These crawlers won't send Sec-Fetch-* headers but must not be gated.
-		if ( false !== stripos( $user_agent, 'Mozilla/' ) && ! self::is_search_crawler( $user_agent ) ) {
+		// 5. Browser proof short-circuits suspicious browser traffic into allow.
+		if ( ! empty( $context['browser_proof_valid'] ) ) {
+			return self::build_result( 'allow', 'trusted_browser', 'browser_proof', 0, array( 'browser_proof' ) );
+		}
+
+		// 6. Browser-claiming UA → classify as block or challenge.
+		if ( false !== stripos( $user_agent, 'Mozilla/' ) ) {
 			$score   = 0;
 			$signals = array();
 
-			// Accept: is */* or missing → +2.
 			$accept = isset( $headers['Accept'] ) ? $headers['Accept'] : '';
 			if ( empty( $accept ) || '*/*' === trim( $accept ) ) {
 				$score += 2;
 				$signals[] = 'accept';
 			}
 
-			// Accept-Language: missing or empty → +2.
 			$accept_lang = isset( $headers['Accept-Language'] ) ? $headers['Accept-Language'] : '';
 			if ( empty( $accept_lang ) ) {
 				$score += 2;
 				$signals[] = 'accept-language';
 			}
 
-			// Sec-Fetch-Mode: missing → +2.
 			if ( empty( $headers['Sec-Fetch-Mode'] ) ) {
 				$score += 2;
 				$signals[] = 'sec-fetch-mode';
 			}
 
-			// Sec-Fetch-Dest: missing → +1.
 			if ( empty( $headers['Sec-Fetch-Dest'] ) ) {
 				$score += 1;
 				$signals[] = 'sec-fetch-dest';
 			}
 
-			// Sec-Fetch-Site: missing → +1.
 			if ( empty( $headers['Sec-Fetch-Site'] ) ) {
 				$score += 1;
 				$signals[] = 'sec-fetch-site';
 			}
 
-			// Sec-Ch-Ua: missing when UA claims Chrome/Edge → +1.
 			if ( empty( $headers['Sec-Ch-Ua'] ) && ( false !== stripos( $user_agent, 'Chrome' ) || false !== stripos( $user_agent, 'Edg' ) ) ) {
 				$score += 1;
 				$signals[] = 'sec-ch-ua';
 			}
 
-			// Accept-Encoding: missing brotli → +1.
 			$accept_enc = isset( $headers['Accept-Encoding'] ) ? $headers['Accept-Encoding'] : '';
 			if ( false === stripos( $accept_enc, 'br' ) ) {
 				$score += 1;
 				$signals[] = 'accept-encoding';
 			}
 
-			if ( $score >= self::HEADER_SCORE_THRESHOLD ) {
-				return array(
-					'is_bot' => true,
-					'method' => 'header_score:' . $score,
-					'score'  => $score,
-					'signal' => implode( ',', $signals ),
-				);
+			if ( empty( $headers['Sec-Fetch-User'] ) ) {
+				$score += 1;
+				$signals[] = 'sec-fetch-user';
 			}
 
-			return array(
-				'is_bot' => false,
-				'method' => 'browser',
-				'score'  => $score,
-				'signal' => '',
-			);
+			if ( empty( $headers['Upgrade-Insecure-Requests'] ) ) {
+				$score += 1;
+				$signals[] = 'upgrade-insecure-requests';
+			}
+
+			if ( $score >= self::HEADER_SCORE_THRESHOLD ) {
+				return self::build_result( 'block', 'browser_like_suspicious', 'header_score:' . $score, $score, $signals );
+			}
+
+			return self::build_result( 'challenge', 'browser_like_suspicious', 'browser_headers', $score, $signals );
 		}
 
-		// 5. Unknown UA (not browser, not bot) → pass through.
-		return array(
-			'is_bot' => false,
-			'method' => 'unknown',
-			'score'  => 0,
-			'signal' => '',
-		);
+		// 7. Unknown non-browser traffic should not be trusted as human.
+		return self::build_result( 'block', 'unknown_non_browser', 'unknown_non_browser', 0, array( 'unknown_non_browser' ) );
 	}
 
 	/**
@@ -399,6 +380,59 @@ class Xenarch_Bot_Detect {
 	}
 
 	/**
+	 * Build a result array with backwards-compatible keys.
+	 *
+	 * @param string   $decision      allow|block|challenge.
+	 * @param string   $traffic_class Traffic class label.
+	 * @param string   $method        Detection method.
+	 * @param int      $score         Classification score.
+	 * @param string[] $signals       Detection signals.
+	 * @return array
+	 */
+	private static function build_result( $decision, $traffic_class, $method, $score, $signals ) {
+		return array(
+			'decision'      => $decision,
+			'traffic_class' => $traffic_class,
+			'method'        => $method,
+			'score'         => $score,
+			'signals'       => $signals,
+			'signal'        => implode( ',', $signals ),
+			'confidence'    => 'block' === $decision ? 'high' : ( 'challenge' === $decision ? 'medium' : 'high' ),
+			'is_bot'        => 'allow' !== $decision,
+		);
+	}
+
+	/**
+	 * Infer traffic class from a matched signature.
+	 *
+	 * @param string $signature Matched user-agent signature.
+	 * @return string
+	 */
+	private static function traffic_class_for_signature( $signature ) {
+		$social_preview = array(
+			'FacebookBot',
+			'facebookexternalhit',
+			'Twitterbot',
+			'LinkedInBot',
+			'WhatsApp',
+			'TelegramBot',
+			'Slackbot',
+			'Discordbot',
+			'SkypeUriPreview',
+			'Viber',
+			'Line/',
+			'Pinterest',
+			'Snapchat',
+		);
+
+		if ( in_array( $signature, $social_preview, true ) ) {
+			return 'social_preview_fetcher';
+		}
+
+		return 'known_ai_crawler';
+	}
+
+	/**
 	 * Check if a UA belongs to a legitimate search engine crawler.
 	 * These crawlers use Mozilla/ UAs but don't send Sec-Fetch-* headers,
 	 * so they must be exempted from header scoring to avoid false gating.
@@ -408,18 +442,20 @@ class Xenarch_Bot_Detect {
 	 */
 	private static function is_search_crawler( $user_agent ) {
 		$search_crawlers = array(
-			'Googlebot',
-			'Bingbot',
-			'Slurp',        // Yahoo
-			'DuckDuckBot',
-			'Baiduspider',
-			'YandexBot',
-			'Sogou',
-			'Applebot',
+			'/\bGooglebot(?:-[A-Za-z]+)?(?:\/|\b)/i',
+			'/\bAdsBot-Google(?:\/|\b)/i',
+			'/\bMediapartners-Google(?:\/|\b)/i',
+			'/\bBingbot(?:\/|\b)/i',
+			'/\bSlurp(?:\/|\b)/i',
+			'/\bDuckDuckBot(?:\/|\b)/i',
+			'/\bBaiduspider(?:\/|\b)/i',
+			'/\bYandexBot(?:\/|\b)/i',
+			'/\bSogou(?:\/|\b)/i',
+			'/\bApplebot(?:\/|\b)/i',
 		);
 
-		foreach ( $search_crawlers as $crawler ) {
-			if ( false !== stripos( $user_agent, $crawler ) ) {
+		foreach ( $search_crawlers as $crawler_pattern ) {
+			if ( 1 === preg_match( $crawler_pattern, $user_agent ) ) {
 				return true;
 			}
 		}

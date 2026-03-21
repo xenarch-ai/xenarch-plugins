@@ -92,6 +92,9 @@ class Xenarch_Admin {
 				case 'save_config':
 					$this->handle_save_config();
 					break;
+				case 'save_gating':
+					$this->handle_save_gating();
+					break;
 			}
 		}
 	}
@@ -201,6 +204,18 @@ class Xenarch_Admin {
 		}
 
 		add_settings_error( 'xenarch', 'config_success', __( 'Settings saved.', 'xenarch' ), 'updated' );
+	}
+
+	/**
+	 * Handle gating toggle save.
+	 */
+	private function handle_save_gating() {
+		check_admin_referer( 'xenarch_save_gating' );
+
+		$value = isset( $_POST['xenarch_gate_unknown_traffic'] ) ? '1' : '0';
+		update_option( 'xenarch_gate_unknown_traffic', $value );
+
+		add_settings_error( 'xenarch', 'gating_success', __( 'Gating settings saved.', 'xenarch' ), 'updated' );
 	}
 
 	// ------------------------------------------------------------------
@@ -321,6 +336,30 @@ class Xenarch_Admin {
 					</tr>
 				</table>
 			</div>
+
+			<?php if ( $has_site ) : ?>
+				<!-- Gating Settings -->
+				<div class="xenarch-card">
+					<h2><?php esc_html_e( 'Gating', 'xenarch' ); ?></h2>
+					<form method="post" action="">
+						<?php wp_nonce_field( 'xenarch_save_gating' ); ?>
+						<input type="hidden" name="xenarch_action" value="save_gating" />
+						<div class="xenarch-toggle-row">
+							<label class="xenarch-toggle">
+								<input type="checkbox" name="xenarch_gate_unknown_traffic" value="1" <?php checked( get_option( 'xenarch_gate_unknown_traffic', '1' ), '1' ); ?> />
+								<span class="xenarch-slider"></span>
+							</label>
+							<div>
+								<div class="xenarch-toggle-label"><?php esc_html_e( 'Gate unknown traffic', 'xenarch' ); ?></div>
+								<div class="xenarch-toggle-description">
+									<?php esc_html_e( 'When enabled, requests from unrecognized User-Agents (not a known bot, browser, or search crawler) receive HTTP 402. Disable if webhooks (Stripe, Slack, etc.) are being incorrectly gated.', 'xenarch' ); ?>
+								</div>
+							</div>
+						</div>
+						<?php submit_button( __( 'Save Gating Settings', 'xenarch' ) ); ?>
+					</form>
+				</div>
+			<?php endif; ?>
 
 			<?php if ( ! $is_registered ) : ?>
 				<!-- Registration Section -->

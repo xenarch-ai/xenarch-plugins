@@ -30,10 +30,13 @@ define( 'XENARCH_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
  * Load plugin includes.
  */
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-api.php';
+require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-access-token.php';
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-bot-detect.php';
+require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-browser-proof.php';
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-admin.php';
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-frontend.php';
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-gate.php';
+require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-gate-response.php';
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-discovery.php';
 
 /**
@@ -58,6 +61,12 @@ function xenarch_activate() {
 	}
 	if ( false === get_option( 'xenarch_payout_wallet' ) ) {
 		add_option( 'xenarch_payout_wallet', '' );
+	}
+	if ( false === get_option( 'xenarch_gate_unknown_traffic' ) ) {
+		add_option( 'xenarch_gate_unknown_traffic', '1' );
+	}
+	if ( false === get_option( Xenarch_Browser_Proof::SECRET_OPTION ) && function_exists( 'wp_generate_password' ) ) {
+		add_option( Xenarch_Browser_Proof::SECRET_OPTION, wp_generate_password( 64, true, true ) );
 	}
 
 	// Register rewrite rules before flushing so they get written.

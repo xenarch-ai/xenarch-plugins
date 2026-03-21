@@ -72,6 +72,78 @@
 	font-size: 13px;
 }
 
+/* Toggle switch (Stripe-style) */
+.xenarch-toggle {
+	position: relative;
+	display: inline-block;
+	width: 44px;
+	height: 24px;
+	vertical-align: middle;
+}
+
+.xenarch-toggle input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+.xenarch-slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ccc;
+	border-radius: 12px;
+	transition: background-color 0.2s;
+}
+
+.xenarch-slider::before {
+	content: "";
+	position: absolute;
+	height: 18px;
+	width: 18px;
+	left: 3px;
+	bottom: 3px;
+	background-color: #fff;
+	border-radius: 50%;
+	transition: transform 0.2s;
+}
+
+.xenarch-toggle input:checked + .xenarch-slider {
+	background-color: #00a32a;
+}
+
+.xenarch-toggle input:checked + .xenarch-slider::before {
+	transform: translateX(20px);
+}
+
+/* Toggle row layout */
+.xenarch-toggle-row {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 12px 0;
+}
+
+.xenarch-toggle-row .xenarch-toggle {
+	flex-shrink: 0;
+	margin-top: 2px;
+}
+
+.xenarch-toggle-label {
+	font-weight: 600;
+	color: #1d2327;
+	margin-bottom: 4px;
+}
+
+.xenarch-toggle-description {
+	color: #646970;
+	font-size: 13px;
+	line-height: 1.5;
+}
+
 /* Form tweaks within cards */
 .xenarch-card .form-table th {
 	padding-left: 0;

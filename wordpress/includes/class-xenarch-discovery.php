@@ -42,6 +42,11 @@ class Xenarch_Discovery {
 			'index.php?xenarch_discovery=xenarch_md',
 			'top'
 		);
+		add_rewrite_rule(
+			'^pay\.json$',
+			'index.php?xenarch_discovery=pay_json',
+			'top'
+		);
 	}
 
 	/**
@@ -98,6 +103,17 @@ class Xenarch_Discovery {
 			'seller_wallet' => $wallet,
 			'provider'      => 'xenarch',
 			'facilitator'   => apply_filters( 'xenarch_api_base', 'https://api.xenarch.dev' ),
+			'tools'         => array(
+				'cli' => array(
+					'install' => 'npm install -g xenarch',
+					'usage'   => 'xenarch pay <url>',
+				),
+				'sdk' => array(
+					'npm'  => 'xenarch',
+					'pypi' => 'xenarch',
+				),
+				'docs' => 'https://xenarch.com/docs',
+			),
 			'rules'         => array(
 				array(
 					'path'      => '/**',
