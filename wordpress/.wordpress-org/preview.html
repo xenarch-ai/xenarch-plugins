@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>xenarch WP plugin — asset preview</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0e0e0e; color: #ccc; font-family: 'Inter', system-ui; padding: 48px; }
+
+  h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: #444; margin-bottom: 8px;
+  }
+  h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px; font-weight: 300; color: #f0f0f0; margin-bottom: 48px;
+  }
+
+  .section { margin-bottom: 64px; }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #333; margin-bottom: 20px; padding-bottom: 8px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .note {
+    font-size: 12px; color: #444; margin-top: 8px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ═══════ WP PLUGIN PAGE MOCKUP ═══════ */
+
+  .wp-mockup {
+    background: #f0f0f1;
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 960px;
+  }
+
+  .wp-banner-area {
+    width: 100%;
+    background: #0a0a0a;
+    position: relative;
+    padding: 0;
+    aspect-ratio: 1544 / 500;
+    overflow: hidden;
+  }
+
+  .wp-banner-area svg { width: 100%; height: 100%; }
+
+  .wp-content {
+    padding: 24px 32px;
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  .wp-icon {
+    width: 128px; height: 128px;
+    border-radius: 16px;
+    overflow: hidden;
+    flex-shrink: 0;
+    margin-top: -40px;
+    border: 4px solid #f0f0f1;
+    background: #0a0a0a;
+  }
+
+  .wp-icon svg { width: 100%; height: 100%; }
+
+  .wp-info { flex: 1; }
+
+  .wp-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 20px; font-weight: 600;
+    color: #1d2327; margin-bottom: 4px;
+  }
+
+  .wp-author {
+    font-size: 13px; color: #646970; margin-bottom: 12px;
+  }
+
+  .wp-desc {
+    font-size: 14px; color: #3c434a; line-height: 1.6;
+  }
+
+  .wp-meta {
+    display: flex; gap: 24px; margin-top: 12px;
+    font-size: 12px; color: #787c82;
+  }
+
+  .wp-install-btn {
+    display: inline-block;
+    background: #2271b1;
+    color: white;
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 12px;
+    border: none;
+    cursor: pointer;
+  }
+
+  /* ═══════ ICON SIZES ═══════ */
+
+  .icon-sizes {
+    display: flex; gap: 32px; align-items: end;
+  }
+
+  .icon-size {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+
+  .icon-size svg {
+    border-radius: 16%;
+  }
+
+  .icon-size span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: #444;
+  }
+
+  /* ═══════ TAGLINE OPTIONS ═══════ */
+
+  .taglines {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+
+  .tagline-option {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px 20px;
+    border: 1px solid #1a1a1a;
+    border-radius: 8px;
+    background: #111;
+  }
+
+  .tagline-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: #333;
+    flex-shrink: 0; width: 24px;
+  }
+
+  .tagline-text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px; font-weight: 400;
+    color: #e0e0e0;
+  }
+
+  .tagline-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: #444;
+    margin-left: auto; flex-shrink: 0;
+  }
+
+  .tagline-option.recommended {
+    border-color: #333;
+    background: #141414;
+  }
+
+  .tagline-option.recommended .tagline-num { color: #f0f0f0; }
+
+  /* ═══════ SHORT DESC ═══════ */
+
+  .short-desc {
+    padding: 20px;
+    border: 1px solid #1a1a1a;
+    border-radius: 8px;
+    background: #111;
+    max-width: 600px;
+  }
+
+  .short-desc .text {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px; color: #ccc; line-height: 1.5;
+  }
+
+  .short-desc .chars {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: #333; margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<h1>XEN-41</h1>
+<h2>WordPress Marketplace Assets Preview</h2>
+
+<!-- WP Plugin Page Mockup -->
+<div class="section">
+  <div class="section-label">plugin page mockup — how it looks on wordpress.org</div>
+  <div class="wp-mockup">
+    <div class="wp-banner-area">
+      <svg viewBox="0 0 1544 500">
+        <rect width="1544" height="500" fill="#0a0a0a"/>
+        <!-- Left routing fragment -->
+        <line x1="60" y1="180" x2="140" y2="220" stroke="#1a1a1a" stroke-width="1.5"/>
+        <line x1="140" y1="220" x2="100" y2="310" stroke="#1a1a1a" stroke-width="1.5"/>
+        <line x1="140" y1="220" x2="220" y2="260" stroke="#1a1a1a" stroke-width="1.5"/>
+        <circle cx="60" cy="180" r="6" fill="#222"/>
+        <circle cx="140" cy="220" r="8" fill="#252525"/>
+        <circle cx="100" cy="310" r="5" fill="#222"/>
+        <circle cx="220" cy="260" r="4.5" fill="#1e1e1e"/>
+        <line x1="160" y1="100" x2="200" y2="140" stroke="#1a1a1a" stroke-width="1"/>
+        <circle cx="160" cy="100" r="4" fill="#1e1e1e"/>
+        <circle cx="200" cy="140" r="3" fill="#1a1a1a"/>
+        <!-- Right routing fragment -->
+        <line x1="1380" y1="200" x2="1440" y2="260" stroke="#1a1a1a" stroke-width="1.5"/>
+        <line x1="1440" y1="260" x2="1400" y2="340" stroke="#1a1a1a" stroke-width="1.5"/>
+        <line x1="1440" y1="260" x2="1500" y2="230" stroke="#1a1a1a" stroke-width="1.5"/>
+        <circle cx="1380" cy="200" r="5.5" fill="#222"/>
+        <circle cx="1440" cy="260" r="7.5" fill="#252525"/>
+        <circle cx="1400" cy="340" r="5" fill="#222"/>
+        <circle cx="1500" cy="230" r="4" fill="#1e1e1e"/>
+        <line x1="1320" y1="130" x2="1360" y2="160" stroke="#1a1a1a" stroke-width="1"/>
+        <circle cx="1320" cy="130" r="3.5" fill="#1e1e1e"/>
+        <circle cx="1360" cy="160" r="3" fill="#1a1a1a"/>
+        <!-- Floating nodes -->
+        <circle cx="480" cy="60" r="3" fill="#1a1a1a"/>
+        <circle cx="1060" cy="50" r="3.5" fill="#1a1a1a"/>
+        <line x1="340" y1="410" x2="400" y2="430" stroke="#1a1a1a" stroke-width="1"/>
+        <circle cx="340" cy="410" r="4" fill="#1e1e1e"/>
+        <circle cx="400" cy="430" r="3" fill="#1a1a1a"/>
+        <line x1="1140" y1="400" x2="1200" y2="420" stroke="#1a1a1a" stroke-width="1"/>
+        <circle cx="1140" cy="400" r="3.5" fill="#1e1e1e"/>
+        <circle cx="1200" cy="420" r="3" fill="#1a1a1a"/>
+        <!-- Central X constellation -->
+        <line x1="620" y1="140" x2="772" y2="250" stroke="#333" stroke-width="2"/>
+        <line x1="924" y1="140" x2="772" y2="250" stroke="#333" stroke-width="2"/>
+        <line x1="620" y1="360" x2="772" y2="250" stroke="#333" stroke-width="2"/>
+        <line x1="924" y1="360" x2="772" y2="250" stroke="#333" stroke-width="2"/>
+        <circle cx="620" cy="140" r="8" fill="#f0f0f0"/>
+        <circle cx="924" cy="140" r="8" fill="#f0f0f0"/>
+        <circle cx="620" cy="360" r="8" fill="#f0f0f0"/>
+        <circle cx="924" cy="360" r="8" fill="#f0f0f0"/>
+        <circle cx="772" cy="250" r="11" fill="#f0f0f0"/>
+        <text x="772" y="438" font-family="'Space Grotesk', system-ui, sans-serif" font-size="32" font-weight="300" fill="#f0f0f0" letter-spacing="-0.5" text-anchor="middle">/xenarch</text>
+        <text x="772" y="472" font-family="'Inter', system-ui, sans-serif" font-size="15" font-weight="400" fill="#888" text-anchor="middle">Charge AI agents for content access</text>
+      </svg>
+    </div>
+    <div class="wp-content">
+      <div class="wp-icon">
+        <svg viewBox="0 0 512 512">
+          <rect width="512" height="512" rx="64" fill="#0a0a0a"/>
+          <line x1="128" y1="128" x2="256" y2="256" stroke="#333" stroke-width="6"/>
+          <line x1="384" y1="128" x2="256" y2="256" stroke="#333" stroke-width="6"/>
+          <line x1="128" y1="384" x2="256" y2="256" stroke="#333" stroke-width="6"/>
+          <line x1="384" y1="384" x2="256" y2="256" stroke="#333" stroke-width="6"/>
+          <circle cx="128" cy="128" r="24" fill="#f0f0f0"/>
+          <circle cx="384" cy="128" r="24" fill="#f0f0f0"/>
+          <circle cx="128" cy="384" r="24" fill="#f0f0f0"/>
+          <circle cx="384" cy="384" r="24" fill="#f0f0f0"/>
+          <circle cx="256" cy="256" r="32" fill="#f0f0f0"/>
+        </svg>
+      </div>
+      <div class="wp-info">
+        <div class="wp-title">Xenarch — AI Bot Payments</div>
+        <div class="wp-author">By <span style="color:#2271b1">xenarch</span></div>
+        <div class="wp-desc">
+          Monetize AI web scraping with x402 micropayments. Detect AI bots, return HTTP 402, and get paid in USDC — non-custodial, on-chain.
+        </div>
+        <div class="wp-meta">
+          <span>Version 1.0.0</span>
+          <span>Tested with WP 6.7</span>
+          <span>GPL-2.0+</span>
+        </div>
+        <button class="wp-install-btn">Install Now</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Icon at multiple sizes -->
+<div class="section">
+  <div class="section-label">plugin icon — multiple sizes</div>
+  <div class="icon-sizes">
+    <div class="icon-size">
+      <svg width="48" height="48" viewBox="0 0 512 512">
+        <rect width="512" height="512" rx="64" fill="#0a0a0a"/>
+        <line x1="128" y1="128" x2="256" y2="256" stroke="#333" stroke-width="8"/>
+        <line x1="384" y1="128" x2="256" y2="256" stroke="#333" stroke-width="8"/>
+        <line x1="128" y1="384" x2="256" y2="256" stroke="#333" stroke-width="8"/>
+        <line x1="384" y1="384" x2="256" y2="256" stroke="#333" stroke-width="8"/>
+        <circle cx="128" cy="128" r="28" fill="#f0f0f0"/>
+        <circle cx="384" cy="128" r="28" fill="#f0f0f0"/>
+        <circle cx="128" cy="384" r="28" fill="#f0f0f0"/>
+        <circle cx="384" cy="384" r="28" fill="#f0f0f0"/>
+        <circle cx="256" cy="256" r="36" fill="#f0f0f0"/>
+      </svg>
+      <span>48px</span>
+    </div>
+    <div class="icon-size">
+      <svg width="128" height="128" viewBox="0 0 512 512">
+        <rect width="512" height="512" rx="64" fill="#0a0a0a"/>
+        <line x1="128" y1="128" x2="256" y2="256" stroke="#333" stroke-width="6"/>
+        <line x1="384" y1="128" x2="256" y2="256" stroke="#333" stroke-width="6"/>
+        <line x1="128" y1="384" x2="256" y2="256" stroke="#333" stroke-width="6"/>
+        <line x1="384" y1="384" x2="256" y2="256" stroke="#333" stroke-width="6"/>
+        <circle cx="128" cy="128" r="24" fill="#f0f0f0"/>
+        <circle cx="384" cy="128" r="24" fill="#f0f0f0"/>
+        <circle cx="128" cy="384" r="24" fill="#f0f0f0"/>
+        <circle cx="384" cy="384" r="24" fill="#f0f0f0"/>
+        <circle cx="256" cy="256" r="32" fill="#f0f0f0"/>
+      </svg>
+      <span>128px</span>
+    </div>
+    <div class="icon-size">
+      <svg width="256" height="256" viewBox="0 0 512 512">
+        <rect width="512" height="512" rx="64" fill="#0a0a0a"/>
+        <line x1="128" y1="128" x2="256" y2="256" stroke="#333" stroke-width="6"/>
+        <line x1="384" y1="128" x2="256" y2="256" stroke="#333" stroke-width="6"/>
+        <line x1="128" y1="384" x2="256" y2="256" stroke="#333" stroke-width="6"/>
+        <line x1="384" y1="384" x2="256" y2="256" stroke="#333" stroke-width="6"/>
+        <circle cx="128" cy="128" r="24" fill="#f0f0f0"/>
+        <circle cx="384" cy="128" r="24" fill="#f0f0f0"/>
+        <circle cx="128" cy="384" r="24" fill="#f0f0f0"/>
+        <circle cx="384" cy="384" r="24" fill="#f0f0f0"/>
+        <circle cx="256" cy="256" r="32" fill="#f0f0f0"/>
+      </svg>
+      <span>256px (required)</span>
+    </div>
+  </div>
+  <div class="note">WP.org needs: icon-256x256.png + icon-128x128.png (will render from SVG)</div>
+</div>
+
+<!-- Tagline options -->
+<div class="section">
+  <div class="section-label">tagline options — pick one</div>
+  <div class="taglines">
+    <div class="tagline-option recommended">
+      <span class="tagline-num">01</span>
+      <span class="tagline-text">Monetize AI bot traffic with micropayments</span>
+      <span class="tagline-type">recommended</span>
+    </div>
+    <div class="tagline-option">
+      <span class="tagline-num">02</span>
+      <span class="tagline-text">Charge AI agents for content access</span>
+      <span class="tagline-type">direct</span>
+    </div>
+    <div class="tagline-option">
+      <span class="tagline-num">03</span>
+      <span class="tagline-text">Payment gate for AI agent traffic</span>
+      <span class="tagline-type">technical</span>
+    </div>
+    <div class="tagline-option">
+      <span class="tagline-num">04</span>
+      <span class="tagline-text">Turn bot traffic into revenue</span>
+      <span class="tagline-type">punchy</span>
+    </div>
+    <div class="tagline-option">
+      <span class="tagline-num">05</span>
+      <span class="tagline-text">x402 micropayments for WordPress</span>
+      <span class="tagline-type">protocol-first</span>
+    </div>
+  </div>
+</div>
+
+<!-- Short description options -->
+<div class="section">
+  <div class="section-label">short description (150 chars max) — pick one</div>
+
+  <div class="short-desc" style="margin-bottom: 12px;">
+    <div class="text">Detect AI bot traffic and charge micropayments for content access. Non-custodial, USDC on Base, x402 protocol.</div>
+    <div class="chars">109 / 150 chars</div>
+  </div>
+
+  <div class="short-desc" style="margin-bottom: 12px;">
+    <div class="text">Monetize AI agent visits with micropayments. Bots pay USDC to access your content. Non-custodial, on-chain.</div>
+    <div class="chars">108 / 150 chars</div>
+  </div>
+
+  <div class="short-desc">
+    <div class="text">Add a payment gate for AI bots. Agents pay micropayments (USDC on Base) to access your content via x402.</div>
+    <div class="chars">104 / 150 chars</div>
+  </div>
+</div>
+
+<!-- Brand decisions summary -->
+<div class="section">
+  <div class="section-label">brand decisions — recommendations</div>
+  <div style="max-width: 600px; line-height: 1.7;">
+    <div style="margin-bottom: 20px;">
+      <div style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 500; color: #e0e0e0; margin-bottom: 4px;">Banner colors</div>
+      <div style="font-size: 13px; color: #666;">Protocol Dark (#0a0a0a background, #f0f0f0 nodes). Matches our design system default. Stands out in the WP directory because almost no plugin uses a near-black banner — it'll be unmissable.</div>
+    </div>
+    <div style="margin-bottom: 20px;">
+      <div style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 500; color: #e0e0e0; margin-bottom: 4px;">Illustration style</div>
+      <div style="font-size: 13px; color: #666;">Minimal/typographic with the X constellation. No custom illustration — the node-edge motif IS the illustration. Consistent with "no decoration" principle.</div>
+    </div>
+    <div>
+      <div style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 500; color: #e0e0e0; margin-bottom: 4px;">Plugin display name</div>
+      <div style="font-size: 13px; color: #666;">"Xenarch — AI Agent Payments" for the listing. Clear what it does, not too long.</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
