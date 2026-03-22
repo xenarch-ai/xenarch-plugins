@@ -165,7 +165,8 @@ run_test(
 	function () {
 		assert_same( false, Xenarch_Access_Token::has_valid_bearer_format( 'Bearer ' ), 'Empty bearer token should not bypass the gate.' );
 		assert_same( false, Xenarch_Access_Token::has_valid_bearer_format( 'Bearer not-a-real-token' ), 'Malformed bearer token should not bypass the gate.' );
-		assert_same( true, Xenarch_Access_Token::has_valid_bearer_format( 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJzaXRlIjoic3RfMTIzIn0.signaturevalue' ), 'JWT-like bearer token should be accepted by the format gate.' );
+		assert_same( true, Xenarch_Access_Token::has_valid_bearer_format( 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJzaXRlIjoic3RfMTIzIn0.signaturevalue' ), 'JWT-like bearer token (3 segments) should be accepted by the format gate.' );
+		assert_same( true, Xenarch_Access_Token::has_valid_bearer_format( 'Bearer eyJnYXRlX2lkIjoiYTFhZmNiYzIifQ.xC8wBojF900qL39XZcY4rgWx0hwi7-F3SueYnHQOT5A' ), 'Two-segment bearer token (payload.signature) should be accepted by the format gate.' );
 	}
 );
 
