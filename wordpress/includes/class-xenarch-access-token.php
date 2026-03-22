@@ -33,6 +33,6 @@ class Xenarch_Access_Token {
 			return false;
 		}
 
-		return 1 === preg_match( '/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/', $token );
+		return 1 === preg_match( '/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)?$/', $token );
 	}
 }
