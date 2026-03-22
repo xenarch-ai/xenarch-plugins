@@ -66,9 +66,11 @@
 
   /* Sections */
   .section {
-    border-top: 1px solid #1a1a1a;
     padding-top: 24px;
     margin-bottom: 24px;
+  }
+  .section + .section {
+    border-top: 1px solid #1a1a1a;
   }
   .section-title {
     font-family: 'Space Grotesk', sans-serif;
@@ -126,7 +128,13 @@
     color: #f0f0f0;
     font-family: 'Inter', sans-serif;
     font-size: 13px;
-    padding: 8px 12px;
+    padding: 8px 32px 8px 12px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    cursor: pointer;
   }
 
   /* Toggle */
@@ -289,7 +297,7 @@
   <!-- PRICING RULES -->
   <div class="section">
     <div class="section-title">Pricing rules</div>
-    <div class="section-desc">Override price for specific URLs. First match wins.</div>
+    <div class="section-desc">Override price for specific URLs. First match wins. Set $0 for free access.</div>
 
     <div class="rule">
       <span class="grip">&#x2807;</span>
@@ -316,11 +324,13 @@
       <span class="match">URL contains</span>
       <input type="text" class="path" value="/public/">
       <span class="arrow">&rarr;</span>
-      <span class="free">FREE</span>
+      <span class="dollar">$</span>
+      <input type="text" class="price" value="0">
       <button class="remove">&times;</button>
     </div>
 
-    <button class="btn-add">+ add rule</button>
+    <div id="rules-container"></div>
+    <button class="btn-add" onclick="addRule()">+ add rule</button>
   </div>
 
   <!-- WALLET -->
@@ -353,5 +363,34 @@
   </div>
 
 </div>
+
+<script>
+// Remove rule
+document.querySelectorAll('.remove').forEach(btn => {
+  btn.addEventListener('click', function() {
+    this.closest('.rule').remove();
+  });
+});
+
+// Add rule
+function addRule() {
+  const container = document.getElementById('rules-container');
+  const rule = document.createElement('div');
+  rule.className = 'rule';
+  rule.innerHTML = `
+    <span class="grip">&#x2807;</span>
+    <span class="match">URL contains</span>
+    <input type="text" class="path" placeholder="/path/" value="">
+    <span class="arrow">&rarr;</span>
+    <span class="dollar">$</span>
+    <input type="text" class="price" placeholder="0.00" value="">
+    <button class="remove" onclick="this.closest('.rule').remove()">&times;</button>
+  `;
+  container.appendChild(rule);
+  rule.querySelector('.path').focus();
+}
+
+
+</script>
 </body>
 </html>
