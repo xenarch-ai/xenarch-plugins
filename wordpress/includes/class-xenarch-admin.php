@@ -2,8 +2,8 @@
 /**
  * Xenarch admin settings page.
  *
- * Renders Settings -> Xenarch in the WordPress admin and handles
- * registration, site setup, and configuration forms.
+ * Registers the Settings > Xenarch page and enqueues the React admin panel.
+ * All UI logic lives in admin-ui/dist/xenarch-admin.js.
  *
  * @package Xenarch
  */
@@ -19,21 +19,28 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Xenarch_Admin {
 
 	/**
-	 * API client instance.
-	 *
-	 * @var Xenarch_Api
-	 */
-	private $api;
-
-	/**
 	 * Constructor — register hooks.
 	 */
 	public function __construct() {
-		$this->api = new Xenarch_Api();
-
 		add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_styles' ) );
-		add_action( 'admin_init', array( $this, 'handle_form_submissions' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
+		add_filter( 'script_loader_tag', array( $this, 'add_module_type' ), 10, 3 );
+	}
+
+	/**
+	 * Add type="module" to the React admin script tag.
+	 *
+	 * @param string $tag    Script HTML tag.
+	 * @param string $handle Script handle.
+	 * @param string $src    Script source URL.
+	 * @return string
+	 */
+	public function add_module_type( $tag, $handle, $src ) {
+		if ( 'xenarch-admin' !== $handle ) {
+			return $tag;
+		}
+		// Replace the script type attribute to make it an ES module.
+		return str_replace( ' src=', ' type="module" src=', $tag );
 	}
 
 	/**
@@ -50,434 +57,76 @@ class Xenarch_Admin {
 	}
 
 	/**
-	 * Enqueue admin CSS on the settings page only.
+	 * Enqueue React admin assets on the settings page only.
 	 *
 	 * @param string $hook_suffix Current admin page hook.
 	 */
-	public function enqueue_styles( $hook_suffix ) {
+	public function enqueue_assets( $hook_suffix ) {
 		if ( 'settings_page_xenarch' !== $hook_suffix ) {
 			return;
 		}
 
+		$dist_url = XENARCH_PLUGIN_URL . 'admin-ui/dist/';
+
 		wp_enqueue_style(
 			'xenarch-admin',
-			XENARCH_PLUGIN_URL . 'assets/admin.css',
+			$dist_url . 'xenarch-admin.css',
 			array(),
 			XENARCH_VERSION
 		);
-	}
 
-	// ------------------------------------------------------------------
-	// Form handling
-	// ------------------------------------------------------------------
-
-	/**
-	 * Process form submissions on admin_init.
-	 */
-	public function handle_form_submissions() {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return;
-		}
-
-		if ( isset( $_POST['xenarch_action'] ) ) {
-			$action = sanitize_text_field( wp_unslash( $_POST['xenarch_action'] ) );
-
-			switch ( $action ) {
-				case 'register':
-					$this->handle_register();
-					break;
-				case 'add_site':
-					$this->handle_add_site();
-					break;
-				case 'save_config':
-					$this->handle_save_config();
-					break;
-				case 'save_gating':
-					$this->handle_save_gating();
-					break;
-			}
-		}
+		wp_enqueue_script(
+			'xenarch-admin',
+			$dist_url . 'xenarch-admin.js',
+			array(),
+			XENARCH_VERSION,
+			true
+		);
 	}
 
 	/**
-	 * Handle publisher registration.
-	 */
-	private function handle_register() {
-		check_admin_referer( 'xenarch_register' );
-
-		$email    = isset( $_POST['xenarch_email'] ) ? sanitize_email( wp_unslash( $_POST['xenarch_email'] ) ) : '';
-		$password = isset( $_POST['xenarch_password'] ) ? sanitize_text_field( wp_unslash( $_POST['xenarch_password'] ) ) : '';
-
-		if ( empty( $email ) || empty( $password ) ) {
-			add_settings_error( 'xenarch', 'missing_fields', __( 'Email and password are required.', 'xenarch' ) );
-			return;
-		}
-
-		$result = $this->api->register( $email, $password );
-
-		if ( is_wp_error( $result ) ) {
-			add_settings_error( 'xenarch', 'register_error', $result->get_error_message() );
-			return;
-		}
-
-		if ( ! empty( $result['api_key'] ) ) {
-			update_option( 'xenarch_api_key', sanitize_text_field( $result['api_key'] ) );
-			update_option( 'xenarch_email', $email );
-			add_settings_error( 'xenarch', 'register_success', __( 'Registration successful! Your API key has been saved.', 'xenarch' ), 'updated' );
-		} else {
-			add_settings_error( 'xenarch', 'register_error', __( 'Registration succeeded but no API key was returned.', 'xenarch' ) );
-		}
-	}
-
-	/**
-	 * Handle site addition.
-	 */
-	private function handle_add_site() {
-		check_admin_referer( 'xenarch_add_site' );
-
-		$site_url = get_site_url();
-		$domain   = wp_parse_url( $site_url, PHP_URL_HOST );
-
-		if ( empty( $domain ) ) {
-			add_settings_error( 'xenarch', 'domain_error', __( 'Could not detect site domain.', 'xenarch' ) );
-			return;
-		}
-
-		$result = $this->api->add_site( $domain );
-
-		if ( is_wp_error( $result ) ) {
-			add_settings_error( 'xenarch', 'site_error', $result->get_error_message() );
-			return;
-		}
-
-		if ( ! empty( $result['id'] ) ) {
-			update_option( 'xenarch_site_id', sanitize_text_field( $result['id'] ) );
-		}
-		if ( ! empty( $result['site_token'] ) ) {
-			update_option( 'xenarch_site_token', sanitize_text_field( $result['site_token'] ) );
-		}
-
-		add_settings_error( 'xenarch', 'site_success', __( 'Site added successfully! l.js will now load on your frontend.', 'xenarch' ), 'updated' );
-	}
-
-	/**
-	 * Handle configuration save (pricing + payout).
-	 */
-	private function handle_save_config() {
-		check_admin_referer( 'xenarch_save_config' );
-
-		$price  = isset( $_POST['xenarch_default_price'] ) ? sanitize_text_field( wp_unslash( $_POST['xenarch_default_price'] ) ) : '';
-		$wallet = isset( $_POST['xenarch_payout_wallet'] ) ? sanitize_text_field( wp_unslash( $_POST['xenarch_payout_wallet'] ) ) : '';
-
-		// Update local options regardless of API result.
-		if ( '' !== $price ) {
-			update_option( 'xenarch_default_price', $price );
-		}
-		if ( '' !== $wallet ) {
-			update_option( 'xenarch_payout_wallet', $wallet );
-		}
-
-		$site_id = get_option( 'xenarch_site_id', '' );
-
-		// Push pricing to API if site is registered.
-		if ( ! empty( $site_id ) && '' !== $price ) {
-			$pricing_result = $this->api->update_pricing( $site_id, (float) $price );
-
-			if ( is_wp_error( $pricing_result ) ) {
-				add_settings_error( 'xenarch', 'pricing_error', $pricing_result->get_error_message() );
-				return;
-			}
-		}
-
-		// Push payout wallet to API if provided and site is registered.
-		if ( ! empty( $site_id ) && ! empty( $wallet ) ) {
-			$payout_result = $this->api->update_payout( $wallet );
-
-			if ( is_wp_error( $payout_result ) ) {
-				add_settings_error( 'xenarch', 'payout_error', $payout_result->get_error_message() );
-				return;
-			}
-		}
-
-		add_settings_error( 'xenarch', 'config_success', __( 'Settings saved.', 'xenarch' ), 'updated' );
-	}
-
-	/**
-	 * Handle gating toggle save.
-	 */
-	private function handle_save_gating() {
-		check_admin_referer( 'xenarch_save_gating' );
-
-		$value = isset( $_POST['xenarch_gate_unknown_traffic'] ) ? '1' : '0';
-		update_option( 'xenarch_gate_unknown_traffic', $value );
-
-		add_settings_error( 'xenarch', 'gating_success', __( 'Gating settings saved.', 'xenarch' ), 'updated' );
-	}
-
-	// ------------------------------------------------------------------
-	// Settings page rendering
-	// ------------------------------------------------------------------
-
-	/**
-	 * Render the settings page.
+	 * Render the settings page — just a mount point for React.
 	 */
 	public function render_settings_page() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
+		$config = array(
+			'restUrl'   => rest_url( 'xenarch/v1' ),
+			'nonce'     => wp_create_nonce( 'wp_rest' ),
+			'settings'  => $this->get_initial_settings(),
+			'pluginUrl' => XENARCH_PLUGIN_URL,
+			'version'   => XENARCH_VERSION,
+		);
+		echo '<div class="wrap"><h1>' . esc_html( get_admin_page_title() ) . '</h1>';
+		echo '<script>window.xenarchAdmin = ' . wp_json_encode( $config ) . ';</script>';
+		echo '<div id="xenarch-admin"></div></div>';
+	}
 
+	/**
+	 * Get initial settings snapshot for the React app.
+	 *
+	 * @return array
+	 */
+	private function get_initial_settings() {
 		$api_key    = get_option( 'xenarch_api_key', '' );
 		$site_id    = get_option( 'xenarch_site_id', '' );
 		$site_token = get_option( 'xenarch_site_token', '' );
-		$email      = get_option( 'xenarch_email', '' );
-		$price      = get_option( 'xenarch_default_price', '0.003' );
-		$wallet     = get_option( 'xenarch_payout_wallet', '' );
 
-		$is_registered = ! empty( $api_key );
-		$has_site      = ! empty( $site_id ) && ! empty( $site_token );
-		?>
-		<div class="wrap xenarch-settings">
-			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-
-			<?php settings_errors( 'xenarch' ); ?>
-
-			<!-- Status Display -->
-			<div class="xenarch-status-card">
-				<h2><?php esc_html_e( 'Status', 'xenarch' ); ?></h2>
-				<table class="xenarch-status-table">
-					<tr>
-						<td><?php esc_html_e( 'Connection', 'xenarch' ); ?></td>
-						<td>
-							<?php if ( $is_registered ) : ?>
-								<span class="xenarch-status-dot xenarch-status-green"></span>
-								<?php esc_html_e( 'Connected', 'xenarch' ); ?>
-							<?php else : ?>
-								<span class="xenarch-status-dot xenarch-status-red"></span>
-								<?php esc_html_e( 'Not connected', 'xenarch' ); ?>
-							<?php endif; ?>
-						</td>
-					</tr>
-					<?php if ( $is_registered ) : ?>
-						<tr>
-							<td><?php esc_html_e( 'Email', 'xenarch' ); ?></td>
-							<td><?php echo esc_html( $email ); ?></td>
-						</tr>
-					<?php endif; ?>
-					<?php if ( $has_site ) : ?>
-						<tr>
-							<td><?php esc_html_e( 'Site Token', 'xenarch' ); ?></td>
-							<td>
-								<code><?php echo esc_html( substr( $site_token, 0, 8 ) . '...' . substr( $site_token, -4 ) ); ?></code>
-							</td>
-						</tr>
-						<tr>
-							<td><?php esc_html_e( 'l.js', 'xenarch' ); ?></td>
-							<td>
-								<span class="xenarch-status-dot xenarch-status-green"></span>
-								<?php esc_html_e( 'Loading on frontend', 'xenarch' ); ?>
-							</td>
-						</tr>
-					<?php else : ?>
-						<tr>
-							<td><?php esc_html_e( 'l.js', 'xenarch' ); ?></td>
-							<td>
-								<span class="xenarch-status-dot xenarch-status-red"></span>
-								<?php esc_html_e( 'Not active — add your site first', 'xenarch' ); ?>
-							</td>
-						</tr>
-					<?php endif; ?>
-					<tr>
-						<td><?php esc_html_e( 'Server-side gating', 'xenarch' ); ?></td>
-						<td>
-							<?php if ( $has_site ) : ?>
-								<span class="xenarch-status-dot xenarch-status-green"></span>
-								<?php
-								printf(
-									/* translators: %d: number of bot signatures */
-									esc_html__( 'Active — blocking %d bot signatures', 'xenarch' ),
-									count( Xenarch_Bot_Detect::get_signatures() ) + count( Xenarch_Bot_Detect::get_fetcher_signatures() )
-								);
-								?>
-							<?php else : ?>
-								<span class="xenarch-status-dot xenarch-status-red"></span>
-								<?php esc_html_e( 'Inactive — add your site first', 'xenarch' ); ?>
-							<?php endif; ?>
-						</td>
-					</tr>
-					<tr>
-						<td><?php esc_html_e( 'pay.json', 'xenarch' ); ?></td>
-						<td>
-							<?php if ( $has_site ) : ?>
-								<a href="<?php echo esc_url( get_site_url() . '/.well-known/pay.json' ); ?>" target="_blank">
-									<?php echo esc_html( get_site_url() . '/.well-known/pay.json' ); ?>
-								</a>
-							<?php else : ?>
-								<span class="xenarch-status-dot xenarch-status-red"></span>
-								<?php esc_html_e( 'Not available', 'xenarch' ); ?>
-							<?php endif; ?>
-						</td>
-					</tr>
-					<tr>
-						<td><?php esc_html_e( 'xenarch.md', 'xenarch' ); ?></td>
-						<td>
-							<?php if ( $has_site ) : ?>
-								<a href="<?php echo esc_url( get_site_url() . '/.well-known/xenarch.md' ); ?>" target="_blank">
-									<?php echo esc_html( get_site_url() . '/.well-known/xenarch.md' ); ?>
-								</a>
-							<?php else : ?>
-								<span class="xenarch-status-dot xenarch-status-red"></span>
-								<?php esc_html_e( 'Not available', 'xenarch' ); ?>
-							<?php endif; ?>
-						</td>
-					</tr>
-				</table>
-			</div>
-
-			<?php if ( $has_site ) : ?>
-				<!-- Gating Settings -->
-				<div class="xenarch-card">
-					<h2><?php esc_html_e( 'Additional Gating', 'xenarch' ); ?></h2>
-					<form method="post" action="">
-						<?php wp_nonce_field( 'xenarch_save_gating' ); ?>
-						<input type="hidden" name="xenarch_action" value="save_gating" />
-						<div class="xenarch-toggle-row">
-							<label class="xenarch-toggle">
-								<input type="checkbox" name="xenarch_gate_unknown_traffic" value="1" <?php checked( get_option( 'xenarch_gate_unknown_traffic', '1' ), '1' ); ?> />
-								<span class="xenarch-slider"></span>
-							</label>
-							<div>
-								<div class="xenarch-toggle-label"><?php esc_html_e( 'Gate unknown traffic', 'xenarch' ); ?></div>
-								<div class="xenarch-toggle-description">
-									<?php
-									printf(
-										/* translators: %d: number of bot signatures */
-										esc_html__( 'In addition to the %d known bot signatures always gated by Xenarch, this option also gates requests from unrecognized User-Agents. Disable if third-party webhooks (Stripe, Slack, etc.) are being incorrectly gated.', 'xenarch' ),
-										count( Xenarch_Bot_Detect::get_signatures() ) + count( Xenarch_Bot_Detect::get_fetcher_signatures() )
-									);
-									?>
-								</div>
-							</div>
-						</div>
-						<?php submit_button( __( 'Save Gating Settings', 'xenarch' ) ); ?>
-					</form>
-				</div>
-			<?php endif; ?>
-
-			<?php if ( ! $is_registered ) : ?>
-				<!-- Registration Section -->
-				<div class="xenarch-card">
-					<h2><?php esc_html_e( 'Step 1: Register', 'xenarch' ); ?></h2>
-					<p><?php esc_html_e( 'Create a Xenarch publisher account to get started.', 'xenarch' ); ?></p>
-					<form method="post" action="">
-						<?php wp_nonce_field( 'xenarch_register' ); ?>
-						<input type="hidden" name="xenarch_action" value="register" />
-						<table class="form-table">
-							<tr>
-								<th scope="row">
-									<label for="xenarch_email"><?php esc_html_e( 'Email', 'xenarch' ); ?></label>
-								</th>
-								<td>
-									<input
-										type="email"
-										id="xenarch_email"
-										name="xenarch_email"
-										class="regular-text"
-										required
-									/>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row">
-									<label for="xenarch_password"><?php esc_html_e( 'Password', 'xenarch' ); ?></label>
-								</th>
-								<td>
-									<input
-										type="password"
-										id="xenarch_password"
-										name="xenarch_password"
-										class="regular-text"
-										required
-									/>
-								</td>
-							</tr>
-						</table>
-						<?php submit_button( __( 'Register', 'xenarch' ) ); ?>
-					</form>
-				</div>
-
-			<?php elseif ( ! $has_site ) : ?>
-				<!-- Site Setup Section -->
-				<div class="xenarch-card">
-					<h2><?php esc_html_e( 'Step 2: Add Your Site', 'xenarch' ); ?></h2>
-					<p>
-						<?php
-						printf(
-							/* translators: %s: detected domain */
-							esc_html__( 'We detected your domain as %s. Click below to register it with Xenarch.', 'xenarch' ),
-							'<strong>' . esc_html( wp_parse_url( get_site_url(), PHP_URL_HOST ) ) . '</strong>'
-						);
-						?>
-					</p>
-					<form method="post" action="">
-						<?php wp_nonce_field( 'xenarch_add_site' ); ?>
-						<input type="hidden" name="xenarch_action" value="add_site" />
-						<?php submit_button( __( 'Add Site', 'xenarch' ) ); ?>
-					</form>
-				</div>
-
-			<?php else : ?>
-				<!-- Configuration Section -->
-				<div class="xenarch-card">
-					<h2><?php esc_html_e( 'Configuration', 'xenarch' ); ?></h2>
-					<p><?php esc_html_e( 'Configure pricing and payout settings for your site.', 'xenarch' ); ?></p>
-					<form method="post" action="">
-						<?php wp_nonce_field( 'xenarch_save_config' ); ?>
-						<input type="hidden" name="xenarch_action" value="save_config" />
-						<table class="form-table">
-							<tr>
-								<th scope="row">
-									<label for="xenarch_default_price"><?php esc_html_e( 'Default Price (USD)', 'xenarch' ); ?></label>
-								</th>
-								<td>
-									<input
-										type="number"
-										id="xenarch_default_price"
-										name="xenarch_default_price"
-										value="<?php echo esc_attr( $price ); ?>"
-										class="regular-text"
-										step="0.001"
-										min="0"
-										max="1"
-									/>
-									<p class="description">
-										<?php esc_html_e( 'Amount in USD charged per AI agent page view (max $1.00).', 'xenarch' ); ?>
-									</p>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row">
-									<label for="xenarch_payout_wallet"><?php esc_html_e( 'Payout Wallet', 'xenarch' ); ?></label>
-								</th>
-								<td>
-									<input
-										type="text"
-										id="xenarch_payout_wallet"
-										name="xenarch_payout_wallet"
-										value="<?php echo esc_attr( $wallet ); ?>"
-										class="regular-text"
-										placeholder="0x..."
-									/>
-									<p class="description">
-										<?php esc_html_e( 'Your USDC wallet address on Base network.', 'xenarch' ); ?>
-									</p>
-								</td>
-							</tr>
-						</table>
-						<?php submit_button( __( 'Save Settings', 'xenarch' ) ); ?>
-					</form>
-				</div>
-			<?php endif; ?>
-		</div>
-		<?php
+		return array(
+			'api_key'              => ! empty( $api_key ),
+			'site_id'              => $site_id,
+			'site_token'           => $site_token,
+			'email'                => get_option( 'xenarch_email', '' ),
+			'default_price'        => get_option( 'xenarch_default_price', '0.003' ),
+			'payout_wallet'        => get_option( 'xenarch_payout_wallet', '' ),
+			'gate_unknown_traffic' => get_option( 'xenarch_gate_unknown_traffic', '1' ),
+			'domain'               => wp_parse_url( get_site_url(), PHP_URL_HOST ),
+			'is_registered'        => ! empty( $api_key ),
+			'has_site'             => ! empty( $site_id ) && ! empty( $site_token ),
+			'bot_signature_count'  => count( Xenarch_Bot_Detect::get_signatures() ) + count( Xenarch_Bot_Detect::get_fetcher_signatures() ),
+			'pay_json_url'         => get_site_url() . '/.well-known/pay.json',
+			'xenarch_md_url'       => get_site_url() . '/.well-known/xenarch.md',
+		);
 	}
 }

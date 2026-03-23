@@ -3,7 +3,7 @@
  * Plugin Name: Xenarch
  * Plugin URI:  https://xenarch.com
  * Description: Monetize AI bot traffic on your WordPress site. Xenarch detects AI agents and charges micropayments for content access via the x402 protocol.
- * Version:     1.0.0
+ * Version:     1.1.0
  * Author:      Xenarch
  * Author URI:  https://xenarch.com
  * License:     GPL-2.0+
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Plugin constants.
  */
-define( 'XENARCH_VERSION', '1.0.0' );
+define( 'XENARCH_VERSION', '1.1.0' );
 define( 'XENARCH_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'XENARCH_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'XENARCH_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
@@ -38,6 +38,7 @@ require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-frontend.php';
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-gate.php';
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-gate-response.php';
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-discovery.php';
+require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-rest.php';
 
 /**
  * Activation hook — set default options.
@@ -64,6 +65,9 @@ function xenarch_activate() {
 	}
 	if ( false === get_option( 'xenarch_gate_unknown_traffic' ) ) {
 		add_option( 'xenarch_gate_unknown_traffic', '1' );
+	}
+	if ( false === get_option( 'xenarch_pricing_rules' ) ) {
+		add_option( 'xenarch_pricing_rules', '[]' );
 	}
 	if ( false === get_option( Xenarch_Browser_Proof::SECRET_OPTION ) && function_exists( 'wp_generate_password' ) ) {
 		add_option( Xenarch_Browser_Proof::SECRET_OPTION, wp_generate_password( 64, true, true ) );
@@ -105,5 +109,8 @@ function xenarch_init() {
 
 	// Discovery documents (/.well-known/pay.json and /.well-known/xenarch.md).
 	new Xenarch_Discovery();
+
+	// REST API endpoints (must be available outside admin for AJAX).
+	new Xenarch_Rest();
 }
 add_action( 'plugins_loaded', 'xenarch_init' );

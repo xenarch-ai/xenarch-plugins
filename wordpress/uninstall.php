@@ -21,3 +21,6 @@ delete_option( 'xenarch_site_token' );
 delete_option( 'xenarch_email' );
 delete_option( 'xenarch_default_price' );
 delete_option( 'xenarch_payout_wallet' );
+delete_option( 'xenarch_gate_unknown_traffic' );
+delete_option( 'xenarch_pricing_rules' );
+delete_option( 'xenarch_browser_proof_secret' );

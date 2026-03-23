@@ -64,6 +64,11 @@ class Xenarch_Gate {
 			return;
 		}
 
+		// Check if a pricing rule marks this path as FREE (price_usd = "0").
+		if ( $this->is_free_path( $request_uri ) ) {
+			return;
+		}
+
 		// Run full non-human traffic detection.
 		$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 		$headers    = self::get_request_headers();
@@ -258,6 +263,11 @@ class Xenarch_Gate {
 			return $response;
 		}
 
+		// Check if a pricing rule marks this path as FREE.
+		if ( $this->is_free_path( $request_uri ) ) {
+			return $response;
+		}
+
 		$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 		$headers    = self::get_request_headers();
 		$detection  = Xenarch_Bot_Detect::detect_full( $user_agent, $headers, $this->get_request_context( $request_uri, $user_agent ) );
@@ -370,6 +380,45 @@ class Xenarch_Gate {
 		if ( function_exists( 'apply_filters' ) && apply_filters( 'xenarch_log_detection_events', false, $event ) ) {
 			error_log( 'xenarch_detection_event ' . wp_json_encode( $event ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 		}
+	}
+
+	/**
+	 * Check if a request path matches a FREE pricing rule (price_usd = "0").
+	 *
+	 * @param string $request_uri Request URI.
+	 * @return bool True if path is free.
+	 */
+	private function is_free_path( $request_uri ) {
+		$matched = $this->match_pricing_rule( $request_uri );
+		return null !== $matched && '0' === (string) $matched;
+	}
+
+	/**
+	 * Match a request path against pricing rules. Returns the matched
+	 * price_usd string, or null if no rule matches.
+	 *
+	 * @param string $request_uri Request URI.
+	 * @return string|null Matched price_usd or null.
+	 */
+	private function match_pricing_rule( $request_uri ) {
+		$path  = wp_parse_url( $request_uri, PHP_URL_PATH );
+		$path  = empty( $path ) ? '/' : $path;
+		$rules = json_decode( get_option( 'xenarch_pricing_rules', '[]' ), true );
+
+		if ( ! is_array( $rules ) ) {
+			return null;
+		}
+
+		foreach ( $rules as $rule ) {
+			if ( empty( $rule['path_contains'] ) || ! isset( $rule['price_usd'] ) ) {
+				continue;
+			}
+			if ( false !== strpos( $path, $rule['path_contains'] ) ) {
+				return (string) $rule['price_usd'];
+			}
+		}
+
+		return null;
 	}
 
 	/**

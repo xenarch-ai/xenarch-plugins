@@ -94,6 +94,27 @@ class Xenarch_Discovery {
 		$price  = get_option( 'xenarch_default_price', '0.003' );
 		$wallet = get_option( 'xenarch_payout_wallet', '' );
 
+		// Build rules array from pricing rules + default catch-all.
+		$rules          = array();
+		$pricing_rules  = json_decode( get_option( 'xenarch_pricing_rules', '[]' ), true );
+
+		if ( is_array( $pricing_rules ) ) {
+			foreach ( $pricing_rules as $rule ) {
+				if ( ! empty( $rule['path_contains'] ) && isset( $rule['price_usd'] ) ) {
+					$rules[] = array(
+						'path'      => '/**' . $rule['path_contains'] . '**',
+						'price_usd' => $rule['price_usd'],
+					);
+				}
+			}
+		}
+
+		// Default catch-all rule always comes last.
+		$rules[] = array(
+			'path'      => '/**',
+			'price_usd' => $price,
+		);
+
 		$pay_json = array(
 			'version'       => '1.0',
 			'protocol'      => 'x402',
@@ -114,12 +135,7 @@ class Xenarch_Discovery {
 				),
 				'docs' => 'https://xenarch.com/docs',
 			),
-			'rules'         => array(
-				array(
-					'path'      => '/**',
-					'price_usd' => $price,
-				),
-			),
+			'rules'         => $rules,
 		);
 
 		/**

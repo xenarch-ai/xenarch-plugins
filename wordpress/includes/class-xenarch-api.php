@@ -153,6 +153,36 @@ class Xenarch_Api {
 		);
 	}
 
+	/**
+	 * Get time-bucketed stats for a site.
+	 *
+	 * @param string $site_id Site UUID.
+	 * @return array|WP_Error
+	 */
+	public function get_stats( $site_id ) {
+		return $this->get(
+			'/v1/sites/' . urlencode( $site_id ) . '/stats',
+			$this->auth_headers()
+		);
+	}
+
+	/**
+	 * Get paginated transactions for a site.
+	 *
+	 * @param string $site_id Site UUID.
+	 * @param array  $params  Query params (period, page, per_page).
+	 * @return array|WP_Error
+	 */
+	public function get_transactions( $site_id, $params = array() ) {
+		$query = http_build_query( $params );
+		$endpoint = '/v1/sites/' . urlencode( $site_id ) . '/transactions';
+		if ( ! empty( $query ) ) {
+			$endpoint .= '?' . $query;
+		}
+
+		return $this->get( $endpoint, $this->auth_headers() );
+	}
+
 	// ------------------------------------------------------------------
 	// Internal helpers
 	// ------------------------------------------------------------------
