@@ -1,63 +1,83 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1544" height="500" viewBox="0 0 1544 500">
-  <!-- Xenarch WordPress banner — 1544x500 -->
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&amp;family=JetBrains+Mono:wght@400;500&amp;family=Space+Grotesk:wght@300;400;500&amp;display=swap');
+    </style>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#4ade80" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#4ade80" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
   <rect width="1544" height="500" fill="#0a0a0a"/>
 
-  <!-- Background decorative nodes — proper node-edge patterns, no triangles -->
-  <!-- Far left: small routing fragment -->
-  <line x1="60" y1="180" x2="140" y2="220" stroke="#1a1a1a" stroke-width="1.5"/>
-  <line x1="140" y1="220" x2="100" y2="310" stroke="#1a1a1a" stroke-width="1.5"/>
-  <line x1="140" y1="220" x2="220" y2="260" stroke="#1a1a1a" stroke-width="1.5"/>
-  <circle cx="60" cy="180" r="6" fill="#222"/>
-  <circle cx="140" cy="220" r="8" fill="#252525"/>
-  <circle cx="100" cy="310" r="5" fill="#222"/>
-  <circle cx="220" cy="260" r="4.5" fill="#1e1e1e"/>
+  <!-- Background texture — sparse dots -->
+  <circle cx="70" cy="65" r="1.5" fill="#161616"/>
+  <circle cx="200" cy="430" r="1.5" fill="#141414"/>
+  <circle cx="1350" cy="55" r="1.5" fill="#161616"/>
+  <circle cx="1480" cy="440" r="1.5" fill="#141414"/>
+  <circle cx="400" cy="450" r="1" fill="#131313"/>
+  <circle cx="1150" cy="50" r="1" fill="#131313"/>
 
-  <!-- Far left: lone pair -->
-  <line x1="160" y1="100" x2="200" y2="140" stroke="#1a1a1a" stroke-width="1"/>
-  <circle cx="160" cy="100" r="4" fill="#1e1e1e"/>
-  <circle cx="200" cy="140" r="3" fill="#1a1a1a"/>
+  <!-- ═══════ WORDMARK — top left ═══════ -->
+  <text x="72" y="72" font-family="'Space Grotesk', system-ui, sans-serif" font-size="22" font-weight="300" fill="#888888" letter-spacing="-0.02em">/xenarch</text>
 
-  <!-- Far right: small routing fragment -->
-  <line x1="1380" y1="200" x2="1440" y2="260" stroke="#1a1a1a" stroke-width="1.5"/>
-  <line x1="1440" y1="260" x2="1400" y2="340" stroke="#1a1a1a" stroke-width="1.5"/>
-  <line x1="1440" y1="260" x2="1500" y2="230" stroke="#1a1a1a" stroke-width="1.5"/>
-  <circle cx="1380" cy="200" r="5.5" fill="#222"/>
-  <circle cx="1440" cy="260" r="7.5" fill="#252525"/>
-  <circle cx="1400" cy="340" r="5" fill="#222"/>
-  <circle cx="1500" cy="230" r="4" fill="#1e1e1e"/>
+  <!-- ═══════ THE FLOW — centered ═══════ -->
+  <!-- Glow behind payment node -->
+  <circle cx="772" cy="195" r="80" fill="url(#glow)"/>
 
-  <!-- Far right: lone pair -->
-  <line x1="1320" y1="130" x2="1360" y2="160" stroke="#1a1a1a" stroke-width="1"/>
-  <circle cx="1320" cy="130" r="3.5" fill="#1e1e1e"/>
-  <circle cx="1360" cy="160" r="3" fill="#1a1a1a"/>
+  <!-- Connection lines -->
+  <line x1="352" y1="195" x2="492" y2="195" stroke="#1a1a1a" stroke-width="1.5"/>
+  <line x1="572" y1="195" x2="712" y2="195" stroke="#1a1a1a" stroke-width="1.5"/>
+  <line x1="832" y1="195" x2="972" y2="195" stroke="#1a1a1a" stroke-width="1.5"/>
+  <line x1="1052" y1="195" x2="1192" y2="195" stroke="#1a1a1a" stroke-width="1.5"/>
 
-  <!-- Top scatter: floating nodes -->
-  <circle cx="480" cy="60" r="3" fill="#1a1a1a"/>
-  <circle cx="1060" cy="50" r="3.5" fill="#1a1a1a"/>
+  <!-- Arrows on lines -->
+  <path d="M480,189 L495,195 L480,201" fill="none" stroke="#555555" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M700,189 L715,195 L700,201" fill="none" stroke="#555555" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M960,189 L975,195 L960,201" fill="none" stroke="#555555" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M1180,189 L1195,195 L1180,201" fill="none" stroke="#555555" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Bottom scatter: floating nodes -->
-  <line x1="340" y1="410" x2="400" y2="430" stroke="#1a1a1a" stroke-width="1"/>
-  <circle cx="340" cy="410" r="4" fill="#1e1e1e"/>
-  <circle cx="400" cy="430" r="3" fill="#1a1a1a"/>
+  <!-- Node 1: AI Bot -->
+  <circle cx="322" cy="195" r="30" fill="#111111" stroke="#1a1a1a" stroke-width="1.2"/>
+  <rect x="309" y="187" width="26" height="15" rx="3" fill="#888888"/>
+  <circle cx="316" cy="195" r="2" fill="#111111"/>
+  <circle cx="328" cy="195" r="2" fill="#111111"/>
+  <line x1="322" y1="187" x2="322" y2="180" stroke="#888888" stroke-width="1.5"/>
+  <circle cx="322" cy="178" r="2" fill="#888888"/>
+  <text x="322" y="246" font-family="'JetBrains Mono', monospace" font-size="11" fill="#888888" text-anchor="middle" letter-spacing="0.06em">AI BOT</text>
+  <text x="322" y="262" font-family="'Inter', sans-serif" font-size="11" fill="#555555" text-anchor="middle">requests page</text>
 
-  <line x1="1140" y1="400" x2="1200" y2="420" stroke="#1a1a1a" stroke-width="1"/>
-  <circle cx="1140" cy="400" r="3.5" fill="#1e1e1e"/>
-  <circle cx="1200" cy="420" r="3" fill="#1a1a1a"/>
+  <!-- Node 2: Detection -->
+  <circle cx="542" cy="195" r="30" fill="#111111" stroke="#1a1a1a" stroke-width="1.2"/>
+  <!-- Eye/scan icon -->
+  <ellipse cx="542" cy="195" rx="12" ry="8" fill="none" stroke="#888888" stroke-width="1.5"/>
+  <circle cx="542" cy="195" r="4" fill="#888888"/>
+  <text x="542" y="246" font-family="'JetBrains Mono', monospace" font-size="11" fill="#888888" text-anchor="middle" letter-spacing="0.06em">DETECTED</text>
+  <text x="542" y="262" font-family="'Inter', sans-serif" font-size="11" fill="#555555" text-anchor="middle">bot identified</text>
 
-  <!-- Central X constellation (hero) -->
-  <line x1="620" y1="140" x2="772" y2="250" stroke="#333333" stroke-width="2"/>
-  <line x1="924" y1="140" x2="772" y2="250" stroke="#333333" stroke-width="2"/>
-  <line x1="620" y1="360" x2="772" y2="250" stroke="#333333" stroke-width="2"/>
-  <line x1="924" y1="360" x2="772" y2="250" stroke="#333333" stroke-width="2"/>
-  <circle cx="620" cy="140" r="8" fill="#f0f0f0"/>
-  <circle cx="924" cy="140" r="8" fill="#f0f0f0"/>
-  <circle cx="620" cy="360" r="8" fill="#f0f0f0"/>
-  <circle cx="924" cy="360" r="8" fill="#f0f0f0"/>
-  <circle cx="772" cy="250" r="11" fill="#f0f0f0"/>
+  <!-- Node 3: 402 -->
+  <circle cx="772" cy="195" r="30" fill="#111111" stroke="#1a1a1a" stroke-width="1.2"/>
+  <text x="772" y="201" font-family="'JetBrains Mono', monospace" font-size="18" font-weight="500" fill="#f0f0f0" text-anchor="middle">402</text>
+  <text x="772" y="246" font-family="'JetBrains Mono', monospace" font-size="11" fill="#888888" text-anchor="middle" letter-spacing="0.06em">GATED</text>
+  <text x="772" y="262" font-family="'Inter', sans-serif" font-size="11" fill="#555555" text-anchor="middle">payment required</text>
 
-  <!-- Wordmark — Space Grotesk per design system -->
-  <text x="772" y="438" font-family="'Space Grotesk', system-ui, sans-serif" font-size="32" font-weight="300" fill="#f0f0f0" letter-spacing="-0.02em" text-anchor="middle">/xenarch</text>
+  <!-- Node 4: Payment -->
+  <circle cx="1012" cy="195" r="32" fill="#111111" stroke="#1a1a1a" stroke-width="1.2"/>
+  <text x="1012" y="203" font-family="'Inter', sans-serif" font-size="22" font-weight="500" fill="#4ade80" text-anchor="middle">$</text>
+  <text x="1012" y="248" font-family="'JetBrains Mono', monospace" font-size="11" fill="#4ade80" text-anchor="middle" letter-spacing="0.06em">PAID</text>
+  <text x="1012" y="264" font-family="'Inter', sans-serif" font-size="11" fill="#555555" text-anchor="middle">USDC on Base</text>
 
-  <!-- Tagline — Inter per design system -->
-  <text x="772" y="472" font-family="'Inter', system-ui, sans-serif" font-size="15" font-weight="400" fill="#888888" text-anchor="middle">Charge AI agents for content access</text>
+  <!-- Node 5: Content served -->
+  <circle cx="1222" cy="195" r="30" fill="#111111" stroke="#1a1a1a" stroke-width="1.2"/>
+  <polyline points="1210,195 1218,203 1234,187" fill="none" stroke="#f0f0f0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="1222" y="246" font-family="'JetBrains Mono', monospace" font-size="11" fill="#888888" text-anchor="middle" letter-spacing="0.06em">SERVED</text>
+  <text x="1222" y="262" font-family="'Inter', sans-serif" font-size="11" fill="#555555" text-anchor="middle">content delivered</text>
+
+  <!-- ═══════ BOTTOM: 3 PHRASES ═══════ -->
+  <line x1="72" y1="360" x2="1472" y2="360" stroke="#1a1a1a" stroke-width="1"/>
+
+  <text x="272" y="410" font-family="'JetBrains Mono', monospace" font-size="13" fill="#555555" text-anchor="middle" letter-spacing="0.08em">AI BOTS SCRAPE YOUR CONTENT</text>
+  <text x="772" y="410" font-family="'JetBrains Mono', monospace" font-size="13" fill="#888888" text-anchor="middle" letter-spacing="0.08em">XENARCH MAKES THEM PAY</text>
+  <text x="1272" y="410" font-family="'JetBrains Mono', monospace" font-size="13" fill="#555555" text-anchor="middle" letter-spacing="0.08em">YOU EARN USDC</text>
 </svg>
