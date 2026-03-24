@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xenarch WP Plugin — Earnings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&family=Space+Grotesk:wght@300;500;600&display=swap" rel="stylesheet">
+<style>
+  :root, [data-theme="dark"] {
+    --bg: #0a0a0a; --fg: #f0f0f0; --secondary: #888; --muted: #555; --dim: #333;
+    --surface: #111; --border: #1a1a1a; --surface-alt: #151515;
+    --success: #4ade80; --success-hover: #5cef92; --success-bg: rgba(74,222,128,0.08); --success-border: rgba(74,222,128,0.15);
+    --error: #f87171; --error-bg: rgba(248,113,113,0.08);
+    --info: #85b7eb; --info-bg: rgba(133,183,235,0.08); --info-border: rgba(133,183,235,0.15);
+    --accent: #c0dd97; --accent-bg: rgba(192,221,151,0.08); --accent-border: rgba(192,221,151,0.15);
+    --btn-primary-fg: #0a0a0a;
+    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  }
+  [data-theme="light"] {
+    --bg: #E8E4DF; --fg: #1a1a1a; --secondary: #555; --muted: #999; --dim: #c8c4bf;
+    --surface: #ddd8d2; --border: #d0ccc7; --surface-alt: #d5d0ca;
+    --success: #16a34a; --success-hover: #15803d; --success-bg: rgba(22,163,74,0.1); --success-border: rgba(22,163,74,0.2);
+    --error: #dc2626; --error-bg: rgba(220,38,38,0.1);
+    --info: #2563eb; --info-bg: rgba(37,99,235,0.1); --info-border: rgba(37,99,235,0.2);
+    --accent: #4d7c0f; --accent-bg: rgba(77,124,15,0.1); --accent-border: rgba(77,124,15,0.2);
+    --btn-primary-fg: #f0f0f0;
+    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23666' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: 'Inter', system-ui, sans-serif; font-size: 14px; line-height: 1.5; padding: 48px; display: flex; justify-content: center; }
+  .plugin { max-width: 700px; width: 100%; }
+  .header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .logo { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 300; line-height: 1.2; color: var(--fg); }
+  .version { font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1; color: var(--secondary); background: var(--surface-alt); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); }
+  .theme-toggle { margin-left: auto; margin-bottom: -1px; background: none; border: none; padding: 4px; cursor: pointer; color: var(--secondary); display: flex; align-items: center; justify-content: center; }
+  .theme-toggle:hover { color: var(--fg); }
+  [data-theme="dark"] .icon-moon, [data-theme="light"] .icon-sun { display: none; }
+  .tabs { display: flex; margin: 16px 0 32px; border-bottom: 1px solid var(--border); }
+  .tab { font-size: 13px; color: var(--secondary); padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab.active { color: var(--fg); border-bottom-color: var(--fg); }
+  .tab:hover { color: var(--fg); }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 24px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .stat-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 400; line-height: 1.2; color: var(--fg); }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .balance-bar { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 24px; margin-bottom: 24px; }
+  .balance-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .balance-amount { font-family: 'JetBrains Mono', monospace; font-size: 28px; line-height: 1.2; color: var(--success); }
+  .balance-currency { font-size: 14px; color: var(--muted); }
+  .balance-address { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-left: 8px; }
+  .badge-xenarch { color: var(--success); background: var(--success-bg); border: 1px solid var(--success-border); }
+  .badge-own { color: var(--info); background: var(--info-bg); border: 1px solid var(--info-border); }
+  .badge-connected { color: var(--accent); background: var(--accent-bg); border: 1px solid var(--accent-border); }
+  .btn-withdraw { font-size: 13px; font-weight: 500; color: var(--fg); background: var(--border); border: 1px solid var(--dim); border-radius: 6px; padding: 8px 16px; cursor: pointer; }
+  .btn-withdraw:hover { background: var(--dim); }
+  .wallet-bar { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 24px; margin-bottom: 16px; }
+  .wallet-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .wallet-address { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--fg); }
+  .wallet-note { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .withdraw-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin-bottom: 24px; display: none; }
+  .withdraw-panel.open { display: block; }
+  .withdraw-title { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; line-height: 1.2; color: var(--fg); margin-bottom: 4px; }
+  .withdraw-desc { font-size: 13px; color: var(--secondary); margin-bottom: 16px; }
+  .withdraw-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .withdraw-row label { font-size: 13px; color: var(--secondary); min-width: 80px; }
+  .withdraw-row input, .withdraw-row select { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--fg); font-size: 13px; line-height: 1.4; padding: 8px 12px; }
+  .withdraw-row input { flex: 1; font-family: 'JetBrains Mono', monospace; }
+  .withdraw-row select { min-width: 100px; font-family: 'Inter', sans-serif; appearance: none; -webkit-appearance: none; background-image: var(--select-arrow); background-repeat: no-repeat; background-position: right 10px center; padding-right: 32px; cursor: pointer; }
+  .withdraw-row .unit { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); }
+  .withdraw-actions { display: flex; gap: 8px; margin-top: 16px; }
+  .btn-send { font-size: 13px; font-weight: 500; background: var(--success); color: var(--btn-primary-fg); border: none; border-radius: 6px; padding: 8px 20px; cursor: pointer; }
+  .btn-send:hover { background: var(--success-hover); }
+  .btn-cancel { font-size: 13px; color: var(--secondary); background: none; border: 1px solid var(--border); border-radius: 6px; padding: 8px 16px; cursor: pointer; }
+  .btn-cancel:hover { border-color: var(--dim); }
+  .withdraw-hint { font-size: 11px; color: var(--muted); margin-top: 8px; }
+  .btn-max { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success); background: none; border: 1px solid var(--success-border); border-radius: 4px; padding: 4px 8px; cursor: pointer; }
+  .period-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .period-title { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; line-height: 1.2; color: var(--fg); }
+  .period-pills { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .pill { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--secondary); padding: 4px 12px; cursor: pointer; border: none; background: none; }
+  .pill.active { background: var(--border); color: var(--fg); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 400; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  td { padding: 8px 0; border-bottom: 1px solid var(--surface); color: var(--fg); }
+  td.path { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--secondary); max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  td.amount { font-family: 'JetBrains Mono', monospace; text-align: right; color: var(--success); }
+  td.agent { font-size: 13px; color: var(--secondary); }
+  td.time { font-size: 12px; color: var(--muted); text-align: right; }
+  .tx-type { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight: 400; }
+  .tx-type.earn { background: var(--success-bg); color: var(--success); }
+  .tx-type.withdraw { background: var(--error-bg); color: var(--error); }
+  .more-row { text-align: center; padding: 16px 0; }
+  .btn-more { font-size: 13px; color: var(--secondary); background: none; border: 1px solid var(--border); border-radius: 6px; padding: 8px 16px; cursor: pointer; }
+  .btn-more:hover { border-color: var(--dim); color: var(--fg); }
+  .state-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; margin: 24px 0 16px; padding-top: 24px; border-top: 1px dashed var(--border); }
+</style>
+</head>
+<body>
+<div class="plugin">
+  <div class="header"><span class="logo">/xenarch</span><span class="version">v1.0</span></div>
+  <div class="tabs">
+    <div class="tab">Settings</div>
+    <div class="tab active">Earnings</div>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+      <svg class="icon-sun" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.5M8 13v1.5M2.75 2.75l1.06 1.06M12.19 12.19l1.06 1.06M1.5 8H3M13 8h1.5M2.75 13.25l1.06-1.06M12.19 3.81l1.06-1.06"/></svg>
+      <svg class="icon-moon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.2 9.5a5.5 5.5 0 01-7-7 5.5 5.5 0 106.7 6.7z"/></svg>
+    </button>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Today</div><div class="stat-value">$4.72</div><div class="stat-sub">1,573 requests</div></div>
+    <div class="stat"><div class="stat-label">This month</div><div class="stat-value">$127.40</div><div class="stat-sub">42,467 requests</div></div>
+    <div class="stat"><div class="stat-label">All time</div><div class="stat-value">$891.05</div><div class="stat-sub">297,017 requests</div></div>
+  </div>
+  <div class="state-label">State: xenarch-generated wallet (has withdraw)</div>
+  <div class="balance-bar" id="balanceBar">
+    <div><div class="balance-label">Wallet balance</div><div class="balance-amount">$891.05 <span class="balance-currency">USDC</span></div><div class="balance-address">0x7a3f...c291 <span class="badge badge-xenarch">xenarch wallet</span></div></div>
+    <button class="btn-withdraw" onclick="toggleWithdraw()">Withdraw</button>
+  </div>
+  <div class="withdraw-panel" id="withdrawPanel">
+    <div class="withdraw-title">Withdraw USDC</div>
+    <div class="withdraw-desc">Send to any wallet or exchange address</div>
+    <div class="withdraw-row"><label>To address</label><input type="text" placeholder="0x... or paste exchange deposit address"></div>
+    <div class="withdraw-row"><label>Network</label><select><option>Base</option><option>Ethereum</option><option>Solana</option><option>TRON</option></select></div>
+    <div class="withdraw-row"><label>Amount</label><input type="text" placeholder="0.00" style="width:140px;flex:none;"><span class="unit">USDC</span><button class="btn-max">MAX</button></div>
+    <div class="withdraw-hint">Network fee: ~$0.001 (Base). Arrives in ~2 seconds.</div>
+    <div class="withdraw-actions"><button class="btn-send">Send</button><button class="btn-cancel" onclick="toggleWithdraw()">Cancel</button></div>
+  </div>
+  <div class="state-label">State: own wallet (pasted address, no withdraw)</div>
+  <div class="wallet-bar"><div><div class="wallet-label">Payments go directly to</div><div class="wallet-address">0x9b2e...f104 <span class="badge badge-own">your wallet</span></div><div class="wallet-note">Settled on-chain via splitter contract. No funds held by Xenarch.</div></div></div>
+  <div class="state-label">State: connected via WalletConnect (no withdraw)</div>
+  <div class="wallet-bar" style="margin-bottom:24px;"><div><div class="wallet-label">Payments go directly to</div><div class="wallet-address">0x4c8a...d037 <span class="badge badge-connected">connected via MetaMask</span></div><div class="wallet-note">Settled on-chain via splitter contract. No funds held by Xenarch.</div></div></div>
+  <div class="period-row"><span class="period-title">Transactions</span><div class="period-pills"><button class="pill">24h</button><button class="pill active">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div>
+  <table>
+    <thead><tr><th>Type</th><th>Page</th><th>Agent</th><th style="text-align:right;">Amount</th><th style="text-align:right;">Time</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/api-reference</td><td class="agent">GPTBot</td><td class="amount">+$0.01</td><td class="time">2 min ago</td></tr>
+      <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/getting-started</td><td class="agent">ClaudeBot</td><td class="amount">+$0.01</td><td class="time">4 min ago</td></tr>
+      <tr><td><span class="tx-type earn">earn</span></td><td class="path">/blog/ai-payments-2026</td><td class="agent">PerplexityBot</td><td class="amount">+$0.003</td><td class="time">7 min ago</td></tr>
+      <tr><td><span class="tx-type earn">earn</span></td><td class="path">/api/v2/endpoints</td><td class="agent">GPTBot</td><td class="amount">+$0.05</td><td class="time">12 min ago</td></tr>
+      <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/authentication</td><td class="agent">GoogleBot-AI</td><td class="amount">+$0.01</td><td class="time">15 min ago</td></tr>
+      <tr><td><span class="tx-type withdraw">withdraw</span></td><td class="path" style="color:var(--error);">&rarr; 0x9b2e...f104</td><td class="agent">Base</td><td class="amount" style="color:var(--error);">-$250.00</td><td class="time">Mar 20</td></tr>
+      <tr><td><span class="tx-type earn">earn</span></td><td class="path">/blog/micropayments-guide</td><td class="agent">ClaudeBot</td><td class="amount">+$0.003</td><td class="time">Mar 20</td></tr>
+      <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/webhooks</td><td class="agent">xn_agent_7kf2m</td><td class="amount">+$0.01</td><td class="time">Mar 20</td></tr>
+      <tr><td><span class="tx-type earn">earn</span></td><td class="path">/api/v2/search</td><td class="agent">GPTBot</td><td class="amount">+$0.05</td><td class="time">Mar 19</td></tr>
+      <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/pricing</td><td class="agent">PerplexityBot</td><td class="amount">+$0.01</td><td class="time">Mar 19</td></tr>
+    </tbody>
+  </table>
+  <div class="more-row"><button class="btn-more">Load more</button></div>
+</div>
+<script>
+function toggleTheme() { var h = document.documentElement; h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
+function toggleWithdraw() { document.getElementById('withdrawPanel').classList.toggle('open'); }
+</script>
+</body>
+</html>
