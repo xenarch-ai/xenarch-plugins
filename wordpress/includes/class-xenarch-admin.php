@@ -48,7 +48,7 @@ class Xenarch_Admin {
 	 */
 	public function add_menu_page() {
 		add_options_page(
-			__( 'Xenarch Settings', 'xenarch' ),
+			__( 'Xenarch Dashboard', 'xenarch' ),
 			__( 'Xenarch', 'xenarch' ),
 			'manage_options',
 			'xenarch',

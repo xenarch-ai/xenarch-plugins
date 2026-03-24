@@ -14,6 +14,7 @@ export function EarningsTab({ settings }: Props) {
   const [stats, setStats] = useState<StatsResponse | null>(null)
   const [transactions, setTransactions] = useState<TransactionsResponse | null>(null)
   const [period, setPeriod] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('paid')
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -26,15 +27,20 @@ export function EarningsTab({ settings }: Props) {
       .finally(() => setLoading(false))
   }, [])
 
-  // Fetch transactions when period or page changes.
+  // Fetch transactions when period, status, or page changes.
   useEffect(() => {
-    api.fetchTransactions(period, page)
+    api.fetchTransactions(period, page, 25, statusFilter)
       .then(setTransactions)
       .catch(() => {})
-  }, [period, page])
+  }, [period, statusFilter, page])
 
   const handlePeriodChange = (p: string) => {
     setPeriod(p)
+    setPage(1)
+  }
+
+  const handleStatusChange = (s: string) => {
+    setStatusFilter(s)
     setPage(1)
   }
 
@@ -79,7 +85,24 @@ export function EarningsTab({ settings }: Props) {
       <div className="xenarch-card">
         <div className="xenarch-flex-between" style={{ marginBottom: 12 }}>
           <h3 style={{ margin: 0 }}>Transactions</h3>
-          <PeriodFilter period={period} onChange={handlePeriodChange} />
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div className="xenarch-period-filter">
+              {[
+                { value: 'paid', label: 'Paid' },
+                { value: 'blocked', label: 'Blocked' },
+                { value: 'all', label: 'All' },
+              ].map((s) => (
+                <button
+                  key={s.value}
+                  className={`xenarch-period-btn ${statusFilter === s.value ? 'xenarch-period-btn--active' : ''}`}
+                  onClick={() => handleStatusChange(s.value)}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+            <PeriodFilter period={period} onChange={handlePeriodChange} />
+          </div>
         </div>
 
         {transactions && (
