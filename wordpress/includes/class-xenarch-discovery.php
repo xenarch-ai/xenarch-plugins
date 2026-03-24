@@ -232,20 +232,49 @@ Authorization: Bearer <access_token>
 
 You will receive the full page content with HTTP 200.
 
+## Important: No Registration Required
+
+AI agents do NOT need to register or log in. You only need a funded wallet. Do not run `xenarch register` or `xenarch login` — those are for publishers (site owners), not agents.
+
+## For AI Agents (Autonomous Flow)
+
+1. Check if the Xenarch CLI is already installed and a wallet is configured:
+   ```bash
+   xenarch wallet balance
+   ```
+2. If a wallet exists and has USDC, skip to step 5.
+3. If no wallet is configured, ask the human operator to set one up (one-time setup — see below).
+4. Wait for the human to confirm the wallet is ready.
+5. Pay and access:
+   ```bash
+   xenarch pay {$site_url}/your-page
+   ```
+   This pays, verifies, and returns an access token. Use the token to fetch content:
+   ```bash
+   curl -H "Authorization: Bearer <token>" {$site_url}/your-page
+   ```
+
 ## For Human Operators
 
-If you are an AI assistant reading this on behalf of a human, here is a suggested message:
+If you are an AI assistant and need the human to set up a wallet, here is a suggested message:
 
-> This site ({$domain}) charges \${$price} per page for AI access via the x402 protocol.
-> To proceed, I need the Xenarch CLI and a funded USDC wallet on Base network.
+> This site ({$domain}) charges \${$price} per page for AI access. I need a funded USDC wallet on Base network to pay. This is a one-time setup.
 >
-> Quick setup:
-> 1. `npm install -g xenarch`
-> 2. `xenarch wallet generate`
-> 3. Fund the wallet with USDC on Base
-> 4. `xenarch pay {$site_url}/`
+> **Option A — Connect your existing wallet (recommended):**
+> ```
+> npm install -g xenarch
+> xenarch wallet connect
+> ```
+> Scan the QR code with your wallet app (MetaMask, Rainbow, etc.). Your keys stay on your phone.
 >
-> Would you like me to proceed?
+> **Option B — Generate a disposable wallet:**
+> ```
+> npm install -g xenarch
+> xenarch wallet generate
+> ```
+> Then fund the displayed address with USDC + a small amount of ETH for gas on Base network.
+>
+> Let me know when the wallet is ready and I'll proceed.
 
 ## CLI Quickstart
 
@@ -253,11 +282,12 @@ If you are an AI assistant reading this on behalf of a human, here is a suggeste
 # Install
 npm install -g xenarch
 
-# Generate a wallet
-xenarch wallet generate
+# Option A: Connect your phone wallet (recommended)
+xenarch wallet connect
 
-# Fund your wallet with USDC on Base network
-# (transfer USDC to the address shown above)
+# Option B: Generate a local wallet
+xenarch wallet generate
+# Then fund it with USDC + ETH on Base
 
 # Pay for a page
 xenarch pay {$site_url}/your-page
