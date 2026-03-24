@@ -74,12 +74,14 @@ export function fetchStats(): Promise<StatsResponse> {
 export function fetchTransactions(
   period: string = 'all',
   page: number = 1,
-  perPage: number = 25
+  perPage: number = 25,
+  status: string = 'paid'
 ): Promise<TransactionsResponse> {
   const params = new URLSearchParams({
     period,
     page: String(page),
     per_page: String(perPage),
+    status,
   })
   return apiFetch<TransactionsResponse>(`/transactions?${params}`)
 }

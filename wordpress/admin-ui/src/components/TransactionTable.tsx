@@ -28,10 +28,14 @@ export function TransactionTable({ transactions, page, onPageChange }: Props) {
     })
   }
 
-  const statusClass = (s: string) => {
-    if (s === 'paid') return 'xenarch-badge--paid'
-    if (s === 'pending') return 'xenarch-badge--pending'
-    return 'xenarch-badge--expired'
+  const statusLabel = (s: string) => {
+    if (s === 'paid') return 'paid'
+    return 'blocked'
+  }
+
+  const pillClass = (s: string) => {
+    if (s === 'paid') return 'xenarch-pill--paid'
+    return 'xenarch-pill--blocked'
   }
 
   return (
@@ -52,7 +56,12 @@ export function TransactionTable({ transactions, page, onPageChange }: Props) {
               <td title={tx.path}>{tx.path.length > 40 ? tx.path.slice(0, 40) + '...' : tx.path}</td>
               <td>{tx.agent_name || '-'}</td>
               <td>${tx.amount_usd}</td>
-              <td><span className={`xenarch-badge ${statusClass(tx.status)}`}>{tx.status}</span></td>
+              <td>
+                <span className={`xenarch-pill ${pillClass(tx.status)}`}>
+                  <span className="xenarch-pill-dot" />
+                  {statusLabel(tx.status)}
+                </span>
+              </td>
               <td>{formatTime(tx.created_at)}</td>
             </tr>
           ))}

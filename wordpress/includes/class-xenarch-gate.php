@@ -209,7 +209,13 @@ class Xenarch_Gate {
 	 * @return void
 	 */
 	private function render_block_response( $request_uri, $detection ) {
-		$gate = $this->get_or_create_gate( $request_uri, $detection['method'] );
+		$agent_label = $detection['method'];
+		if ( in_array( $detection['method'], array( 'ua_match', 'fetcher_ua' ), true ) && ! empty( $detection['signals'][0] ) ) {
+			$agent_label = $detection['signals'][0];
+		} elseif ( 'header_score' === substr( $detection['method'], 0, 12 ) ) {
+			$agent_label = 'Unknown Bot';
+		}
+		$gate = $this->get_or_create_gate( $request_uri, $agent_label );
 
 		if ( is_wp_error( $gate ) || empty( $gate ) ) {
 			$path = wp_parse_url( $request_uri, PHP_URL_PATH );
@@ -299,11 +305,17 @@ class Xenarch_Gate {
 			);
 		}
 
-		$gate = $this->get_or_create_gate( $request_uri, $detection['method'] );
+		$rest_agent_label = $detection['method'];
+		if ( in_array( $detection['method'], array( 'ua_match', 'fetcher_ua' ), true ) && ! empty( $detection['signals'][0] ) ) {
+			$rest_agent_label = $detection['signals'][0];
+		} elseif ( 'header_score' === substr( $detection['method'], 0, 12 ) ) {
+			$rest_agent_label = 'Unknown Bot';
+		}
+		$gate = $this->get_or_create_gate( $request_uri, $rest_agent_label );
 		if ( is_wp_error( $gate ) || empty( $gate ) ) {
 			$path = wp_parse_url( $request_uri, PHP_URL_PATH );
 			$path = empty( $path ) ? '/' : $path;
-			$gate = Xenarch_Gate_Response::build_fallback_gate_payload( $path, $detection['method'] );
+			$gate = Xenarch_Gate_Response::build_fallback_gate_payload( $path, $rest_agent_label );
 		}
 
 		$gate = $this->enrich_gate_payload( $gate );

@@ -1,18 +1,151 @@
-/* Scoped under #xenarch-admin to avoid WP admin leakage */
-#xenarch-admin {
-  max-width: 860px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-  font-size: 14px;
-  color: #1d2327;
-  line-height: 1.5;
+/* Xenarch Design System — Protocol Dark (default) + Structural (light) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+/* ═══════ THEME TOKENS ═══════ */
+
+#xenarch-admin,
+#xenarch-admin[data-theme="dark"] {
+  --xn-bg: #0a0a0a;
+  --xn-card-bg: #111;
+  --xn-text: #f0f0f0;
+  --xn-text-secondary: #888;
+  --xn-text-muted: #555;
+  --xn-border: #1a1a1a;
+  --xn-border-hover: #333;
+  --xn-input-bg: #111;
+  --xn-input-border: #222;
+  --xn-input-focus: #444;
+  --xn-btn-primary-bg: #f0f0f0;
+  --xn-btn-primary-text: #0a0a0a;
+  --xn-btn-secondary-bg: transparent;
+  --xn-btn-secondary-border: #333;
+  --xn-btn-secondary-text: #e0e0e0;
+  --xn-btn-active-bg: #f0f0f0;
+  --xn-btn-active-text: #0a0a0a;
+  --xn-table-header-bg: #0e0e0e;
+  --xn-table-row-border: #151515;
+  --xn-skeleton-from: #111;
+  --xn-skeleton-via: #1a1a1a;
+  --xn-toggle-bg: #333;
+  --xn-toggle-active: #f0f0f0;
+  --xn-toggle-knob: #0a0a0a;
+  --xn-link: #888;
+  --xn-link-hover: #ccc;
+  --xn-code-bg: #111;
+  --xn-dot-green: #4ade80;
+  --xn-dot-red: #f87171;
+  --xn-pill-paid-bg: #0d1f0d;
+  --xn-pill-paid-text: #4ade80;
+  --xn-pill-blocked-bg: #1f0d0d;
+  --xn-pill-blocked-text: #f87171;
+  --xn-wallet-bg: #111;
+  --xn-wallet-label-bg: #1a1a1a;
+  --xn-wallet-label-text: #666;
+  --xn-empty-text: #555;
+  --xn-notice-success-bg: #0d1f0d;
+  --xn-notice-success-border: #4ade80;
+  --xn-notice-success-text: #4ade80;
+  --xn-notice-error-bg: #1f0d0d;
+  --xn-notice-error-border: #f87171;
+  --xn-notice-error-text: #f87171;
 }
 
-/* Tabs */
+#xenarch-admin[data-theme="light"] {
+  --xn-bg: #E8E4DF;
+  --xn-card-bg: #f5f2ee;
+  --xn-text: #1a1a1a;
+  --xn-text-secondary: #777;
+  --xn-text-muted: #999;
+  --xn-border: #c8c4bf;
+  --xn-border-hover: #aaa;
+  --xn-input-bg: #fff;
+  --xn-input-border: #c8c4bf;
+  --xn-input-focus: #999;
+  --xn-btn-primary-bg: #1a1a1a;
+  --xn-btn-primary-text: #f0f0f0;
+  --xn-btn-secondary-bg: transparent;
+  --xn-btn-secondary-border: #ccc;
+  --xn-btn-secondary-text: #1a1a1a;
+  --xn-btn-active-bg: #1a1a1a;
+  --xn-btn-active-text: #f0f0f0;
+  --xn-table-header-bg: #ece8e3;
+  --xn-table-row-border: #ddd8d2;
+  --xn-skeleton-from: #ddd8d2;
+  --xn-skeleton-via: #d0ccc7;
+  --xn-toggle-bg: #c8c4bf;
+  --xn-toggle-active: #1a1a1a;
+  --xn-toggle-knob: #f0f0f0;
+  --xn-link: #555;
+  --xn-link-hover: #1a1a1a;
+  --xn-code-bg: #ddd8d2;
+  --xn-dot-green: #00a32a;
+  --xn-dot-red: #d63638;
+  --xn-pill-paid-bg: #edfaef;
+  --xn-pill-paid-text: #00a32a;
+  --xn-pill-blocked-bg: #f0f0f1;
+  --xn-pill-blocked-text: #646970;
+  --xn-wallet-bg: #ece8e3;
+  --xn-wallet-label-bg: #ddd8d2;
+  --xn-wallet-label-text: #777;
+  --xn-empty-text: #999;
+  --xn-notice-success-bg: #edfaef;
+  --xn-notice-success-border: #00a32a;
+  --xn-notice-success-text: #005c12;
+  --xn-notice-error-bg: #fcf0f1;
+  --xn-notice-error-border: #d63638;
+  --xn-notice-error-text: #8a1e21;
+}
+
+/* ═══════ ROOT ═══════ */
+
+#xenarch-admin {
+  max-width: 860px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  color: var(--xn-text);
+  line-height: 1.5;
+  background: var(--xn-bg);
+  padding: 20px 20px 10px;
+  border-radius: 12px;
+  margin-top: 12px;
+}
+
+/* ═══════ HEADER ═══════ */
+
+#xenarch-admin .xenarch-header {
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--xn-border);
+  margin-bottom: 20px;
+}
+
+#xenarch-admin .xenarch-header-logo {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 8px;
+  opacity: 0.5;
+  transform: translateX(-5%);
+}
+
+#xenarch-admin .xenarch-header-wordmark {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--xn-text);
+}
+
+#xenarch-admin[data-theme="dark"] .xenarch-header-wordmark {
+  font-weight: 300;
+}
+
+/* ═══════ TABS ═══════ */
+
 #xenarch-admin .xenarch-tabs {
   display: flex;
   gap: 0;
-  border-bottom: 1px solid #c3c4c7;
-  margin-bottom: 20px;
 }
 
 #xenarch-admin .xenarch-tab {
@@ -21,50 +154,60 @@
   border: 1px solid transparent;
   border-bottom: none;
   cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 14px;
   font-weight: 500;
-  color: #646970;
+  color: var(--xn-text-muted);
   margin-bottom: -1px;
   transition: color 0.15s;
 }
 
 #xenarch-admin .xenarch-tab:hover {
-  color: #135e96;
+  color: var(--xn-text);
 }
 
 #xenarch-admin .xenarch-tab--active {
-  background: #fff;
-  border-color: #c3c4c7;
-  border-bottom-color: #fff;
-  color: #1d2327;
+  background: var(--xn-card-bg);
+  border-color: var(--xn-border);
+  border-bottom-color: var(--xn-card-bg);
+  color: var(--xn-text);
 }
 
 #xenarch-admin .xenarch-tab:disabled {
-  color: #a7aaad;
+  color: var(--xn-text-muted);
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-/* Cards */
+/* ═══════ CARDS ═══════ */
+
 #xenarch-admin .xenarch-card {
-  background: #fff;
-  border: 1px solid #c3c4c7;
-  border-radius: 4px;
+  background: var(--xn-card-bg);
+  border: 1px solid var(--xn-border);
+  border-radius: 10px;
   padding: 20px;
   margin-bottom: 16px;
 }
 
 #xenarch-admin .xenarch-card h3 {
   margin: 0 0 12px;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 15px;
   font-weight: 600;
+  color: var(--xn-text);
 }
 
 #xenarch-admin .xenarch-card p {
   margin: 0 0 12px;
-  color: #646970;
+  color: var(--xn-text-secondary);
 }
 
-/* Status table */
+#xenarch-admin .xenarch-card:last-child {
+  margin-bottom: 0;
+}
+
+/* ═══════ STATUS TABLE ═══════ */
+
 #xenarch-admin .xenarch-status-table {
   width: 100%;
   border-collapse: collapse;
@@ -72,46 +215,53 @@
 
 #xenarch-admin .xenarch-status-table td {
   padding: 8px 12px;
-  border-bottom: 1px solid #f0f0f1;
+  border-bottom: 1px solid var(--xn-border);
   vertical-align: middle;
 }
 
 #xenarch-admin .xenarch-status-table td:first-child {
-  color: #646970;
+  color: var(--xn-text-muted);
   width: 160px;
   font-weight: 500;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  text-transform: lowercase;
 }
 
 #xenarch-admin .xenarch-status-table tr:last-child td {
   border-bottom: none;
 }
 
-/* Status dots */
+/* ═══════ STATUS DOTS ═══════ */
+
 #xenarch-admin .xenarch-dot {
   display: inline-block;
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   margin-right: 6px;
   vertical-align: middle;
 }
 
-#xenarch-admin .xenarch-dot--green { background: #00a32a; }
-#xenarch-admin .xenarch-dot--red { background: #d63638; }
+#xenarch-admin .xenarch-dot--green { background: var(--xn-dot-green); }
+#xenarch-admin .xenarch-dot--red { background: var(--xn-dot-red); }
 
-/* Forms */
+/* ═══════ FORMS ═══════ */
+
 #xenarch-admin .xenarch-field {
   margin-bottom: 16px;
 }
 
 #xenarch-admin .xenarch-field label {
   display: block;
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 500;
   margin-bottom: 4px;
+  color: var(--xn-text);
 }
 
 #xenarch-admin .xenarch-field .xenarch-description {
-  color: #646970;
+  color: var(--xn-text-muted);
   font-size: 13px;
   margin-top: 4px;
 }
@@ -119,17 +269,20 @@
 #xenarch-admin .xenarch-input {
   width: 100%;
   max-width: 400px;
-  padding: 6px 10px;
-  border: 1px solid #8c8f94;
-  border-radius: 4px;
+  padding: 8px 12px;
+  background: var(--xn-input-bg);
+  border: 1px solid var(--xn-input-border);
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
   font-size: 14px;
   line-height: 1.5;
+  color: var(--xn-text);
   box-sizing: border-box;
+  transition: border-color 0.15s;
 }
 
 #xenarch-admin .xenarch-input:focus {
-  border-color: #2271b1;
-  box-shadow: 0 0 0 1px #2271b1;
+  border-color: var(--xn-input-focus);
   outline: none;
 }
 
@@ -137,64 +290,65 @@
   max-width: 100%;
 }
 
-/* Buttons */
+/* ═══════ BUTTONS ═══════ */
+
 #xenarch-admin .xenarch-btn {
   display: inline-flex;
   align-items: center;
-  padding: 6px 16px;
+  padding: 8px 18px;
+  font-family: 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 500;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   border: 1px solid;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
   line-height: 1.5;
 }
 
 #xenarch-admin .xenarch-btn--primary {
-  background: #2271b1;
-  border-color: #2271b1;
-  color: #fff;
+  background: var(--xn-btn-primary-bg);
+  border-color: var(--xn-btn-primary-bg);
+  color: var(--xn-btn-primary-text);
 }
 
 #xenarch-admin .xenarch-btn--primary:hover {
-  background: #135e96;
-  border-color: #135e96;
+  opacity: 0.85;
 }
 
 #xenarch-admin .xenarch-btn--secondary {
-  background: #f6f7f7;
-  border-color: #8c8f94;
-  color: #2c3338;
+  background: var(--xn-btn-secondary-bg);
+  border-color: var(--xn-btn-secondary-border);
+  color: var(--xn-btn-secondary-text);
 }
 
 #xenarch-admin .xenarch-btn--secondary:hover {
-  background: #f0f0f1;
-  border-color: #646970;
+  border-color: var(--xn-border-hover);
 }
 
 #xenarch-admin .xenarch-btn--danger {
   background: none;
   border-color: transparent;
-  color: #d63638;
+  color: var(--xn-dot-red);
   padding: 4px 8px;
 }
 
 #xenarch-admin .xenarch-btn--danger:hover {
-  color: #a00;
+  opacity: 0.7;
 }
 
 #xenarch-admin .xenarch-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
 #xenarch-admin .xenarch-btn--small {
-  padding: 3px 10px;
+  padding: 4px 12px;
   font-size: 12px;
 }
 
-/* Toggle */
+/* ═══════ TOGGLE ═══════ */
+
 #xenarch-admin .xenarch-toggle-row {
   display: flex;
   align-items: flex-start;
@@ -218,11 +372,8 @@
 #xenarch-admin .xenarch-toggle .xenarch-slider {
   position: absolute;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #c3c4c7;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--xn-toggle-bg);
   border-radius: 12px;
   transition: background 0.2s;
 }
@@ -234,31 +385,33 @@
   width: 18px;
   left: 3px;
   bottom: 3px;
-  background: #fff;
+  background: var(--xn-toggle-knob);
   border-radius: 50%;
   transition: transform 0.2s;
 }
 
 #xenarch-admin .xenarch-toggle input:checked + .xenarch-slider {
-  background: #2271b1;
+  background: var(--xn-toggle-active);
 }
 
 #xenarch-admin .xenarch-toggle input:checked + .xenarch-slider::before {
   transform: translateX(20px);
 }
 
-/* Toggle label/description */
 #xenarch-admin .xenarch-toggle-label {
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 500;
+  color: var(--xn-text);
 }
 
 #xenarch-admin .xenarch-toggle-description {
-  color: #646970;
+  color: var(--xn-text-muted);
   font-size: 13px;
   margin-top: 2px;
 }
 
-/* Stats cards grid */
+/* ═══════ STATS CARDS ═══════ */
+
 #xenarch-admin .xenarch-stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -267,103 +420,122 @@
 }
 
 #xenarch-admin .xenarch-stat-card {
-  background: #fff;
-  border: 1px solid #c3c4c7;
-  border-radius: 4px;
+  background: var(--xn-card-bg);
+  border: 1px solid var(--xn-border);
+  border-radius: 10px;
   padding: 16px;
   text-align: center;
 }
 
 #xenarch-admin .xenarch-stat-card .xenarch-stat-value {
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 24px;
-  font-weight: 700;
-  color: #1d2327;
+  font-weight: 600;
+  color: var(--xn-text);
   margin-bottom: 2px;
 }
 
 #xenarch-admin .xenarch-stat-card .xenarch-stat-sub {
-  font-size: 12px;
-  color: #646970;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--xn-text-muted);
 }
 
 #xenarch-admin .xenarch-stat-card .xenarch-stat-label {
-  font-size: 13px;
-  color: #646970;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--xn-text-secondary);
   margin-top: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-/* Transaction table */
+/* ═══════ TRANSACTION TABLE ═══════ */
+
 #xenarch-admin .xenarch-table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
-  border: 1px solid #c3c4c7;
-  border-radius: 4px;
 }
 
 #xenarch-admin .xenarch-table th {
   text-align: left;
   padding: 10px 12px;
-  font-weight: 600;
-  font-size: 13px;
-  color: #1d2327;
-  border-bottom: 1px solid #c3c4c7;
-  background: #f6f7f7;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--xn-text-muted);
+  border-bottom: 1px solid var(--xn-border);
+  background: var(--xn-table-header-bg);
 }
 
 #xenarch-admin .xenarch-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid #f0f0f1;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--xn-table-row-border);
   font-size: 13px;
+  color: var(--xn-text);
 }
 
 #xenarch-admin .xenarch-table tr:last-child td {
   border-bottom: none;
 }
 
-/* Status badges */
-#xenarch-admin .xenarch-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 10px;
+/* ═══════ STATUS PILLS ═══════ */
+
+#xenarch-admin .xenarch-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
+  font-weight: 500;
 }
 
-#xenarch-admin .xenarch-badge--paid {
-  background: #edfaef;
-  color: #00a32a;
+#xenarch-admin .xenarch-pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
 }
 
-#xenarch-admin .xenarch-badge--pending {
-  background: #fef8ee;
-  color: #996800;
+#xenarch-admin .xenarch-pill--paid {
+  background: var(--xn-pill-paid-bg);
+  color: var(--xn-pill-paid-text);
 }
 
-#xenarch-admin .xenarch-badge--expired {
-  background: #f0f0f1;
-  color: #646970;
+#xenarch-admin .xenarch-pill--paid .xenarch-pill-dot {
+  background: var(--xn-pill-paid-text);
 }
 
-/* Period filter */
+#xenarch-admin .xenarch-pill--blocked {
+  background: var(--xn-pill-blocked-bg);
+  color: var(--xn-pill-blocked-text);
+}
+
+#xenarch-admin .xenarch-pill--blocked .xenarch-pill-dot {
+  background: var(--xn-pill-blocked-text);
+}
+
+/* ═══════ PERIOD / STATUS FILTER ═══════ */
+
 #xenarch-admin .xenarch-period-filter {
   display: inline-flex;
-  border: 1px solid #c3c4c7;
-  border-radius: 4px;
+  border: 1px solid var(--xn-border);
+  border-radius: 6px;
   overflow: hidden;
-  margin-bottom: 12px;
 }
 
 #xenarch-admin .xenarch-period-btn {
   padding: 5px 14px;
-  background: #fff;
+  background: transparent;
   border: none;
-  border-right: 1px solid #c3c4c7;
+  border-right: 1px solid var(--xn-border);
   cursor: pointer;
-  font-size: 13px;
-  color: #646970;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--xn-text-muted);
   transition: background 0.15s, color 0.15s;
 }
 
@@ -372,25 +544,28 @@
 }
 
 #xenarch-admin .xenarch-period-btn--active {
-  background: #2271b1;
-  color: #fff;
+  background: var(--xn-btn-active-bg);
+  color: var(--xn-btn-active-text);
 }
 
 #xenarch-admin .xenarch-period-btn:hover:not(.xenarch-period-btn--active) {
-  background: #f0f0f1;
+  color: var(--xn-text);
 }
 
-/* Pagination */
+/* ═══════ PAGINATION ═══════ */
+
 #xenarch-admin .xenarch-pagination {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 10px 0;
-  font-size: 13px;
-  color: #646970;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--xn-text-muted);
 }
 
-/* Pricing rules */
+/* ═══════ PRICING RULES ═══════ */
+
 #xenarch-admin .xenarch-rule-row {
   display: flex;
   gap: 8px;
@@ -402,42 +577,43 @@
   max-width: none;
 }
 
-#xenarch-admin .xenarch-rule-path {
-  flex: 2;
-}
+#xenarch-admin .xenarch-rule-path { flex: 2; }
+#xenarch-admin .xenarch-rule-price { flex: 1; max-width: 120px; }
 
-#xenarch-admin .xenarch-rule-price {
-  flex: 1;
-  max-width: 120px;
-}
+/* ═══════ WALLET BAR ═══════ */
 
-/* Wallet bar */
 #xenarch-admin .xenarch-wallet-bar {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #f6f7f7;
-  border: 1px solid #c3c4c7;
-  border-radius: 4px;
+  background: var(--xn-wallet-bg);
+  border: 1px solid var(--xn-border);
+  border-radius: 10px;
   padding: 10px 16px;
   margin-bottom: 16px;
   font-size: 13px;
+  color: var(--xn-text);
 }
 
 #xenarch-admin .xenarch-wallet-address {
-  font-family: monospace;
-  color: #2c3338;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--xn-text);
 }
 
 #xenarch-admin .xenarch-wallet-label {
-  background: #e7e8ea;
+  background: var(--xn-wallet-label-bg);
   padding: 2px 8px;
-  border-radius: 3px;
-  font-size: 11px;
-  color: #646970;
+  border-radius: 100px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--xn-wallet-label-text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-/* Setup wizard */
+/* ═══════ SETUP WIZARD ═══════ */
+
 #xenarch-admin .xenarch-wizard-step {
   padding: 4px 0;
 }
@@ -449,39 +625,43 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #2271b1;
-  color: #fff;
+  background: var(--xn-btn-primary-bg);
+  color: var(--xn-btn-primary-text);
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 600;
   font-size: 14px;
   margin-right: 10px;
 }
 
-/* Notice/toast */
+/* ═══════ NOTICES ═══════ */
+
 #xenarch-admin .xenarch-notice {
   padding: 10px 14px;
-  border-left: 4px solid;
+  border-left: 3px solid;
   margin-bottom: 16px;
-  border-radius: 0 4px 4px 0;
+  border-radius: 0 6px 6px 0;
+  font-size: 13px;
 }
 
 #xenarch-admin .xenarch-notice--success {
-  background: #edfaef;
-  border-color: #00a32a;
-  color: #005c12;
+  background: var(--xn-notice-success-bg);
+  border-color: var(--xn-notice-success-border);
+  color: var(--xn-notice-success-text);
 }
 
 #xenarch-admin .xenarch-notice--error {
-  background: #fcf0f1;
-  border-color: #d63638;
-  color: #8a1e21;
+  background: var(--xn-notice-error-bg);
+  border-color: var(--xn-notice-error-border);
+  color: var(--xn-notice-error-text);
 }
 
-/* Loading skeleton */
+/* ═══════ LOADING ═══════ */
+
 #xenarch-admin .xenarch-skeleton {
-  background: linear-gradient(90deg, #f0f0f1 25%, #e7e8ea 50%, #f0f0f1 75%);
+  background: linear-gradient(90deg, var(--xn-skeleton-from) 25%, var(--xn-skeleton-via) 50%, var(--xn-skeleton-from) 75%);
   background-size: 200% 100%;
   animation: xenarch-shimmer 1.5s infinite;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 @keyframes xenarch-shimmer {
@@ -489,13 +669,12 @@
   100% { background-position: -200% 0; }
 }
 
-/* Spinner */
 #xenarch-admin .xenarch-spinner {
   display: inline-block;
   width: 16px;
   height: 16px;
-  border: 2px solid #c3c4c7;
-  border-top-color: #2271b1;
+  border: 2px solid var(--xn-border);
+  border-top-color: var(--xn-text);
   border-radius: 50%;
   animation: xenarch-spin 0.6s linear infinite;
   margin-right: 6px;
@@ -506,18 +685,112 @@
   to { transform: rotate(360deg); }
 }
 
-/* Coming soon stub */
+/* ═══════ MISC ═══════ */
+
 #xenarch-admin .xenarch-coming-soon {
   display: inline-block;
   padding: 2px 10px;
-  background: #f0f0f1;
-  border-radius: 3px;
-  font-size: 12px;
-  color: #646970;
-  font-weight: 500;
+  background: var(--xn-wallet-label-bg);
+  border-radius: 100px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--xn-text-muted);
 }
 
-/* Responsive */
+/* ═══════ FOOTER ═══════ */
+
+#xenarch-admin .xenarch-footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0 0;
+  margin-top: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--xn-text-muted);
+  letter-spacing: 0.02em;
+}
+
+#xenarch-admin .xenarch-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--xn-empty-text);
+  font-size: 13px;
+}
+
+#xenarch-admin .xenarch-flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#xenarch-admin a {
+  color: var(--xn-link);
+  text-decoration: none;
+  border-bottom: 1px solid var(--xn-border);
+  transition: color 0.15s;
+}
+
+#xenarch-admin a:hover {
+  color: var(--xn-link-hover);
+  text-decoration: none;
+}
+
+#xenarch-admin code {
+  background: var(--xn-code-bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--xn-text-secondary);
+}
+
+#xenarch-admin .xenarch-copy-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--xn-text-muted);
+  padding: 2px 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  transition: color 0.15s;
+}
+
+#xenarch-admin .xenarch-copy-btn:hover {
+  color: var(--xn-text);
+}
+
+/* ═══════ THEME TOGGLE ═══════ */
+
+#xenarch-admin .xenarch-theme-toggle {
+  background: none;
+  border: 1px solid var(--xn-border);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 6px 8px;
+  color: var(--xn-text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, border-color 0.15s;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+
+#xenarch-admin .xenarch-theme-toggle:hover {
+  color: var(--xn-text);
+  border-color: var(--xn-border-hover);
+}
+
+#xenarch-admin .xenarch-theme-toggle svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+/* ═══════ RESPONSIVE ═══════ */
+
 @media (max-width: 782px) {
   #xenarch-admin .xenarch-stats-grid {
     grid-template-columns: 1fr;
@@ -530,51 +803,9 @@
   #xenarch-admin .xenarch-rule-price {
     max-width: none;
   }
-}
 
-/* Copy button */
-#xenarch-admin .xenarch-copy-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #646970;
-  padding: 2px 4px;
-  font-size: 13px;
-}
-
-#xenarch-admin .xenarch-copy-btn:hover {
-  color: #2271b1;
-}
-
-/* Empty state */
-#xenarch-admin .xenarch-empty {
-  text-align: center;
-  padding: 40px 20px;
-  color: #646970;
-}
-
-/* Flex utility */
-#xenarch-admin .xenarch-flex-between {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* Link style */
-#xenarch-admin a {
-  color: #2271b1;
-  text-decoration: none;
-}
-
-#xenarch-admin a:hover {
-  color: #135e96;
-  text-decoration: underline;
-}
-
-/* Code blocks */
-#xenarch-admin code {
-  background: #f0f0f1;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 13px;
+  #xenarch-admin .xenarch-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
 }

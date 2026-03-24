@@ -38,7 +38,12 @@ export function WalletBar({ settings }: Props) {
       <button className="xenarch-copy-btn" onClick={handleCopy} title="Copy address">
         {copied ? 'Copied!' : 'Copy'}
       </button>
-      <span className="xenarch-wallet-label">Manual</span>
+      {/* Wallet type labels:
+          - "External Wallet" = pasted address (current)
+          - "WalletConnect"   = connected via WalletConnect (XEN-48)
+          - "Xenarch Wallet"  = platform-generated custodial (v2)
+      */}
+      <span className="xenarch-wallet-label">External Wallet</span>
     </div>
   )
 }

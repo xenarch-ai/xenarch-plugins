@@ -407,6 +407,11 @@ class Xenarch_Rest {
 			$params['per_page'] = min( absint( $per_page ), 100 );
 		}
 
+		$status = $request->get_param( 'status' );
+		if ( ! empty( $status ) && in_array( $status, array( 'paid', 'blocked', 'all' ), true ) ) {
+			$params['status'] = $status;
+		}
+
 		$result = $this->api->get_transactions( $site_id, $params );
 
 		if ( is_wp_error( $result ) ) {
