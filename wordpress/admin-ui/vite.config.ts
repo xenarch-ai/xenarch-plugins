@@ -15,7 +15,4 @@ export default defineConfig({
       },
     },
   },
-  define: {
-    'process.env.REOWN_PROJECT_ID': JSON.stringify(process.env.REOWN_PROJECT_ID || ''),
-  },
 })

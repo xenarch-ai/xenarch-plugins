@@ -1,27 +1,29 @@
 {
   "name": "xenarch-admin-ui",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.4.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "@reown/appkit": "^1.7.3",
     "@reown/appkit-adapter-wagmi": "^1.7.3",
+    "@tanstack/react-query": "^5.66.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "wagmi": "^2.14.16",
     "viem": "^2.23.2",
-    "@tanstack/react-query": "^5.66.0"
+    "wagmi": "^2.14.16"
   },
   "devDependencies": {
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.7.3",
-    "vite": "^6.1.0"
+    "vite": "^6.1.0",
+    "vitest": "^4.1.1"
   }
 }

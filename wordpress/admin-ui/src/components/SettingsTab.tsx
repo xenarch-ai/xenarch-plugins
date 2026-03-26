@@ -1,4 +1,4 @@
-import type { Settings } from '../types'
+import type { Settings, SettingsChangeHandler } from '../types'
 import { SetupWizard } from './SetupWizard'
 import { StatusCard } from './StatusCard'
 import { GatingToggle } from './GatingToggle'
@@ -7,7 +7,7 @@ import { WalletSection } from './WalletSection'
 
 interface Props {
   settings: Settings
-  onSettingsChange: (s: Settings) => void
+  onSettingsChange: SettingsChangeHandler
 }
 
 export function SettingsTab({ settings, onSettingsChange }: Props) {

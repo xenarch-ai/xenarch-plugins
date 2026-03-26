@@ -168,6 +168,7 @@ class Xenarch_Rest {
 			'xenarch_default_price',
 			'xenarch_payout_wallet',
 			'xenarch_gate_unknown_traffic',
+			'xenarch_wallet_type',
 		);
 
 		foreach ( $allowed as $key ) {
@@ -448,6 +449,7 @@ class Xenarch_Rest {
 			'bot_signature_count'  => count( Xenarch_Bot_Detect::get_signatures() ) + count( Xenarch_Bot_Detect::get_fetcher_signatures() ),
 			'pay_json_url'         => get_site_url() . '/.well-known/pay.json',
 			'xenarch_md_url'       => get_site_url() . '/.well-known/xenarch.md',
+			'wallet_type'          => get_option( 'xenarch_wallet_type', '' ),
 		);
 	}
 }
