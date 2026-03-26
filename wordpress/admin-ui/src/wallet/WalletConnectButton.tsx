@@ -1,63 +1,28 @@
-import { useState, useEffect, useCallback } from 'react'
+import { getAppKit } from './config'
 
 interface Props {
-  onConnect: (address: string) => void
+  connected: boolean
+  onDisconnect: () => void
 }
 
-export function WalletConnectButton({ onConnect }: Props) {
-  const [available, setAvailable] = useState(false)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    // Only enable WalletConnect if a project ID is configured.
-    const projectId = process.env.REOWN_PROJECT_ID || ''
-    if (!projectId) {
-      setLoading(false)
-      return
-    }
-
-    // Dynamically import to avoid loading heavy WalletConnect SDK when no project ID.
-    import('./config')
-      .then(() => {
-        setAvailable(true)
-        setLoading(false)
-      })
-      .catch(() => {
-        setLoading(false)
-      })
-  }, [])
-
-  const handleConnect = useCallback(async () => {
-    if (!available) return
-
-    try {
-      const { appKit } = await import('./config')
-      await appKit.open()
-
-      // Poll for connected address (AppKit events).
-      const checkAddress = setInterval(() => {
-        const address = appKit.getAddress()
-        if (address) {
-          clearInterval(checkAddress)
-          onConnect(address)
-        }
-      }, 500)
-
-      // Stop polling after 60s.
-      setTimeout(() => clearInterval(checkAddress), 60_000)
-    } catch {
-      // User cancelled or error.
-    }
-  }, [available, onConnect])
-
-  if (loading) {
-    return null
+export function WalletConnectButton({ connected, onDisconnect }: Props) {
+  const handleConnect = () => {
+    const appKit = getAppKit()
+    if (appKit) appKit.open()
   }
 
-  if (!available) {
+  const handleDisconnect = async () => {
+    const appKit = getAppKit()
+    if (appKit) {
+      try { await appKit.disconnect() } catch {}
+    }
+    onDisconnect()
+  }
+
+  if (connected) {
     return (
-      <button className="xenarch-btn xenarch-btn--secondary" disabled>
-        Connect Wallet (configure REOWN_PROJECT_ID to enable)
+      <button className="xenarch-btn xenarch-btn--secondary" onClick={handleDisconnect}>
+        Disconnect Wallet
       </button>
     )
   }

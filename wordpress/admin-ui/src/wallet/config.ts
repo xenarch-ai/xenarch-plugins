@@ -1,8 +1,10 @@
-import { createAppKit } from '@reown/appkit/react'
+import { createAppKit } from '@reown/appkit'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-import { base } from '@reown/appkit/networks'
+import { base, mainnet } from '@reown/appkit/networks'
 
-const projectId = process.env.REOWN_PROJECT_ID || ''
+type AppKit = ReturnType<typeof createAppKit>
+
+let appKitInstance: AppKit | null = null
 
 const metadata = {
   name: 'Xenarch',
@@ -11,21 +13,33 @@ const metadata = {
   icons: [],
 }
 
-const wagmiAdapter = new WagmiAdapter({
-  projectId,
-  networks: [base],
-})
+/**
+ * Initialise the Reown AppKit singleton.
+ * No WagmiProvider needed — we use the imperative API only.
+ */
+export function initAppKit(projectId: string): AppKit {
+  if (appKitInstance) return appKitInstance
 
-export const appKit = createAppKit({
-  adapters: [wagmiAdapter],
-  networks: [base],
-  metadata,
-  projectId,
-  features: {
-    analytics: false,
-    email: false,
-    socials: false,
-  },
-})
+  const adapter = new WagmiAdapter({
+    projectId,
+    networks: [base, mainnet],
+  })
 
-export const wagmiConfig = wagmiAdapter.wagmiConfig
+  appKitInstance = createAppKit({
+    adapters: [adapter],
+    networks: [base, mainnet],
+    metadata,
+    projectId,
+    features: {
+      analytics: false,
+      email: false,
+      socials: false,
+    },
+  })
+
+  return appKitInstance
+}
+
+export function getAppKit(): AppKit | null {
+  return appKitInstance
+}

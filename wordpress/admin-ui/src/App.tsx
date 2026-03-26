@@ -1,11 +1,18 @@
 import { useState, useCallback, useEffect } from 'react'
-import type { Settings } from './types'
+import type { Settings, SettingsChangeHandler } from './types'
 import { SettingsTab } from './components/SettingsTab'
 import { EarningsTab } from './components/EarningsTab'
 import { ThemeToggle } from './components/ThemeToggle'
+import { initAppKit } from './wallet/config'
 
 type Tab = 'settings' | 'earnings'
 type Theme = 'dark' | 'light'
+
+// Initialise AppKit at module level (before first render).
+const wcProjectId = window.xenarchAdmin?.wcProjectId || ''
+if (wcProjectId) {
+  initAppKit(wcProjectId)
+}
 
 function getInitialTheme(): Theme {
   const stored = localStorage.getItem('xenarch-theme')
@@ -23,7 +30,6 @@ export function App() {
     if (root) root.setAttribute('data-theme', theme)
     localStorage.setItem('xenarch-theme', theme)
 
-    // Override WP admin background to match theme
     const wpContent = document.getElementById('wpcontent')
     const wpTitle = document.querySelector('.wrap > h1') as HTMLElement
     if (wpContent) {
@@ -42,7 +48,7 @@ export function App() {
     setTheme((t) => (t === 'dark' ? 'light' : 'dark'))
   }, [])
 
-  const onSettingsChange = useCallback((updated: Settings) => {
+  const onSettingsChange = useCallback<SettingsChangeHandler>((updated) => {
     setSettings(updated)
   }, [])
 
