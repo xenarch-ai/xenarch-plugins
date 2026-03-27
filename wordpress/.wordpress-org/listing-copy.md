@@ -10,10 +10,10 @@ SEO keyword targets (from Google Ads Keyword Planner, March 2026):
 ## Short Description (150 chars max)
 
 ```
-Monetize AI web scraping with x402 micropayments. Detect AI bots, return HTTP 402, and get paid in USDC — non-custodial, on-chain.
+Stop giving your content to AI for free. Xenarch detects AI bots and charges them to access your pages.
 ```
 
-131 chars.
+102 chars.
 
 ---
 
@@ -181,7 +181,7 @@ Xenarch does not interfere with legitimate search engine crawlers (Googlebot, Bi
 ## Plugin Header Tags (for readme.txt)
 
 ```
-=== Xenarch — AI Bot Payments ===
+=== Xenarch — Charge AI Bots for Content Access ===
 Contributors: xenarch
 Tags: ai bot detection, ai scraping, paywall, micropayments, bot protection
 Requires at least: 6.0
