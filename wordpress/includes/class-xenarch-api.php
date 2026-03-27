@@ -38,6 +38,15 @@ class Xenarch_Api {
 	}
 
 	/**
+	 * Get public platform configuration (WalletConnect project ID, etc.).
+	 *
+	 * @return array|WP_Error
+	 */
+	public function get_config() {
+		return $this->get( '/v1/config' );
+	}
+
+	/**
 	 * Register a new publisher account.
 	 *
 	 * @param string $email    Publisher email address.

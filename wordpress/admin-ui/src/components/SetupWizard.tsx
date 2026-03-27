@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import type { Settings } from '../types'
+import type { Settings, SettingsChangeHandler } from '../types'
 import * as api from '../api'
 
 interface Props {
   settings: Settings
-  onSettingsChange: (s: Settings) => void
+  onSettingsChange: SettingsChangeHandler
 }
 
 export function SetupWizard({ settings, onSettingsChange }: Props) {

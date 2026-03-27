@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
-import type { Settings, PricingRule } from '../types'
+import type { Settings, PricingRule, SettingsChangeHandler } from '../types'
 import * as api from '../api'
 import { PricingRuleRow } from './PricingRuleRow'
 
 interface Props {
   settings: Settings
-  onSettingsChange: (s: Settings) => void
+  onSettingsChange: SettingsChangeHandler
 }
 
 export function PricingSection({ settings, onSettingsChange }: Props) {

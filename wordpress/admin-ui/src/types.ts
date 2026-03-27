@@ -4,6 +4,7 @@ export interface XenarchAdmin {
   settings: Settings
   pluginUrl: string
   version: string
+  wcProjectId: string
 }
 
 export interface Settings {
@@ -14,6 +15,7 @@ export interface Settings {
   default_price: string
   payout_wallet: string
   gate_unknown_traffic: string
+  wallet_type: '' | 'external' | 'walletconnect'
   domain: string
   is_registered: boolean
   has_site: boolean
@@ -21,6 +23,10 @@ export interface Settings {
   pay_json_url: string
   xenarch_md_url: string
 }
+
+export type SettingsChange = Settings | ((current: Settings) => Settings)
+
+export type SettingsChangeHandler = (change: SettingsChange) => void
 
 export interface PricingRule {
   path_contains: string
