@@ -10,21 +10,21 @@ SEO keyword targets (from Google Ads Keyword Planner, March 2026):
 ## Short Description (150 chars max)
 
 ```
-Stop giving your content to AI for free. Xenarch detects AI bots and charges them to access your pages.
+Monetize AI web scraping with x402 micropayments. Detect AI bots, return HTTP 402, and get paid in USDC — non-custodial, on-chain.
 ```
 
-102 chars.
+131 chars.
 
 ---
 
 ## Long Description
 
 ```
-= Stop Giving Your Content to AI for Free =
+= Monetize AI Bot Traffic Instead of Blocking It =
 
 AI web scraping is eating your content. Every day, AI crawlers and LLM training bots scrape your site — and you get nothing.
 
-Xenarch flips the script: instead of trying to block AI bots, **charge them**. When an AI agent hits your site, Xenarch detects it, returns an HTTP 402 (Payment Required) response, and the agent pays a micropayment to access your content. No accounts, no invoices, no negotiation — just instant, automated pay-per-crawl.
+Xenarch flips the script: instead of trying to block AI bots, **charge them**. When an AI agent hits your site, Xenarch detects it, returns an HTTP 402 (Payment Required) status code, and the agent pays a micropayment in USDC to access your content. No accounts, no invoices, no negotiation — just instant, automated pay-per-crawl.
 
 This is not a paywall plugin for humans. This is a **payment gate for AI agents**.
 
@@ -40,14 +40,12 @@ This is not a paywall plugin for humans. This is a **payment gate for AI agents*
 
 == Why Xenarch ==
 
-* **No crypto knowledge needed** — Don't have a wallet? Xenarch can generate one for you. Withdraw earnings to any wallet or exchange whenever you want.
-* **Non-custodial option** — Already have a wallet? Paste your address or connect via WalletConnect. Payments go directly to you via a smart contract on Base. Verify every transaction on Basescan.
+* **Non-custodial** — Xenarch never holds your money. Payments go directly to your wallet address via a smart contract on Base. Verify every transaction on Basescan.
 * **0% platform fee** — The smart contract is immutable. What the agent pays is what you receive.
 * **x402 Protocol** — Built on the open x402 standard (HTTP 402 + USDC on Base), supported by the x402 Foundation. Not a proprietary lock-in.
-* **Pay-per-crawl pricing** — You set the price per page. Micropayments as low as $0.001 per request. Add URL-specific pricing rules for premium content.
-* **Earnings dashboard** — Track revenue in real time: today, this month, all time. See which bots are paying, which pages earn the most, and full transaction history.
+* **Pay-per-crawl pricing** — You set the price per page. Micropayments as low as $0.001 per request. No subscriptions, no minimums.
 * **Human visitors unaffected** — Only AI bots and automated agents see the payment gate. Your regular traffic flows normally.
-* **Works with any theme** — No frontend changes needed. Xenarch operates at the HTTP level, before your theme even loads. Includes a custom admin dashboard to track earnings and manage pricing.
+* **Works with any theme** — No frontend changes needed. Xenarch operates at the HTTP level, before your theme even loads.
 
 == What Gets Detected ==
 
@@ -72,7 +70,7 @@ Xenarch identifies and gates traffic from:
 
 Xenarch implements the x402 protocol — an open standard that turns the long-dormant HTTP 402 status code into a programmable payment rail. When a server returns 402, it includes a payment specification. The client (AI agent) can read the price, pay in USDC on Base, and retry with a payment receipt. No API keys, no OAuth, no accounts — just HTTP and crypto.
 
-Learn more at [xenarch.com](https://xenarch.com).
+Learn more at [xenarch.dev](https://xenarch.dev).
 
 == Third-Party Services ==
 
@@ -81,10 +79,10 @@ This plugin connects to the Xenarch API (`api.xenarch.dev`) to:
 * Validate payment receipts on-chain
 * Serve pay.json pricing specifications
 
-The plugin only contacts the API after the publisher configures their settings. No data is sent without explicit setup.
+The plugin only contacts the API after the publisher configures their site token. No data is sent without explicit setup.
 
-* [Xenarch Terms of Service](https://xenarch.com/terms)
-* [Xenarch Privacy Policy](https://xenarch.com/privacy)
+* [Xenarch Terms of Service](https://xenarch.dev/terms)
+* [Xenarch Privacy Policy](https://xenarch.dev/privacy)
 ```
 
 ---
@@ -96,21 +94,18 @@ The plugin only contacts the API after the publisher configures their settings. 
 
 1. Install the plugin from the WordPress Plugin Directory, or upload the `xenarch` folder to `/wp-content/plugins/`.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
-3. Go to **Settings > Xenarch** to configure.
-4. Toggle **Gate AI bots** on.
-5. Set your **default price per page** (e.g., $0.003 per request).
-6. (Optional) Add **pricing rules** for specific URLs — charge more for premium content, or mark pages as free.
-7. Set up your wallet — three options:
-   * **Paste** your existing USDC wallet address (Base network)
-   * **Connect** via WalletConnect (MetaMask, Coinbase Wallet, etc.)
-   * **Generate one** — Xenarch creates a wallet for you. Withdraw to any address anytime.
-8. Save settings. AI bot detection and payment gating are now active.
+3. Go to **Settings → Xenarch** to configure.
+4. Enter your **Site Token** (get one at [xenarch.dev](https://xenarch.dev)).
+5. Enter your **USDC wallet address** (Base network) — this is where payments go.
+6. Set your **price per page** (in USD, e.g., 0.01 for one cent per request).
+7. Save settings. AI bot detection and HTTP 402 gating are now active.
 
 = Requirements =
 
 * WordPress 6.0 or higher
 * PHP 7.4 or higher
-* A Xenarch account (free at xenarch.com)
+* A USDC wallet address on the Base network (e.g., Coinbase Wallet, MetaMask with Base)
+* A Xenarch site token (free at xenarch.dev)
 ```
 
 ---
@@ -124,9 +119,9 @@ The plugin only contacts the API after the publisher configures their settings. 
 
 HTTP 402 "Payment Required" is a status code that has existed in the HTTP spec since 1997 but was never widely used — until now. The x402 protocol, developed as an open standard, turns 402 into a machine-readable payment rail. When your server returns 402, it includes pricing info. AI agents that support x402 can read the price, pay in USDC stablecoin, and access your content automatically.
 
-= Do I need a crypto wallet? =
+= Do I need cryptocurrency or a crypto wallet? =
 
-No. If you don't have one, Xenarch can generate a wallet for you during setup. Your earnings accumulate there and you can withdraw to any wallet or exchange address whenever you want. If you already have a wallet (Coinbase Wallet, MetaMask, or any EVM wallet on Base), you can paste the address or connect via WalletConnect — payments then go directly to your wallet on-chain.
+Yes, you need a USDC wallet address on the Base network to receive payments. Base is an Ethereum L2 with sub-cent transaction fees. You can use Coinbase Wallet, MetaMask (with Base network added), or any EVM-compatible wallet. Payments arrive as USDC — a stablecoin pegged 1:1 to USD.
 
 = Will this affect my human visitors? =
 
@@ -142,19 +137,19 @@ Bots that don't support x402 simply receive the 402 response and cannot access y
 
 = How much should I charge per page? =
 
-That depends on your content value. Common pricing: $0.001-$0.01 for blog posts, $0.01-$0.10 for premium data or research, $0.10-$1.00 for high-value API responses. You set the price — there are no minimums or maximums (up to $1 per request). You can also set different prices per URL using pricing rules.
+That depends on your content value. Common pricing: $0.001–$0.01 for blog posts, $0.01–$0.10 for premium data or research, $0.10–$1.00 for high-value API responses. You set the price — there are no minimums or maximums (up to $1 per request).
 
 = Is Xenarch a paywall plugin? =
 
-Not in the traditional sense. WordPress paywall plugins gate content for human readers behind subscriptions. Xenarch is a payment gate specifically for AI agents — humans never see it. Think of it as pay-per-crawl for bots, not a metered paywall for people.
+Not in the traditional sense. WordPress paywall plugins gate content for human readers behind subscriptions. Xenarch is a content paywall specifically for AI agents — humans never see it. Think of it as pay-per-crawl for bots, not a metered paywall for people.
 
 = Does Xenarch hold my money? =
 
-It depends on your wallet setup. If you paste your own wallet address or connect via WalletConnect, payments go directly to your wallet on-chain — Xenarch never touches your money. If you use a Xenarch-generated wallet, your earnings accumulate there until you withdraw. Either way, every transaction is verifiable on Basescan.
+No. Xenarch is fully non-custodial. Payments are routed through a smart contract on Base that splits payment directly to your wallet address. Xenarch never has access to your funds. The contract is immutable and verifiable on Basescan.
 
 = Is there a platform fee? =
 
-Zero. 0%. The smart contract sends 100% of the payment to the publisher. Xenarch monetizes through optional premium features, not by taking a cut of your revenue.
+Zero. 0%. The smart contract sends 100% of the payment to the publisher's wallet. Xenarch monetizes through optional premium features, not by taking a cut of your revenue.
 
 = Does this work with robots.txt? =
 
@@ -178,9 +173,7 @@ Xenarch does not interfere with legitimate search engine crawlers (Googlebot, Bi
 * HTTP 402 payment gate with x402 protocol support
 * USDC micropayments on Base L2
 * pay.json generation for machine-readable pricing
-* Custom admin dashboard with settings and earnings tabs
-* Three wallet options: paste address, connect via WalletConnect, or generate
-* URL-specific pricing rules
+* WordPress admin settings page
 ```
 
 ---
@@ -188,7 +181,7 @@ Xenarch does not interfere with legitimate search engine crawlers (Googlebot, Bi
 ## Plugin Header Tags (for readme.txt)
 
 ```
-=== Xenarch — Charge AI Bots for Content Access ===
+=== Xenarch — AI Bot Payments ===
 Contributors: xenarch
 Tags: ai bot detection, ai scraping, paywall, micropayments, bot protection
 Requires at least: 6.0
