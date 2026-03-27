@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xenarch WP Plugin — Earnings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&family=Space+Grotesk:wght@300;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    color: #f0f0f0;
+    font-family: 'Inter', system-ui, sans-serif;
+    padding: 40px;
+    display: flex;
+    justify-content: center;
+  }
+  .plugin { max-width: 700px; width: 100%; }
+
+  .header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .logo { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 300; color: #f0f0f0; }
+  .version { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #888; background: #151515; padding: 2px 8px; border-radius: 4px; border: 1px solid #1a1a1a; }
+
+  .tabs { display: flex; gap: 0; margin: 20px 0 32px; border-bottom: 1px solid #1a1a1a; }
+  .tab { font-size: 13px; color: #888; padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab.active { color: #f0f0f0; border-bottom-color: #f0f0f0; }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 28px; }
+  .stat { background: #111; border: 1px solid #1a1a1a; border-radius: 10px; padding: 16px; }
+  .stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    font-weight: 400;
+    color: #f0f0f0;
+  }
+  .stat-sub { font-size: 11px; color: #555; margin-top: 4px; }
+
+  /* Wallet balance bar — xenarch-generated wallet */
+  .balance-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #111;
+    border: 1px solid #1a1a1a;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 28px;
+  }
+  .balance-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .balance-amount {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    color: #4ade80;
+  }
+  .balance-currency {
+    font-size: 14px;
+    color: #555;
+  }
+  .balance-address {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #555;
+    margin-top: 4px;
+  }
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+  }
+  .badge-xenarch { color: #4ade80; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.15); }
+  .badge-own { color: #85b7eb; background: rgba(133,183,235,0.08); border: 1px solid rgba(133,183,235,0.15); }
+  .badge-connected { color: #c0dd97; background: rgba(192,221,151,0.08); border: 1px solid rgba(192,221,151,0.15); }
+
+  .btn-withdraw {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #f0f0f0;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 8px 18px;
+    cursor: pointer;
+  }
+  .btn-withdraw:hover { background: #222; border-color: #444; }
+
+  /* Own wallet bar — no withdraw */
+  .wallet-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #111;
+    border: 1px solid #1a1a1a;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+  .wallet-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .wallet-address {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    color: #f0f0f0;
+  }
+  .wallet-note { font-size: 11px; color: #555; margin-top: 4px; }
+
+  /* Withdraw panel */
+  .withdraw-panel {
+    background: #111;
+    border: 1px solid #1a1a1a;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 28px;
+    display: none;
+  }
+  .withdraw-panel.open { display: block; }
+  .withdraw-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: #f0f0f0;
+    margin-bottom: 4px;
+  }
+  .withdraw-desc { font-size: 12px; color: #888; margin-bottom: 16px; }
+  .withdraw-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .withdraw-row label { font-size: 13px; color: #888; min-width: 80px; }
+  .withdraw-row input, .withdraw-row select {
+    background: #0a0a0a;
+    border: 1px solid #1a1a1a;
+    border-radius: 6px;
+    color: #f0f0f0;
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+  .withdraw-row input { flex: 1; font-family: 'JetBrains Mono', monospace; }
+  .withdraw-row select {
+    min-width: 100px;
+    font-family: 'Inter', sans-serif;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+    cursor: pointer;
+  }
+  .withdraw-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .btn-send {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    background: #4ade80;
+    color: #0a0a0a;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 20px;
+    cursor: pointer;
+  }
+  .btn-send:hover { background: #5cef92; }
+  .btn-cancel {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: #888;
+    background: none;
+    border: 1px solid #1a1a1a;
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+  .btn-cancel:hover { border-color: #333; }
+  .withdraw-hint { font-size: 11px; color: #555; margin-top: 10px; }
+  .btn-max {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #4ade80;
+    background: none;
+    border: 1px solid rgba(74,222,128,0.2);
+    border-radius: 4px;
+    padding: 2px 6px;
+    cursor: pointer;
+  }
+
+  /* Period filter */
+  .period-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .period-pills {
+    display: flex;
+    background: #111;
+    border: 1px solid #1a1a1a;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #888;
+    padding: 5px 12px;
+    cursor: pointer;
+    border: none;
+    background: none;
+  }
+  .pill.active { background: #1a1a1a; color: #f0f0f0; }
+
+  /* Transactions table */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 400;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 8px 0;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  td { padding: 10px 0; border-bottom: 1px solid #111; color: #ccc; }
+  td.path {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #888;
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  td.amount {
+    font-family: 'JetBrains Mono', monospace;
+    text-align: right;
+    color: #4ade80;
+  }
+  td.agent { font-size: 12px; color: #888; }
+  td.time { font-size: 12px; color: #555; text-align: right; }
+  .tx-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 400;
+  }
+  .tx-type.earn { background: rgba(74,222,128,0.08); color: #4ade80; }
+  .tx-type.withdraw { background: rgba(248,113,113,0.08); color: #f87171; }
+  .more-row { text-align: center; padding: 16px 0; }
+  .btn-more {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: #888;
+    background: none;
+    border: 1px solid #1a1a1a;
+    border-radius: 6px;
+    padding: 6px 20px;
+    cursor: pointer;
+  }
+  .btn-more:hover { border-color: #333; color: #ccc; }
+
+  /* State separator */
+  .state-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #333;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 40px 0 16px;
+    padding-top: 40px;
+    border-top: 1px dashed #1a1a1a;
+  }
+</style>
+</head>
+<body>
+<div class="plugin">
+
+  <div class="header">
+    <span class="logo">/xenarch</span>
+    <span class="version">v1.0</span>
+  </div>
+
+  <div class="tabs">
+    <div class="tab">Settings</div>
+    <div class="tab active">Earnings</div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Today</div>
+      <div class="stat-value">$4.72</div>
+      <div class="stat-sub">1,573 requests</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">This month</div>
+      <div class="stat-value">$127.40</div>
+      <div class="stat-sub">42,467 requests</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">All time</div>
+      <div class="stat-value">$891.05</div>
+      <div class="stat-sub">297,017 requests</div>
+    </div>
+  </div>
+
+  <!-- ═══════ STATE: XENARCH-GENERATED WALLET ═══════ -->
+  <div class="state-label">State: xenarch-generated wallet (has withdraw)</div>
+
+  <div class="balance-bar" id="balanceBar">
+    <div>
+      <div class="balance-label">Wallet balance</div>
+      <div class="balance-amount">$891.05 <span class="balance-currency">USDC</span></div>
+      <div class="balance-address">0x7a3f...c291 <span class="badge badge-xenarch">xenarch wallet</span></div>
+    </div>
+    <button class="btn-withdraw" onclick="toggleWithdraw()">Withdraw</button>
+  </div>
+
+  <!-- WITHDRAW PANEL -->
+  <div class="withdraw-panel" id="withdrawPanel">
+    <div class="withdraw-title">Withdraw USDC</div>
+    <div class="withdraw-desc">Send to any wallet or exchange address</div>
+
+    <div class="withdraw-row">
+      <label>To address</label>
+      <input type="text" placeholder="0x... or paste exchange deposit address">
+    </div>
+    <div class="withdraw-row">
+      <label>Network</label>
+      <select>
+        <option>Base</option>
+        <option>Ethereum</option>
+        <option>Solana</option>
+        <option>TRON</option>
+      </select>
+    </div>
+    <div class="withdraw-row">
+      <label>Amount</label>
+      <input type="text" placeholder="0.00" style="width: 140px; flex: none;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#555;">USDC</span>
+      <button class="btn-max">MAX</button>
+    </div>
+    <div class="withdraw-hint">Network fee: ~$0.001 (Base). Arrives in ~2 seconds.</div>
+    <div class="withdraw-actions">
+      <button class="btn-send">Send</button>
+      <button class="btn-cancel" onclick="toggleWithdraw()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ═══════ STATE: OWN WALLET (pasted address) ═══════ -->
+  <div class="state-label">State: own wallet (pasted address, no withdraw)</div>
+
+  <div class="wallet-bar">
+    <div>
+      <div class="wallet-label">Payments go directly to</div>
+      <div class="wallet-address">0x9b2e...f104 <span class="badge badge-own">your wallet</span></div>
+      <div class="wallet-note">Settled on-chain via splitter contract. No funds held by Xenarch.</div>
+    </div>
+  </div>
+
+  <!-- ═══════ STATE: CONNECTED WALLET (WalletConnect) ═══════ -->
+  <div class="state-label">State: connected via WalletConnect (no withdraw)</div>
+
+  <div class="wallet-bar" style="margin-bottom: 28px;">
+    <div>
+      <div class="wallet-label">Payments go directly to</div>
+      <div class="wallet-address">0x4c8a...d037 <span class="badge badge-connected">connected via MetaMask</span></div>
+      <div class="wallet-note">Settled on-chain via splitter contract. No funds held by Xenarch.</div>
+    </div>
+  </div>
+
+  <!-- TRANSACTIONS -->
+  <div class="period-row">
+    <span class="section-title" style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:500;">Transactions</span>
+    <div class="period-pills">
+      <button class="pill">24h</button>
+      <button class="pill active">7d</button>
+      <button class="pill">30d</button>
+      <button class="pill">All</button>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Page</th>
+        <th>Agent</th>
+        <th style="text-align:right;">Amount</th>
+        <th style="text-align:right;">Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/api-reference</td><td class="agent">GPTBot</td><td class="amount">+$0.01</td><td class="time">2 min ago</td></tr>
+      <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/getting-started</td><td class="agent">ClaudeBot</td><td class="amount">+$0.01</td><td class="time">4 min ago</td></tr>
+      <tr><td><span class="tx-type earn">earn</span></td><td class="path">/blog/ai-payments-2026</td><td class="agent">PerplexityBot</td><td class="amount">+$0.003</td><td class="time">7 min ago</td></tr>
+      <tr><td><span class="tx-type earn">earn</span></td><td class="path">/api/v2/endpoints</td><td class="agent">GPTBot</td><td class="amount">+$0.05</td><td class="time">12 min ago</td></tr>
+      <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/authentication</td><td class="agent">GoogleBot-AI</td><td class="amount">+$0.01</td><td class="time">15 min ago</td></tr>
+      <tr><td><span class="tx-type withdraw">withdraw</span></td><td class="path" style="color:#f87171;">&rarr; 0x9b2e...f104</td><td class="agent">Base</td><td class="amount" style="color:#f87171;">-$250.00</td><td class="time">Mar 20</td></tr>
+      <tr><td><span class="tx-type earn">earn</span></td><td class="path">/blog/micropayments-guide</td><td class="agent">ClaudeBot</td><td class="amount">+$0.003</td><td class="time">Mar 20</td></tr>
+      <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/webhooks</td><td class="agent">xn_agent_7kf2m</td><td class="amount">+$0.01</td><td class="time">Mar 20</td></tr>
+      <tr><td><span class="tx-type earn">earn</span></td><td class="path">/api/v2/search</td><td class="agent">GPTBot</td><td class="amount">+$0.05</td><td class="time">Mar 19</td></tr>
+      <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/pricing</td><td class="agent">PerplexityBot</td><td class="amount">+$0.01</td><td class="time">Mar 19</td></tr>
+    </tbody>
+  </table>
+
+  <div class="more-row">
+    <button class="btn-more">Load more</button>
+  </div>
+
+</div>
+
+<script>
+function toggleWithdraw() {
+  document.getElementById('withdrawPanel').classList.toggle('open');
+}
+</script>
+</body>
+</html>
