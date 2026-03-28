@@ -1,98 +1,71 @@
 import { useState, useCallback, useEffect } from 'react'
 import type { Settings } from './types'
+import { Onboarding } from './components/Onboarding'
 import { SettingsTab } from './components/SettingsTab'
 import { EarningsTab } from './components/EarningsTab'
-import { ThemeToggle } from './components/ThemeToggle'
+import { StatusTab } from './components/StatusTab'
 
-type Tab = 'settings' | 'earnings'
-type Theme = 'dark' | 'light'
-
-function getInitialTheme(): Theme {
-  const stored = localStorage.getItem('xenarch-theme')
-  if (stored === 'light' || stored === 'dark') return stored
-  return 'dark'
-}
+type Tab = 'earnings' | 'settings' | 'status'
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('earnings')
+  const [activeTab, setActiveTab] = useState<Tab>('settings')
   const [settings, setSettings] = useState<Settings>(window.xenarchAdmin.settings)
-  const [theme, setTheme] = useState<Theme>(getInitialTheme)
 
+  // Apply initial theme from localStorage.
   useEffect(() => {
+    const theme = localStorage.getItem('xenarch-theme') || 'dark'
     const root = document.getElementById('xenarch-admin')
     if (root) root.setAttribute('data-theme', theme)
-    localStorage.setItem('xenarch-theme', theme)
-
-    // Override WP admin background to match theme
-    const wpContent = document.getElementById('wpcontent')
-    const wpTitle = document.querySelector('.wrap > h1') as HTMLElement
-    if (wpContent) {
-      wpContent.style.background = theme === 'dark' ? '#1a1a1a' : ''
-    }
-    if (wpTitle) {
-      wpTitle.style.color = theme === 'dark' ? '#f0f0f0' : ''
-    }
-    return () => {
-      if (wpContent) wpContent.style.background = ''
-      if (wpTitle) wpTitle.style.color = ''
-    }
-  }, [theme])
-
-  const toggleTheme = useCallback(() => {
-    setTheme((t) => (t === 'dark' ? 'light' : 'dark'))
+    document.body.classList.toggle('xenarch-light', theme === 'light')
   }, [])
 
   const onSettingsChange = useCallback((updated: Settings) => {
     setSettings(updated)
   }, [])
 
+  const hasWallet = settings.has_wallet
+
+  // No wallet = onboarding only.
+  if (!hasWallet) {
+    return (
+      <div className="xenarch-app">
+        <Onboarding settings={settings} onSettingsChange={onSettingsChange} />
+      </div>
+    )
+  }
+
   return (
     <div className="xenarch-app">
-      <div className="xenarch-header">
-        <div className="xenarch-tabs">
-          <button
-            className={`xenarch-tab ${activeTab === 'earnings' ? 'xenarch-tab--active' : ''}`}
-            onClick={() => setActiveTab('earnings')}
-            disabled={!settings.has_site}
-          >
-            Earnings
-          </button>
-          <button
-            className={`xenarch-tab ${activeTab === 'settings' ? 'xenarch-tab--active' : ''}`}
-            onClick={() => setActiveTab('settings')}
-          >
-            Settings
-          </button>
-        </div>
-        <div className="xenarch-header-logo">
-          <svg width="28" height="28" viewBox="0 0 120 120">
-            <line x1="28" y1="28" x2="60" y2="60" stroke="var(--xn-border-hover)" strokeWidth="1.5"/>
-            <line x1="92" y1="28" x2="60" y2="60" stroke="var(--xn-border-hover)" strokeWidth="1.5"/>
-            <line x1="28" y1="92" x2="60" y2="60" stroke="var(--xn-border-hover)" strokeWidth="1.5"/>
-            <line x1="92" y1="92" x2="60" y2="60" stroke="var(--xn-border-hover)" strokeWidth="1.5"/>
-            <circle cx="28" cy="28" r="6" fill="var(--xn-text)"/>
-            <circle cx="92" cy="28" r="6" fill="var(--xn-text)"/>
-            <circle cx="28" cy="92" r="6" fill="var(--xn-text)"/>
-            <circle cx="92" cy="92" r="6" fill="var(--xn-text)"/>
-            <circle cx="60" cy="60" r="8" fill="var(--xn-text)"/>
-          </svg>
-          <span className="xenarch-header-wordmark">xenarch</span>
-        </div>
-        <ThemeToggle theme={theme} onToggle={toggleTheme} />
+      <div className="xenarch-tabs-row">
+        <button
+          className={`xenarch-tab ${activeTab === 'earnings' ? 'xenarch-tab--active' : ''}`}
+          onClick={() => setActiveTab('earnings')}
+        >
+          Earnings
+        </button>
+        <button
+          className={`xenarch-tab ${activeTab === 'settings' ? 'xenarch-tab--active' : ''}`}
+          onClick={() => setActiveTab('settings')}
+        >
+          Settings
+        </button>
+        <button
+          className={`xenarch-tab ${activeTab === 'status' ? 'xenarch-tab--active' : ''}`}
+          onClick={() => setActiveTab('status')}
+        >
+          Status
+        </button>
       </div>
 
       <div className="xenarch-tab-content">
-        {activeTab === 'settings' && (
-          <SettingsTab settings={settings} onSettingsChange={onSettingsChange} />
-        )}
-        {activeTab === 'earnings' && settings.has_site && (
-          <EarningsTab settings={settings} />
-        )}
+        {activeTab === 'earnings' && <EarningsTab settings={settings} />}
+        {activeTab === 'settings' && <SettingsTab settings={settings} onSettingsChange={onSettingsChange} />}
+        {activeTab === 'status' && <StatusTab settings={settings} />}
       </div>
 
       <div className="xenarch-footer">
-        <span>&nbsp;<span style={{ fontSize: '13px', verticalAlign: '-2px' }}>&#169;</span> Xenarch. {new Date().getFullYear()}</span>
-        <span>v{window.xenarchAdmin.version}&nbsp;</span>
+        <span>&copy; {new Date().getFullYear()} Xenarch</span>
+        <span>support@xenarch.com</span>
       </div>
     </div>
   )

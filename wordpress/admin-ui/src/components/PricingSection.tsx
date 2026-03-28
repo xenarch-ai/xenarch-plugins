@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import type { Settings, PricingRule } from '../types'
 import * as api from '../api'
 import { PricingRuleRow } from './PricingRuleRow'
@@ -6,101 +6,126 @@ import { PricingRuleRow } from './PricingRuleRow'
 interface Props {
   settings: Settings
   onSettingsChange: (s: Settings) => void
+  loading?: boolean
 }
 
-export function PricingSection({ settings, onSettingsChange }: Props) {
+export function PricingSection({ settings, onSettingsChange, loading }: Props) {
   const [defaultPrice, setDefaultPrice] = useState(settings.default_price)
   const [rules, setRules] = useState<PricingRule[]>([])
-  const [saving, setSaving] = useState(false)
-  const [notice, setNotice] = useState<{ type: 'success' | 'error'; msg: string } | null>(null)
   const [loaded, setLoaded] = useState(false)
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     api.fetchPricingRules().then((data) => {
       setRules(data.rules)
       setLoaded(true)
-    }).catch(() => {
-      setLoaded(true)
-    })
+    }).catch(() => setLoaded(true))
   }, [])
+
+  // Keep defaultPrice in sync if settings change externally.
+  useEffect(() => {
+    setDefaultPrice(settings.default_price)
+  }, [settings.default_price])
+
+  // Auto-save rules (debounced).
+  const saveRules = useCallback((newRules: PricingRule[]) => {
+    const validRules = newRules.filter((r) => r.path_contains.trim() !== '')
+    api.savePricingRules(validRules).catch(() => {})
+  }, [])
+
+  const debouncedSaveRules = useCallback((newRules: PricingRule[]) => {
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => saveRules(newRules), 500)
+  }, [saveRules])
+
+  // Auto-save default price on blur.
+  const handlePriceBlur = useCallback(() => {
+    api.updateSettings({ xenarch_default_price: defaultPrice })
+      .then(onSettingsChange)
+      .catch(() => {})
+  }, [defaultPrice, onSettingsChange])
 
   const addRule = useCallback(() => {
     setRules((prev) => [...prev, { path_contains: '', price_usd: '0.003' }])
   }, [])
 
   const updateRule = useCallback((index: number, updated: PricingRule) => {
-    setRules((prev) => prev.map((r, i) => (i === index ? updated : r)))
-  }, [])
+    setRules((prev) => {
+      const next = prev.map((r, i) => (i === index ? updated : r))
+      debouncedSaveRules(next)
+      return next
+    })
+  }, [debouncedSaveRules])
 
   const deleteRule = useCallback((index: number) => {
-    setRules((prev) => prev.filter((_, i) => i !== index))
-  }, [])
+    setRules((prev) => {
+      const next = prev.filter((_, i) => i !== index)
+      saveRules(next)
+      return next
+    })
+  }, [saveRules])
+
+  // Remove empty rules when path input loses focus.
+  const handleRuleBlur = useCallback((index: number) => {
+    setRules((prev) => {
+      if (prev[index] && prev[index].path_contains.trim() === '') {
+        const next = prev.filter((_, i) => i !== index)
+        saveRules(next)
+        return next
+      }
+      return prev
+    })
+  }, [saveRules])
 
   const moveRule = useCallback((from: number, to: number) => {
     setRules((prev) => {
       const next = [...prev]
       const [item] = next.splice(from, 1)
       if (item) next.splice(to, 0, item)
+      saveRules(next)
       return next
     })
-  }, [])
+  }, [saveRules])
 
-  const handleSave = async () => {
-    setSaving(true)
-    setNotice(null)
-    try {
-      // Save default price.
-      const updated = await api.updateSettings({
-        xenarch_default_price: defaultPrice,
-      })
-      onSettingsChange(updated)
-
-      // Save pricing rules.
-      const validRules = rules.filter((r) => r.path_contains.trim() !== '')
-      await api.savePricingRules(validRules)
-      setRules(validRules)
-
-      setNotice({ type: 'success', msg: 'Pricing settings saved.' })
-    } catch (err) {
-      setNotice({
-        type: 'error',
-        msg: err instanceof Error ? err.message : 'Failed to save pricing',
-      })
-    } finally {
-      setSaving(false)
-    }
+  // Loading skeleton
+  if (loading) {
+    return (
+      <div className="xenarch-section">
+        <div className="xenarch-skeleton" style={{ width: 80, height: 16, marginBottom: 6 }} />
+        <div className="xenarch-skeleton" style={{ width: 300, height: 12, marginBottom: 16 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+          <div className="xenarch-skeleton" style={{ width: 90, height: 12 }} />
+          <div className="xenarch-skeleton" style={{ width: 80, height: 38, borderRadius: 6 }} />
+          <div className="xenarch-skeleton" style={{ width: 50, height: 12 }} />
+        </div>
+        <div className="xenarch-skeleton" style={{ width: '100%', height: 42, borderRadius: 8, marginBottom: 8 }} />
+        <div className="xenarch-skeleton" style={{ width: '100%', height: 42, borderRadius: 8 }} />
+      </div>
+    )
   }
 
   return (
-    <div className="xenarch-card">
-      <h3>Pricing</h3>
+    <div className="xenarch-section">
+      <div className="xenarch-section-title">Pricing</div>
+      <div className="xenarch-section-desc">How much bots pay per page. Add rules for specific paths.</div>
 
-      {notice && (
-        <div className={`xenarch-notice xenarch-notice--${notice.type}`}>{notice.msg}</div>
-      )}
-
-      <div className="xenarch-field">
-        <label htmlFor="xen-default-price">Default Price (USD)</label>
+      {/* Default price row */}
+      <div className="xenarch-pricing-row">
+        <label className="xenarch-pricing-label">Default price</label>
+        <span className="xenarch-pricing-symbol">$</span>
         <input
-          id="xen-default-price"
-          type="number"
-          className="xenarch-input"
+          type="text"
+          className="xenarch-input xenarch-pricing-price-input"
           value={defaultPrice}
           onChange={(e) => setDefaultPrice(e.target.value)}
-          step="0.001"
-          min="0"
-          max="1"
+          onBlur={handlePriceBlur}
+          onKeyDown={(e) => { if (e.key === 'Enter') handlePriceBlur() }}
         />
-        <div className="xenarch-description">
-          Amount in USD charged per AI agent page view (max $1.00). Set to 0 for free access.
-        </div>
+        <span className="xenarch-pricing-unit">per page</span>
       </div>
 
       {loaded && (
-        <>
-          <h3 style={{ marginTop: 16 }}>Path Pricing Rules</h3>
-          <p>First matching rule wins. Drag to reorder. Set price to $0 for free paths.</p>
-
+        <div style={{ marginTop: 12 }}>
           {rules.map((rule, i) => (
             <PricingRuleRow
               key={i}
@@ -109,28 +134,19 @@ export function PricingSection({ settings, onSettingsChange }: Props) {
               onChange={updateRule}
               onDelete={deleteRule}
               onMove={moveRule}
+              onPathBlur={handleRuleBlur}
+              autoFocus={rule.path_contains === ''}
             />
           ))}
 
-          <div style={{ marginBottom: 16 }}>
-            <button
-              className="xenarch-btn xenarch-btn--secondary xenarch-btn--small"
-              onClick={addRule}
-            >
-              + Add Rule
-            </button>
-          </div>
-        </>
+          <button
+            className="xenarch-btn-add"
+            onClick={addRule}
+          >
+            + add rule
+          </button>
+        </div>
       )}
-
-      <button
-        className="xenarch-btn xenarch-btn--primary"
-        onClick={handleSave}
-        disabled={saving}
-      >
-        {saving && <span className="xenarch-spinner" />}
-        Save Pricing
-      </button>
     </div>
   )
 }

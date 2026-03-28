@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { Settings } from '../types'
 import * as api from '../api'
 import { WalletConnectButton } from '../wallet/WalletConnectButton'
@@ -6,81 +6,190 @@ import { WalletConnectButton } from '../wallet/WalletConnectButton'
 interface Props {
   settings: Settings
   onSettingsChange: (s: Settings) => void
+  loading?: boolean
 }
 
-export function WalletSection({ settings, onSettingsChange }: Props) {
-  const [wallet, setWallet] = useState(settings.payout_wallet)
+type Phase = 'setup' | 'manual' | 'configured'
+
+export function WalletSection({ settings, onSettingsChange, loading }: Props) {
+  const hasWallet = !!settings.payout_wallet
+  const [phase, setPhase] = useState<Phase>(hasWallet ? 'configured' : 'setup')
+  const [manualAddress, setManualAddress] = useState('')
+  const [manualNetwork, setManualNetwork] = useState('base')
   const [saving, setSaving] = useState(false)
-  const [notice, setNotice] = useState<{ type: 'success' | 'error'; msg: string } | null>(null)
+  const [balance, setBalance] = useState<string | null>(null)
 
-  const handleSave = async () => {
-    if (!/^0x[0-9a-fA-F]{40}$/.test(wallet)) {
-      setNotice({ type: 'error', msg: 'Invalid wallet address. Must be a valid 0x address.' })
-      return
+  const walletType = settings.wallet_type || 'manual'
+  const isXenarchWallet = walletType === 'xenarch'
+
+  // Fetch balance for Xenarch wallets to know if change should be blocked.
+  useEffect(() => {
+    if (hasWallet && isXenarchWallet) {
+      api.fetchBalance().then(data => setBalance(data.balance_usd)).catch(() => setBalance(null))
     }
+  }, [hasWallet, isXenarchWallet])
 
+  // Keep phase in sync if wallet changes externally.
+  useEffect(() => {
+    setPhase(settings.payout_wallet ? 'configured' : 'setup')
+  }, [settings.payout_wallet])
+
+  const saveWallet = useCallback(async (address: string, type: string, network: string) => {
     setSaving(true)
-    setNotice(null)
     try {
-      const updated = await api.updateSettings({ xenarch_payout_wallet: wallet })
-      onSettingsChange(updated)
-      setNotice({ type: 'success', msg: 'Wallet address saved.' })
-    } catch (err) {
-      setNotice({
-        type: 'error',
-        msg: err instanceof Error ? err.message : 'Failed to save wallet',
+      const updated = await api.updateSettings({
+        xenarch_payout_wallet: address,
+        xenarch_wallet_type: type,
+        xenarch_wallet_network: network,
       })
-    } finally {
-      setSaving(false)
+      onSettingsChange(updated)
+      setPhase('configured')
+    } catch {}
+    setSaving(false)
+  }, [onSettingsChange])
+
+  const handleWalletConnect = useCallback((address: string) => {
+    saveWallet(address, 'connected', 'base')
+  }, [saveWallet])
+
+  const [error, setError] = useState('')
+
+  const handleCreateWallet = useCallback(async () => {
+    setSaving(true)
+    setError('')
+    try {
+      // TODO: wire to Xenarch platform API
+      throw new Error('Wallet creation is not available yet.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong.')
     }
+    setSaving(false)
+  }, [])
+
+  const handleManualSave = useCallback(() => {
+    if (!manualAddress.trim()) return
+    saveWallet(manualAddress.trim(), 'manual', manualNetwork)
+  }, [manualAddress, manualNetwork, saveWallet])
+
+  const handleChange = () => {
+    // Xenarch wallet with balance > 0: block change.
+    if (isXenarchWallet && balance && parseFloat(balance) > 0) return
+    setPhase('setup')
   }
 
-  const handleWalletConnect = (address: string) => {
-    setWallet(address)
-    // Auto-save when connected via WalletConnect.
-    api.updateSettings({ xenarch_payout_wallet: address }).then(onSettingsChange).catch(() => {})
+  const truncateAddress = (addr: string) => {
+    if (addr.length <= 12) return addr
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`
+  }
+
+  const badgeText = walletType === 'xenarch' ? 'xenarch wallet' : walletType === 'connected' ? 'connected via WalletConnect' : 'your wallet'
+  const badgeClass = walletType === 'xenarch' ? 'xenarch-wallet-badge--xenarch' : 'xenarch-wallet-badge--external'
+  const noteText = isXenarchWallet
+    ? 'Your wallet. Withdraw anytime from the Earnings tab.'
+    : 'Settled on-chain via splitter contract. No funds held by Xenarch.'
+
+  const changeBlocked = isXenarchWallet && balance !== null && parseFloat(balance) > 0
+
+  // Loading skeleton
+  if (loading) {
+    return (
+      <div className="xenarch-section">
+        <div className="xenarch-skeleton" style={{ width: 60, height: 16, marginBottom: 6 }} />
+        <div className="xenarch-skeleton" style={{ width: 260, height: 12, marginBottom: 16 }} />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <div className="xenarch-skeleton" style={{ flex: 1, height: 52, borderRadius: 8 }} />
+          <div className="xenarch-skeleton" style={{ flex: 1, height: 52, borderRadius: 8 }} />
+          <div className="xenarch-skeleton" style={{ flex: 1, height: 52, borderRadius: 8 }} />
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="xenarch-card">
-      <h3>Payout Wallet</h3>
-      <p>Your USDC wallet address on Base network. Payments go directly to this address.</p>
+    <div className="xenarch-section">
+      <div className="xenarch-section-title">Wallet</div>
 
-      {notice && (
-        <div className={`xenarch-notice xenarch-notice--${notice.type}`}>{notice.msg}</div>
+      {/* Phase 1: Setup -- 3 option cards */}
+      {phase === 'setup' && (
+        <>
+          <div className="xenarch-section-desc">Where do you want to receive payments?</div>
+          <div className="xenarch-wallet-options">
+            <WalletConnectButton onConnect={(address) => handleWalletConnect(address)} />
+            <button className="xenarch-wallet-opt" onClick={handleCreateWallet} disabled={saving}>
+              <div className="xenarch-wallet-opt-title">Create for me</div>
+              <div className="xenarch-wallet-opt-desc">Easiest setup</div>
+            </button>
+            <button className="xenarch-wallet-opt" onClick={() => setPhase('manual')}>
+              <div className="xenarch-wallet-opt-title">Enter manually</div>
+              <div className="xenarch-wallet-opt-desc">Paste an address</div>
+            </button>
+          </div>
+          {error && <div className="xenarch-onboarding-error">{error}</div>}
+        </>
       )}
 
-      <div className="xenarch-field">
-        <label htmlFor="xen-wallet">Wallet Address</label>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+      {/* Phase 1b: Manual entry */}
+      {phase === 'manual' && (
+        <div className="xenarch-wallet-manual">
           <input
-            id="xen-wallet"
             type="text"
-            className="xenarch-input"
-            value={wallet}
-            onChange={(e) => setWallet(e.target.value)}
+            className="xenarch-input xenarch-input--wide"
+            value={manualAddress}
+            onChange={(e) => setManualAddress(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleManualSave() }}
             placeholder="0x..."
-            style={{ maxWidth: 420 }}
+            autoFocus
           />
+          <select
+            className="xenarch-wallet-network-select"
+            value={manualNetwork}
+            onChange={(e) => setManualNetwork(e.target.value)}
+          >
+            <option value="base">Base</option>
+            <option value="solana">Solana</option>
+          </select>
           <button
-            className="xenarch-btn xenarch-btn--primary"
-            onClick={handleSave}
+            className="xenarch-wallet-icon-btn xenarch-wallet-icon-btn--confirm"
+            onClick={handleManualSave}
+            title="Save"
             disabled={saving}
           >
-            {saving && <span className="xenarch-spinner" />}
-            Save
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 8.5 6.5 12 13 4"/></svg>
+          </button>
+          <button
+            className="xenarch-wallet-icon-btn xenarch-wallet-icon-btn--cancel"
+            onClick={() => setPhase(hasWallet ? 'configured' : 'setup')}
+            title="Cancel"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
           </button>
         </div>
-      </div>
+      )}
 
-      <div style={{ marginTop: 12 }}>
-        <WalletConnectButton onConnect={handleWalletConnect} />
-      </div>
-
-      <div style={{ marginTop: 16 }}>
-        <span className="xenarch-coming-soon">Coming soon</span>{' '}
-        Generate wallet via Xenarch / Withdraw from Xenarch wallet
-      </div>
+      {/* Phase 2: Configured */}
+      {phase === 'configured' && (
+        <div className="xenarch-wallet-configured">
+          <div>
+            <div>
+              <span className="xenarch-wallet-addr">{truncateAddress(settings.payout_wallet)}</span>
+              <span className={`xenarch-wallet-badge ${badgeClass}`}>{badgeText}</span>
+            </div>
+            <div className="xenarch-wallet-note">{noteText}</div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <button
+              className={`xenarch-wallet-change${changeBlocked ? ' xenarch-wallet-change--disabled' : ''}`}
+              onClick={handleChange}
+              disabled={changeBlocked}
+            >
+              Change
+            </button>
+            {changeBlocked && (
+              <div className="xenarch-wallet-change-hint">Withdraw your balance before changing wallet</div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

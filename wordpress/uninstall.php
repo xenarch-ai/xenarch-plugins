@@ -18,9 +18,17 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 delete_option( 'xenarch_api_key' );
 delete_option( 'xenarch_site_id' );
 delete_option( 'xenarch_site_token' );
-delete_option( 'xenarch_email' );
 delete_option( 'xenarch_default_price' );
 delete_option( 'xenarch_payout_wallet' );
 delete_option( 'xenarch_gate_unknown_traffic' );
 delete_option( 'xenarch_pricing_rules' );
 delete_option( 'xenarch_browser_proof_secret' );
+delete_option( 'xenarch_gate_enabled' );
+
+// Drop bot detection log table.
+global $wpdb;
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}xenarch_bot_log" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+delete_option( 'xenarch_bot_categories' );
+delete_option( 'xenarch_bot_overrides' );
+delete_option( 'xenarch_wallet_type' );
+delete_option( 'xenarch_wallet_network' );
