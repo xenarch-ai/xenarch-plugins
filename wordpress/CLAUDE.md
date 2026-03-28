@@ -383,7 +383,7 @@ Indexed on: `signature` (unique), `category`, `last_seen`.
 | `xenarch_bot_overrides` | JSON | Per-bot overrides: `{"PerplexityBot": "charge", ...}` |
 | `xenarch_default_price` | string | Default price USD (e.g. "0.003") |
 | `xenarch_pricing_rules` | JSON | URL rules: `[{"path_contains": "/docs/", "price_usd": "0.01"}, ...]` |
-| `xenarch_wallet_address` | string | USDC payout address |
+| `xenarch_payout_wallet` | string | USDC payout address |
 | `xenarch_wallet_network` | string | Network (base, solana) |
 | `xenarch_wallet_type` | string | How wallet was set up: `xenarch`, `connected`, `manual` |
 | `xenarch_gate_unknown_traffic` | bool | Gate unknown non-browser traffic |

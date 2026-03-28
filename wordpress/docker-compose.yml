@@ -5,6 +5,7 @@ services:
     image: mysql:8.0
     restart: unless-stopped
     environment:
+      # Local dev only — not used in production.
       MYSQL_ROOT_PASSWORD: xenarch
       MYSQL_DATABASE: wordpress
       MYSQL_USER: wp

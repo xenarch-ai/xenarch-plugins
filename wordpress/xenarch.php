@@ -54,7 +54,7 @@ function xenarch_activate() {
 	if ( false === get_option( 'xenarch_site_token' ) ) {
 		add_option( 'xenarch_site_token', '' );
 	}
-if ( false === get_option( 'xenarch_default_price' ) ) {
+	if ( false === get_option( 'xenarch_default_price' ) ) {
 		add_option( 'xenarch_default_price', '0.003' );
 	}
 	if ( false === get_option( 'xenarch_payout_wallet' ) ) {
