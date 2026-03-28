@@ -50,7 +50,8 @@
   .data-val a:hover { color: var(--fg); }
   .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
   .dot-ok { background: var(--success); }
-  .status-pill { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 3px 10px; border-radius: 4px; }
+  .status-pill { display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; padding: 4px 12px; border-radius: 100px; }
+  .status-pill-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
   .status-pill.ok { color: var(--success); background: var(--success-bg); }
 </style>
 </head>
@@ -74,7 +75,7 @@
       <div class="status-card">
         <div class="data-row">
           <span class="data-key">status</span>
-          <span class="data-val"><span class="status-pill ok">connected</span></span>
+          <span class="data-val"><span class="status-pill ok"><span class="status-pill-dot"></span>connected</span></span>
         </div>
         <div class="data-row">
           <span class="data-key">site token</span>
@@ -117,7 +118,7 @@
       <div class="status-card">
         <div class="data-row">
           <span class="data-key">status</span>
-          <span class="data-val"><span class="status-pill ok">connected</span></span>
+          <span class="data-val"><span class="status-pill ok"><span class="status-pill-dot"></span>connected</span></span>
         </div>
         <div class="data-row">
           <span class="data-key">site token</span>

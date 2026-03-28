@@ -1549,10 +1549,21 @@
 /* ═══════ STATUS PILLS ═══════ */
 
 #xenarch-admin .xn-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  padding: 3px 10px;
-  border-radius: 4px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 100px;
+}
+
+#xenarch-admin .xn-status-pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 #xenarch-admin .xn-status-pill--ok {

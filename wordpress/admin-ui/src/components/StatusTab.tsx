@@ -44,7 +44,7 @@ export function StatusTab({ settings }: Props) {
       <div className="xn-data-row">
         <span className="xn-data-key">status</span>
         <span className="xn-data-val">
-          <span className={`xn-status-pill ${pillClass}`}>{pillLabel}</span>
+          <span className={`xn-status-pill ${pillClass}`}><span className="xn-status-pill-dot"></span>{pillLabel}</span>
         </span>
       </div>
 
