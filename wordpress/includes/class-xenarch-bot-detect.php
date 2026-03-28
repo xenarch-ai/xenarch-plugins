@@ -273,10 +273,15 @@ class Xenarch_Bot_Detect {
 			return self::build_result( 'block', 'known_fetcher', 'empty_ua', 0, array( 'empty_ua' ) );
 		}
 
-		// 2. AI crawler signature match → instant block.
+		// 2. Signature match — block AI crawlers, allow social preview bots.
 		foreach ( self::$signatures as $signature ) {
 			if ( false !== stripos( $user_agent, $signature ) ) {
-				return self::build_result( 'block', self::traffic_class_for_signature( $signature ), 'ua_match', 0, array( $signature ) );
+				$traffic_class = self::traffic_class_for_signature( $signature );
+				// Social preview bots always pass through free (not configurable).
+				if ( 'social_preview_fetcher' === $traffic_class ) {
+					return self::build_result( 'allow', 'social_preview_fetcher', 'social_allowlist', 0, array( $signature ) );
+				}
+				return self::build_result( 'block', $traffic_class, 'ua_match', 0, array( $signature ) );
 			}
 		}
 
