@@ -58,9 +58,10 @@ class Xenarch_Gate {
 			return;
 		}
 
-		// If the request presents a Xenarch-looking access token, let it through.
+		// If the request presents a verified access token (paid gate receipt), let it through.
 		$auth_header = $this->get_authorization_header();
-		if ( Xenarch_Access_Token::has_valid_bearer_format( $auth_header ) ) {
+		$token       = Xenarch_Access_Token::extract_token( $auth_header );
+		if ( $token && Xenarch_Access_Token::verify_token( $token ) ) {
 			return;
 		}
 
@@ -265,7 +266,8 @@ class Xenarch_Gate {
 		}
 
 		$auth_header = $this->get_authorization_header();
-		if ( Xenarch_Access_Token::has_valid_bearer_format( $auth_header ) ) {
+		$token       = Xenarch_Access_Token::extract_token( $auth_header );
+		if ( $token && Xenarch_Access_Token::verify_token( $token ) ) {
 			return $response;
 		}
 
