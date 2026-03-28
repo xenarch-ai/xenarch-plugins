@@ -112,15 +112,20 @@ class Xenarch_Api {
 	/**
 	 * Update payout wallet for the authenticated publisher.
 	 *
-	 * @param string $wallet Wallet address (0x...).
+	 * @param string $wallet  Wallet address (0x...).
+	 * @param string $network Network name (default: value from wp_options, fallback: 'base').
 	 * @return array|WP_Error
 	 */
-	public function update_payout( $wallet ) {
+	public function update_payout( $wallet, $network = '' ) {
+		if ( empty( $network ) ) {
+			$network = get_option( 'xenarch_wallet_network', 'base' );
+		}
+
 		return $this->post(
 			'/v1/publishers/me/payout',
 			array(
 				'wallet'  => $wallet,
-				'network' => 'base',
+				'network' => $network,
 			),
 			$this->auth_headers(),
 			'PUT'
