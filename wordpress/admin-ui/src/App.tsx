@@ -17,6 +17,8 @@ if (wcProjectId) {
 function getInitialTheme(): Theme {
   const stored = localStorage.getItem('xenarch-theme')
   if (stored === 'light' || stored === 'dark') return stored
+  // Auto-detect system preference on first visit.
+  if (window.matchMedia?.('(prefers-color-scheme: light)').matches) return 'light'
   return 'dark'
 }
 

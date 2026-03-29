@@ -32,7 +32,10 @@ const LIGHT_THEME = {
 } as Record<string, string | number>
 
 function getCurrentTheme(): 'dark' | 'light' {
-  return localStorage.getItem('xenarch-theme') === 'light' ? 'light' : 'dark'
+  const stored = localStorage.getItem('xenarch-theme')
+  if (stored === 'light' || stored === 'dark') return stored
+  if (window.matchMedia?.('(prefers-color-scheme: light)').matches) return 'light'
+  return 'dark'
 }
 
 /**
