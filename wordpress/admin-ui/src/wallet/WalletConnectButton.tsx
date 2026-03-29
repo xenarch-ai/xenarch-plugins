@@ -1,22 +1,46 @@
+import { useEffect, useRef } from 'react'
 import { getAppKit } from './config'
 
 interface Props {
-  connected: boolean
-  onDisconnect: () => void
+  connected?: boolean
+  onConnect?: (address: string) => void
+  onDisconnect?: () => void
 }
 
-export function WalletConnectButton({ connected, onDisconnect }: Props) {
+export function WalletConnectButton({ connected, onConnect, onDisconnect }: Props) {
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
   const handleConnect = () => {
     const appKit = getAppKit()
-    if (appKit) appKit.open()
+    if (!appKit) return
+    appKit.open()
+
+    // Poll for address after modal opens (AppKit has no connect callback).
+    if (onConnect && !pollingRef.current) {
+      pollingRef.current = setInterval(() => {
+        const addr = appKit.getAddress()
+        if (addr) {
+          clearInterval(pollingRef.current!)
+          pollingRef.current = null
+          onConnect(addr)
+        }
+      }, 500)
+    }
   }
+
+  // Clean up polling on unmount.
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current)
+    }
+  }, [])
 
   const handleDisconnect = async () => {
     const appKit = getAppKit()
     if (appKit) {
       try { await appKit.disconnect() } catch {}
     }
-    onDisconnect()
+    onDisconnect?.()
   }
 
   if (connected) {

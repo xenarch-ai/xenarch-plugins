@@ -5,160 +5,215 @@
 
 #xenarch-admin,
 #xenarch-admin[data-theme="dark"] {
+  /* Layer 0: page bg */
   --xn-bg: #0a0a0a;
-  --xn-card-bg: #111;
-  --xn-text: #f0f0f0;
-  --xn-text-secondary: #888;
-  --xn-text-muted: #555;
-  --xn-border: #1a1a1a;
-  --xn-border-hover: #333;
-  --xn-input-bg: #111;
-  --xn-input-border: #222;
-  --xn-input-focus: #444;
-  --xn-btn-primary-bg: #f0f0f0;
-  --xn-btn-primary-text: #0a0a0a;
-  --xn-btn-secondary-bg: transparent;
-  --xn-btn-secondary-border: #333;
-  --xn-btn-secondary-text: #e0e0e0;
-  --xn-btn-active-bg: #f0f0f0;
-  --xn-btn-active-text: #0a0a0a;
-  --xn-table-header-bg: #0e0e0e;
-  --xn-table-row-border: #151515;
-  --xn-skeleton-from: #111;
-  --xn-skeleton-via: #1a1a1a;
-  --xn-toggle-bg: #333;
-  --xn-toggle-active: #f0f0f0;
-  --xn-toggle-knob: #0a0a0a;
-  --xn-link: #888;
-  --xn-link-hover: #ccc;
-  --xn-code-bg: #111;
-  --xn-dot-green: #4ade80;
-  --xn-dot-red: #f87171;
-  --xn-pill-paid-bg: #0d1f0d;
-  --xn-pill-paid-text: #4ade80;
-  --xn-pill-blocked-bg: #1f0d0d;
-  --xn-pill-blocked-text: #f87171;
-  --xn-wallet-bg: #111;
-  --xn-wallet-label-bg: #1a1a1a;
-  --xn-wallet-label-text: #666;
-  --xn-empty-text: #555;
-  --xn-notice-success-bg: #0d1f0d;
-  --xn-notice-success-border: #4ade80;
-  --xn-notice-success-text: #4ade80;
-  --xn-notice-error-bg: #1f0d0d;
-  --xn-notice-error-border: #f87171;
-  --xn-notice-error-text: #f87171;
+  /* Layer 1: main card */
+  --xn-card: #111; --xn-card-border: #1a1a1a;
+  /* Layer 2: inner elements */
+  --xn-surface: #191919; --xn-surface-border: #252525;
+  /* Inputs recessed into surfaces */
+  --xn-input-bg: #111; --xn-input-border: #252525; --xn-input-focus: #444;
+  /* Text */
+  --xn-text: #f0f0f0; --xn-text-secondary: #999; --xn-text-muted: #666; --xn-dim: #444;
+  /* Buttons */
+  --xn-btn-primary-bg: #f0f0f0; --xn-btn-primary-text: #0a0a0a;
+  --xn-btn-secondary-border: #252525; --xn-btn-secondary-text: #e0e0e0;
+  /* Status */
+  --xn-dot-green: #4ade80; --xn-dot-red: #f87171;
+  --xn-pill-paid-bg: rgba(74,222,128,0.08); --xn-pill-paid-text: #4ade80;
+  --xn-pill-blocked-bg: rgba(248,113,113,0.08); --xn-pill-blocked-text: #f87171;
+  /* Table */
+  --xn-table-header-bg: #0e0e0e; --xn-table-row-border: #191919;
+  /* Misc */
+  --xn-skeleton-from: #191919; --xn-skeleton-via: #252525;
+  --xn-toggle-bg: #444; --xn-link: #999; --xn-link-hover: #ccc;
+  --xn-code-bg: #191919; --xn-empty-text: #666;
+  --xn-notice-success-bg: rgba(74,222,128,0.08); --xn-notice-success-border: #4ade80; --xn-notice-success-text: #4ade80;
+  --xn-notice-error-bg: rgba(248,113,113,0.08); --xn-notice-error-border: #f87171; --xn-notice-error-text: #f87171;
+  /* Pending */
+  --xn-pending: #facc15; --xn-pending-bg: rgba(250,204,21,0.08);
 }
 
 #xenarch-admin[data-theme="light"] {
   --xn-bg: #E8E4DF;
-  --xn-card-bg: #f5f2ee;
-  --xn-text: #1a1a1a;
-  --xn-text-secondary: #777;
-  --xn-text-muted: #999;
-  --xn-border: #c8c4bf;
-  --xn-border-hover: #aaa;
-  --xn-input-bg: #fff;
-  --xn-input-border: #c8c4bf;
-  --xn-input-focus: #999;
-  --xn-btn-primary-bg: #1a1a1a;
-  --xn-btn-primary-text: #f0f0f0;
-  --xn-btn-secondary-bg: transparent;
-  --xn-btn-secondary-border: #ccc;
-  --xn-btn-secondary-text: #1a1a1a;
-  --xn-btn-active-bg: #1a1a1a;
-  --xn-btn-active-text: #f0f0f0;
-  --xn-table-header-bg: #ece8e3;
-  --xn-table-row-border: #ddd8d2;
-  --xn-skeleton-from: #ddd8d2;
-  --xn-skeleton-via: #d0ccc7;
-  --xn-toggle-bg: #c8c4bf;
-  --xn-toggle-active: #1a1a1a;
-  --xn-toggle-knob: #f0f0f0;
-  --xn-link: #555;
-  --xn-link-hover: #1a1a1a;
-  --xn-code-bg: #ddd8d2;
-  --xn-dot-green: #00a32a;
-  --xn-dot-red: #d63638;
-  --xn-pill-paid-bg: #edfaef;
-  --xn-pill-paid-text: #00a32a;
-  --xn-pill-blocked-bg: #f0f0f1;
-  --xn-pill-blocked-text: #646970;
-  --xn-wallet-bg: #ece8e3;
-  --xn-wallet-label-bg: #ddd8d2;
-  --xn-wallet-label-text: #777;
-  --xn-empty-text: #999;
-  --xn-notice-success-bg: #edfaef;
-  --xn-notice-success-border: #00a32a;
-  --xn-notice-success-text: #005c12;
-  --xn-notice-error-bg: #fcf0f1;
-  --xn-notice-error-border: #d63638;
-  --xn-notice-error-text: #8a1e21;
+  --xn-card: #f5f2ee; --xn-card-border: #d5d0ca;
+  --xn-surface: #ece8e3; --xn-surface-border: #d0ccc7;
+  --xn-input-bg: #fff; --xn-input-border: #d0ccc7; --xn-input-focus: #999;
+  --xn-text: #1a1a1a; --xn-text-secondary: #555; --xn-text-muted: #888; --xn-dim: #bbb;
+  --xn-btn-primary-bg: #1a1a1a; --xn-btn-primary-text: #f0f0f0;
+  --xn-btn-secondary-border: #d0ccc7; --xn-btn-secondary-text: #1a1a1a;
+  --xn-dot-green: #16a34a; --xn-dot-red: #dc2626;
+  --xn-pill-paid-bg: rgba(22,163,74,0.08); --xn-pill-paid-text: #16a34a;
+  --xn-pill-blocked-bg: rgba(220,38,38,0.08); --xn-pill-blocked-text: #dc2626;
+  --xn-table-header-bg: #ece8e3; --xn-table-row-border: #ece8e3;
+  --xn-skeleton-from: #ece8e3; --xn-skeleton-via: #d0ccc7;
+  --xn-toggle-bg: #d0ccc7; --xn-link: #555; --xn-link-hover: #1a1a1a;
+  --xn-code-bg: #ece8e3; --xn-empty-text: #888;
+  --xn-notice-success-bg: rgba(22,163,74,0.08); --xn-notice-success-border: #16a34a; --xn-notice-success-text: #16a34a;
+  --xn-notice-error-bg: rgba(220,38,38,0.08); --xn-notice-error-border: #dc2626; --xn-notice-error-text: #dc2626;
+  --xn-pending: #ca8a04; --xn-pending-bg: rgba(202,138,4,0.08);
+}
+
+/* ═══════ WP OVERRIDES — full bleed background ═══════ */
+
+.xenarch-page #wpcontent,
+.xenarch-page #wpbody,
+.xenarch-page .wrap {
+  background: #0a0a0a !important;
+}
+
+.xenarch-page #wpbody-content {
+  background: #0a0a0a !important;
+  min-height: 100vh !important;
+  padding-bottom: 40px !important;
+}
+
+/* Hide default WP h1 — we render our own header */
+.xenarch-page .wrap > h1 {
+  display: none !important;
+}
+
+.xenarch-page .xenarch-page-container {
+  max-width: 760px;
+}
+
+.xenarch-page .xenarch-page-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.xenarch-page .xenarch-page-logo {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 300;
+  color: #f0f0f0;
+}
+
+.xenarch-page .xenarch-page-version {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #888;
+  background: #151515;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #1a1a1a;
+}
+
+.xenarch-page .xenarch-page-subtitle {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  color: #999;
+  margin: 0 0 24px;
+}
+
+.xenarch-page .xenarch-page-theme-toggle {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #666;
+  display: flex;
+  align-items: center;
+}
+
+.xenarch-page .xenarch-page-theme-toggle:hover { color: #f0f0f0; }
+
+/* Icon visibility — show sun in dark, moon in light */
+.xenarch-page .xn-icon-moon { display: none; }
+.xenarch-page.xenarch-light .xn-icon-sun { display: none; }
+.xenarch-page.xenarch-light .xn-icon-moon { display: block; }
+.xenarch-page.xenarch-light .xenarch-page-theme-toggle { color: #888; }
+.xenarch-page.xenarch-light .xenarch-page-theme-toggle:hover { color: #1a1a1a; }
+
+/* Light overrides for PHP header */
+.xenarch-page.xenarch-light .xenarch-page-logo { color: #1a1a1a; }
+.xenarch-page.xenarch-light .xenarch-page-version { color: #555; background: #d5d0ca; border-color: #d0ccc7; }
+.xenarch-page.xenarch-light .xenarch-page-subtitle { color: #555; }
+
+.xenarch-page #wpfooter {
+  display: none !important;
+}
+
+/* Light theme WP overrides */
+#xenarch-admin[data-theme="light"] ~ style,
+.xenarch-page.xenarch-light #wpcontent,
+.xenarch-page.xenarch-light #wpbody,
+.xenarch-page.xenarch-light #wpbody-content,
+.xenarch-page.xenarch-light .wrap {
+  background: #E8E4DF !important;
+}
+
+.xenarch-page.xenarch-light .wrap > h1 {
+  color: #1a1a1a !important;
 }
 
 /* ═══════ ROOT ═══════ */
 
 #xenarch-admin {
-  max-width: 860px;
+  max-width: 760px;
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 14px;
   color: var(--xn-text);
   line-height: 1.5;
-  background: var(--xn-bg);
-  padding: 20px 20px 10px;
+  background: var(--xn-card);
+  border: 1px solid var(--xn-card-border);
+  padding: 24px;
   border-radius: 12px;
   margin-top: 12px;
 }
 
 /* ═══════ HEADER ═══════ */
 
-#xenarch-admin .xenarch-header {
-  display: flex;
-  align-items: flex-end;
-  border-bottom: 1px solid var(--xn-border);
-  margin-bottom: 20px;
-}
 
-#xenarch-admin .xenarch-header-logo {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  padding-bottom: 8px;
-  opacity: 0.5;
-  transform: translateX(-5%);
-}
-
-#xenarch-admin .xenarch-header-wordmark {
+#xenarch-admin .xenarch-logo {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 300;
+  line-height: 1.2;
   color: var(--xn-text);
 }
 
-#xenarch-admin[data-theme="dark"] .xenarch-header-wordmark {
-  font-weight: 300;
+#xenarch-admin .xenarch-version {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--xn-text-secondary);
+  background: var(--xn-surface);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--xn-surface-border);
+}
+
+#xenarch-admin .xenarch-subtitle {
+  font-size: 13px;
+  color: var(--xn-text-secondary);
+  margin: 0 0 24px;
 }
 
 /* ═══════ TABS ═══════ */
 
-#xenarch-admin .xenarch-tabs {
+#xenarch-admin .xenarch-tabs-row {
   display: flex;
-  gap: 0;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--xn-surface-border);
+}
+
+#xenarch-admin .xenarch-tab-content {
+  padding-top: 16px;
 }
 
 #xenarch-admin .xenarch-tab {
-  padding: 10px 20px;
-  background: none;
-  border: 1px solid transparent;
-  border-bottom: none;
-  cursor: pointer;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
   color: var(--xn-text-muted);
+  padding: 8px 16px;
+  cursor: pointer;
+  border: none;
+  border-bottom: 2px solid transparent;
   margin-bottom: -1px;
+  background: none;
+  font-family: 'Inter', sans-serif;
   transition: color 0.15s;
 }
 
@@ -167,10 +222,8 @@
 }
 
 #xenarch-admin .xenarch-tab--active {
-  background: var(--xn-card-bg);
-  border-color: var(--xn-border);
-  border-bottom-color: var(--xn-card-bg);
   color: var(--xn-text);
+  border-bottom-color: var(--xn-text);
 }
 
 #xenarch-admin .xenarch-tab:disabled {
@@ -179,11 +232,39 @@
   cursor: not-allowed;
 }
 
+/* ═══════ SECTIONS (flat layout matching mockups) ═══════ */
+
+#xenarch-admin .xenarch-section {
+  padding-top: 0;
+  margin-bottom: 0;
+}
+
+#xenarch-admin .xenarch-section + .xenarch-section {
+  padding-top: 20px;
+  margin-top: 20px;
+  border-top: 1px solid var(--xn-surface-border);
+}
+
+#xenarch-admin .xenarch-section-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--xn-text);
+  margin-bottom: 4px;
+}
+
+#xenarch-admin .xenarch-section-desc {
+  font-size: 13px;
+  color: var(--xn-text-secondary);
+  margin-bottom: 12px;
+}
+
 /* ═══════ CARDS ═══════ */
 
 #xenarch-admin .xenarch-card {
-  background: var(--xn-card-bg);
-  border: 1px solid var(--xn-border);
+  background: var(--xn-surface);
+  border: 1px solid var(--xn-surface-border);
   border-radius: 10px;
   padding: 20px;
   margin-bottom: 16px;
@@ -206,34 +287,69 @@
   margin-bottom: 0;
 }
 
-/* ═══════ STATUS TABLE ═══════ */
+/* ═══════ STATUS CARD (Status Tab) ═══════ */
 
-#xenarch-admin .xenarch-status-table {
-  width: 100%;
-  border-collapse: collapse;
+#xenarch-admin .xn-status-card {
+  background: var(--xn-surface);
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 10px;
+  padding: 32px;
 }
 
-#xenarch-admin .xenarch-status-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--xn-border);
-  vertical-align: middle;
+#xenarch-admin .xn-data-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--xn-surface-border);
 }
 
-#xenarch-admin .xenarch-status-table td:first-child {
-  color: var(--xn-text-muted);
-  width: 160px;
-  font-weight: 500;
+#xenarch-admin .xn-data-row--last {
+  border-bottom: none;
+}
+
+#xenarch-admin .xn-data-key {
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
-  text-transform: lowercase;
+  color: var(--xn-text-muted);
+  width: 140px;
+  flex-shrink: 0;
 }
 
-#xenarch-admin .xenarch-status-table tr:last-child td {
-  border-bottom: none;
+#xenarch-admin .xn-data-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--xn-text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#xenarch-admin .xn-data-val a {
+  color: var(--xn-text-secondary);
+  text-decoration: none;
+}
+
+#xenarch-admin .xn-data-val a:hover {
+  color: var(--xn-text);
+}
+
+#xenarch-admin .xn-dash {
+  color: var(--xn-text-muted);
 }
 
 /* ═══════ STATUS DOTS ═══════ */
 
+#xenarch-admin .xn-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+#xenarch-admin .xn-dot--green { background: var(--xn-dot-green); }
+#xenarch-admin .xn-dot--red { background: var(--xn-dot-red); }
+
+/* Legacy dot classes (used by WalletBar) */
 #xenarch-admin .xenarch-dot {
   display: inline-block;
   width: 8px;
@@ -284,6 +400,14 @@
 #xenarch-admin .xenarch-input:focus {
   border-color: var(--xn-input-focus);
   outline: none;
+  box-shadow: none;
+}
+
+#xenarch-admin input:focus,
+#xenarch-admin select:focus,
+#xenarch-admin button:focus {
+  outline: none;
+  box-shadow: none;
 }
 
 #xenarch-admin .xenarch-input--wide {
@@ -317,13 +441,13 @@
 }
 
 #xenarch-admin .xenarch-btn--secondary {
-  background: var(--xn-btn-secondary-bg);
+  background: transparent;
   border-color: var(--xn-btn-secondary-border);
   color: var(--xn-btn-secondary-text);
 }
 
 #xenarch-admin .xenarch-btn--secondary:hover {
-  border-color: var(--xn-border-hover);
+  border-color: var(--xn-dim);
 }
 
 #xenarch-admin .xenarch-btn--danger {
@@ -351,8 +475,10 @@
 
 #xenarch-admin .xenarch-toggle-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
+  margin-bottom: 12px;
 }
 
 #xenarch-admin .xenarch-toggle {
@@ -360,20 +486,20 @@
   width: 44px;
   height: 24px;
   flex-shrink: 0;
-  margin-top: 2px;
 }
 
 #xenarch-admin .xenarch-toggle input {
   opacity: 0;
   width: 0;
   height: 0;
+  position: absolute;
 }
 
 #xenarch-admin .xenarch-toggle .xenarch-slider {
   position: absolute;
   cursor: pointer;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: var(--xn-toggle-bg);
+  background: var(--xn-dim);
   border-radius: 12px;
   transition: background 0.2s;
 }
@@ -385,13 +511,13 @@
   width: 18px;
   left: 3px;
   bottom: 3px;
-  background: var(--xn-toggle-knob);
+  background: white;
   border-radius: 50%;
   transition: transform 0.2s;
 }
 
 #xenarch-admin .xenarch-toggle input:checked + .xenarch-slider {
-  background: var(--xn-toggle-active);
+  background: var(--xn-dot-green);
 }
 
 #xenarch-admin .xenarch-toggle input:checked + .xenarch-slider::before {
@@ -400,14 +526,15 @@
 
 #xenarch-admin .xenarch-toggle-label {
   font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
   font-weight: 500;
   color: var(--xn-text);
 }
 
 #xenarch-admin .xenarch-toggle-description {
-  color: var(--xn-text-muted);
+  color: var(--xn-text-secondary);
   font-size: 13px;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
 /* ═══════ STATS CARDS ═══════ */
@@ -420,8 +547,8 @@
 }
 
 #xenarch-admin .xenarch-stat-card {
-  background: var(--xn-card-bg);
-  border: 1px solid var(--xn-border);
+  background: var(--xn-surface);
+  border: 1px solid var(--xn-surface-border);
   border-radius: 10px;
   padding: 16px;
   text-align: center;
@@ -466,7 +593,7 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--xn-text-muted);
-  border-bottom: 1px solid var(--xn-border);
+  border-bottom: 1px solid var(--xn-surface-border);
   background: var(--xn-table-header-bg);
 }
 
@@ -522,7 +649,7 @@
 
 #xenarch-admin .xenarch-period-filter {
   display: inline-flex;
-  border: 1px solid var(--xn-border);
+  border: 1px solid var(--xn-surface-border);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -531,7 +658,7 @@
   padding: 5px 14px;
   background: transparent;
   border: none;
-  border-right: 1px solid var(--xn-border);
+  border-right: 1px solid var(--xn-surface-border);
   cursor: pointer;
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
@@ -544,8 +671,8 @@
 }
 
 #xenarch-admin .xenarch-period-btn--active {
-  background: var(--xn-btn-active-bg);
-  color: var(--xn-btn-active-text);
+  background: var(--xn-btn-primary-bg);
+  color: var(--xn-btn-primary-text);
 }
 
 #xenarch-admin .xenarch-period-btn:hover:not(.xenarch-period-btn--active) {
@@ -570,6 +697,10 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  padding: 8px 12px;
+  background: var(--xn-surface);
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 8px;
   margin-bottom: 8px;
 }
 
@@ -577,8 +708,45 @@
   max-width: none;
 }
 
-#xenarch-admin .xenarch-rule-path { flex: 2; }
-#xenarch-admin .xenarch-rule-price { flex: 1; max-width: 120px; }
+#xenarch-admin .xenarch-rule-path { flex: 1; }
+#xenarch-admin .xenarch-rule-price { width: 80px; max-width: 80px; text-align: right; flex-shrink: 0; }
+
+/* Path autocomplete dropdown */
+#xenarch-admin .xenarch-path-suggest {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: var(--xn-bg);
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 10;
+}
+
+#xenarch-admin .xenarch-suggest-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+#xenarch-admin .xenarch-suggest-item:hover {
+  background: var(--xn-surface);
+}
+
+#xenarch-admin .xenarch-suggest-path {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--xn-text);
+}
+
+#xenarch-admin .xenarch-suggest-title {
+  font-size: 12px;
+  color: var(--xn-text-muted);
+}
 
 /* ═══════ WALLET BAR ═══════ */
 
@@ -586,8 +754,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: var(--xn-wallet-bg);
-  border: 1px solid var(--xn-border);
+  background: var(--xn-surface);
+  border: 1px solid var(--xn-surface-border);
   border-radius: 10px;
   padding: 10px 16px;
   margin-bottom: 16px;
@@ -602,12 +770,12 @@
 }
 
 #xenarch-admin .xenarch-wallet-label {
-  background: var(--xn-wallet-label-bg);
+  background: var(--xn-surface-border);
   padding: 2px 8px;
   border-radius: 100px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
-  color: var(--xn-wallet-label-text);
+  color: var(--xn-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -673,7 +841,7 @@
   display: inline-block;
   width: 16px;
   height: 16px;
-  border: 2px solid var(--xn-border);
+  border: 2px solid var(--xn-surface-border);
   border-top-color: var(--xn-text);
   border-radius: 50%;
   animation: xenarch-spin 0.6s linear infinite;
@@ -690,11 +858,71 @@
 #xenarch-admin .xenarch-coming-soon {
   display: inline-block;
   padding: 2px 10px;
-  background: var(--xn-wallet-label-bg);
+  background: var(--xn-surface-border);
   border-radius: 100px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--xn-text-muted);
+}
+
+/* ═══════ ONBOARDING ═══════ */
+
+#xenarch-admin .xenarch-onboarding {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 0;
+}
+
+#xenarch-admin .xenarch-onboarding-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--xn-text);
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+#xenarch-admin .xenarch-onboarding-desc {
+  font-size: 13px;
+  color: var(--xn-text-secondary);
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+#xenarch-admin .xenarch-onboarding .xenarch-wallet-options {
+  width: 100%;
+}
+
+#xenarch-admin .xenarch-onboarding .xenarch-wallet-manual {
+  width: 100%;
+}
+
+#xenarch-admin .xenarch-onboarding-error {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--xn-dot-red);
+  margin-top: 16px;
+  text-align: center;
+}
+
+#xenarch-admin .xenarch-onboarding-retry {
+  color: var(--xn-text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+#xenarch-admin .xenarch-onboarding-retry:hover {
+  color: var(--xn-text);
+}
+
+#xenarch-admin .xenarch-onboarding-footer {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--xn-text-muted);
+  text-align: center;
+  margin-top: 32px;
 }
 
 /* ═══════ FOOTER ═══════ */
@@ -726,7 +954,7 @@
 #xenarch-admin a {
   color: var(--xn-link);
   text-decoration: none;
-  border-bottom: 1px solid var(--xn-border);
+  border-bottom: 1px solid var(--xn-surface-border);
   transition: color 0.15s;
 }
 
@@ -763,24 +991,21 @@
 
 #xenarch-admin .xenarch-theme-toggle {
   background: none;
-  border: 1px solid var(--xn-border);
-  border-radius: 6px;
+  border: none;
   cursor: pointer;
-  padding: 6px 8px;
-  color: var(--xn-text-muted);
+  padding: 4px;
+  color: var(--xn-text-secondary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.15s, border-color 0.15s;
-  width: 34px;
-  height: 34px;
-  margin-bottom: 6px;
+  transition: color 0.15s;
   flex-shrink: 0;
+  margin-bottom: -1px;
 }
 
 #xenarch-admin .xenarch-theme-toggle:hover {
   color: var(--xn-text);
-  border-color: var(--xn-border-hover);
+  border-color: var(--xn-dim);
 }
 
 #xenarch-admin .xenarch-theme-toggle svg {
@@ -789,11 +1014,1209 @@
   fill: currentColor;
 }
 
+/* ═══════ GATING SECTION — CATEGORY ROWS ═══════ */
+
+#xenarch-admin .xenarch-cat-list {
+  margin-top: 16px;
+}
+
+#xenarch-admin .xenarch-cat-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--xn-surface);
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+#xenarch-admin .xenarch-cat-row:hover {
+  border-color: var(--xn-dim);
+}
+
+#xenarch-admin .xenarch-cat-toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+#xenarch-admin .xenarch-cat-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+#xenarch-admin .xenarch-cat-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--xn-toggle-bg);
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+#xenarch-admin .xenarch-cat-slider::before {
+  content: '';
+  position: absolute;
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+#xenarch-admin .xenarch-cat-toggle input:checked + .xenarch-cat-slider {
+  background: var(--xn-dot-green);
+}
+
+#xenarch-admin .xenarch-cat-toggle input:checked + .xenarch-cat-slider::before {
+  transform: translateX(16px);
+}
+
+#xenarch-admin .xenarch-cat-toggle--disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+#xenarch-admin .xenarch-cat-info {
+  flex: 1;
+  min-width: 0;
+}
+
+#xenarch-admin .xenarch-cat-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--xn-text);
+  line-height: 1.3;
+}
+
+#xenarch-admin .xenarch-cat-desc {
+  font-size: 12px;
+  color: var(--xn-text-secondary);
+  line-height: 1.3;
+}
+
+#xenarch-admin .xenarch-cat-stat {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+#xenarch-admin .xenarch-cat-stat--on {
+  color: var(--xn-dot-green);
+}
+
+#xenarch-admin .xenarch-cat-stat--off,
+#xenarch-admin .xenarch-cat-stat--muted {
+  color: var(--xn-text-muted);
+}
+
+#xenarch-admin .xenarch-cat-chevron {
+  font-size: 16px;
+  color: var(--xn-text-muted);
+  flex-shrink: 0;
+}
+
+#xenarch-admin .xenarch-cat-row:hover .xenarch-cat-chevron {
+  color: var(--xn-text-secondary);
+}
+
+#xenarch-admin .xenarch-always-note {
+  font-size: 11px;
+  color: var(--xn-text-muted);
+  margin-top: 10px;
+}
+
+/* ═══════ BOT DETAIL MODAL ═══════ */
+
+#xenarch-admin .xenarch-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+}
+
+#xenarch-admin .xenarch-modal {
+  background: var(--xn-bg);
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 12px;
+  width: 620px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#xenarch-admin .xenarch-modal-top {
+  padding: 24px 24px 0;
+}
+
+#xenarch-admin .xenarch-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+#xenarch-admin .xenarch-modal-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--xn-text);
+}
+
+#xenarch-admin .xenarch-modal-close {
+  font-size: 18px;
+  color: var(--xn-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+#xenarch-admin .xenarch-modal-close:hover {
+  color: var(--xn-dot-red);
+}
+
+/* Category pills in modal */
+#xenarch-admin .xenarch-cat-pills {
+  display: flex;
+  background: var(--xn-surface);
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+#xenarch-admin .xenarch-cat-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--xn-text-secondary);
+  padding: 5px 10px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  white-space: nowrap;
+}
+
+#xenarch-admin .xenarch-cat-pill--active {
+  background: var(--xn-surface-border);
+  color: var(--xn-text);
+}
+
+#xenarch-admin .xenarch-cat-pill:hover:not(.xenarch-cat-pill--active) {
+  color: var(--xn-text);
+}
+
+#xenarch-admin .xenarch-modal-search {
+  background: var(--xn-input-bg);
+  border: 1px solid var(--xn-input-border);
+  border-radius: 6px;
+  color: var(--xn-text);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  padding: 8px 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#xenarch-admin .xenarch-modal-search:focus {
+  outline: none;
+  border-color: var(--xn-input-focus);
+}
+
+#xenarch-admin .xenarch-modal-search::placeholder {
+  color: var(--xn-text-muted);
+}
+
+/* Bulk actions bar */
+#xenarch-admin .xenarch-bulk-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--xn-surface-border);
+}
+
+#xenarch-admin .xenarch-bulk-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#xenarch-admin .xenarch-bulk-label {
+  font-size: 12px;
+  color: var(--xn-text-secondary);
+}
+
+#xenarch-admin .xenarch-bulk-actions {
+  display: flex;
+  gap: 6px;
+}
+
+#xenarch-admin .xenarch-bulk-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--xn-text-muted);
+  background: none;
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 4px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+
+#xenarch-admin .xenarch-bulk-btn:hover {
+  border-color: var(--xn-dim);
+  color: var(--xn-text-secondary);
+}
+
+/* Custom checkbox */
+#xenarch-admin .xenarch-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--xn-dim);
+  border-radius: 3px;
+  background: none;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+}
+
+#xenarch-admin .xenarch-checkbox:hover {
+  border-color: var(--xn-text-secondary);
+}
+
+#xenarch-admin .xenarch-checkbox:checked {
+  background: var(--xn-dot-green);
+  border-color: var(--xn-dot-green);
+}
+
+#xenarch-admin .xenarch-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 4.5px;
+  top: 1.5px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--xn-bg);
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+
+/* Bot list in modal */
+#xenarch-admin .xenarch-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 24px 24px;
+}
+
+#xenarch-admin .xenarch-bot-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--xn-table-row-border);
+}
+
+#xenarch-admin .xenarch-bot-info {
+  flex: 1;
+  min-width: 0;
+}
+
+#xenarch-admin .xenarch-bot-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--xn-text);
+}
+
+#xenarch-admin .xenarch-bot-company {
+  font-size: 12px;
+  color: var(--xn-text-muted);
+  margin-left: 8px;
+}
+
+#xenarch-admin .xenarch-bot-new {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--xn-dot-green);
+  background: var(--xn-pill-paid-bg);
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-left: 6px;
+}
+
+#xenarch-admin .xenarch-bot-seen {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--xn-text-muted);
+  flex-shrink: 0;
+  min-width: 55px;
+  text-align: right;
+}
+
+/* Segmented action buttons */
+#xenarch-admin .xenarch-action-seg {
+  display: inline-flex;
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+#xenarch-admin .xenarch-action-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 3px 10px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--xn-text-muted);
+}
+
+#xenarch-admin .xenarch-action-btn--active {
+  background: var(--xn-surface-border);
+  color: var(--xn-text);
+}
+
+#xenarch-admin .xenarch-action-btn--allow.xenarch-action-btn--active {
+  color: var(--xn-dot-green);
+}
+
+#xenarch-admin .xenarch-action-btn:hover:not(.xenarch-action-btn--active) {
+  color: var(--xn-text-secondary);
+}
+
+/* ═══════ WALLET SECTION ═══════ */
+
+#xenarch-admin .xenarch-wallet-options {
+  display: flex;
+  gap: 8px;
+}
+
+#xenarch-admin .xenarch-wallet-opt {
+  flex: 1;
+  background: var(--xn-surface);
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 8px;
+  padding: 14px 12px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s;
+}
+
+#xenarch-admin .xenarch-wallet-opt:hover {
+  border-color: var(--xn-dim);
+}
+
+#xenarch-admin .xenarch-wallet-opt-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--xn-text);
+  line-height: 1.3;
+}
+
+#xenarch-admin .xenarch-wallet-opt-desc {
+  font-size: 11px;
+  color: var(--xn-text-muted);
+  margin-top: 2px;
+}
+
+#xenarch-admin .xenarch-wallet-manual {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--xn-surface);
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 8px;
+  padding: 14px 12px;
+}
+
+#xenarch-admin .xenarch-wallet-manual .xenarch-input {
+  flex: 1;
+  min-width: 0;
+  max-width: none;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+#xenarch-admin .xenarch-wallet-network-select {
+  background: var(--xn-input-bg);
+  border: 1px solid var(--xn-input-border);
+  border-radius: 6px;
+  color: var(--xn-text);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  padding: 8px 12px;
+  flex-shrink: 0;
+}
+
+#xenarch-admin .xenarch-wallet-icon-btn {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--xn-input-bg);
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  color: var(--xn-text-muted);
+}
+
+#xenarch-admin .xenarch-wallet-icon-btn:hover {
+  border-color: var(--xn-dim);
+  color: var(--xn-text-secondary);
+}
+
+#xenarch-admin .xenarch-wallet-icon-btn--confirm:hover {
+  border-color: var(--xn-dot-green);
+  color: var(--xn-dot-green);
+}
+
+#xenarch-admin .xenarch-wallet-icon-btn--cancel:hover {
+  border-color: var(--xn-dot-red);
+  color: var(--xn-dot-red);
+}
+
+#xenarch-admin .xenarch-wallet-configured {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--xn-surface);
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+
+#xenarch-admin .xenarch-wallet-addr {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: var(--xn-text);
+}
+
+#xenarch-admin .xenarch-wallet-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
+#xenarch-admin .xenarch-wallet-badge--xenarch {
+  color: var(--xn-dot-green);
+  background: var(--xn-pill-paid-bg);
+}
+
+#xenarch-admin .xenarch-wallet-badge--external {
+  color: #5a9fd4;
+  background: rgba(90,159,212,0.1);
+}
+
+#xenarch-admin .xenarch-wallet-note {
+  font-size: 11px;
+  color: var(--xn-text-muted);
+  margin-top: 4px;
+}
+
+#xenarch-admin .xenarch-wallet-change {
+  font-size: 12px;
+  color: var(--xn-text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+#xenarch-admin .xenarch-wallet-change:hover {
+  color: var(--xn-text);
+}
+
+/* ═══════ STATUS PILLS ═══════ */
+
+#xenarch-admin .xn-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 100px;
+}
+
+#xenarch-admin .xn-status-pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+#xenarch-admin .xn-status-pill--ok {
+  color: var(--xn-dot-green);
+  background: var(--xn-pill-paid-bg);
+}
+
+#xenarch-admin .xn-status-pill--err {
+  color: var(--xn-dot-red);
+  background: var(--xn-pill-blocked-bg);
+}
+
+#xenarch-admin .xn-status-pill--pending {
+  color: var(--xn-pending);
+  background: var(--xn-pending-bg);
+}
+
+/* ═══════ EARNINGS TAB ═══════ */
+
+/* Wallet row */
+#xenarch-admin .xenarch-earnings-wallet-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--xn-surface);
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 10px;
+  padding: 12px 20px;
+  margin-bottom: 24px;
+}
+
+#xenarch-admin .xenarch-earnings-wallet-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--xn-dot-green);
+  flex-shrink: 0;
+}
+
+#xenarch-admin .xenarch-earnings-wallet-addr {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--xn-text);
+}
+
+#xenarch-admin .xenarch-earnings-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
+#xenarch-admin .xenarch-earnings-badge--xenarch {
+  color: var(--xn-dot-green);
+  background: var(--xn-pill-paid-bg);
+  border: 1px solid rgba(74,222,128,0.15);
+}
+
+#xenarch-admin .xenarch-earnings-badge--own {
+  color: #5a9fd4;
+  background: rgba(90,159,212,0.1);
+  border: 1px solid rgba(90,159,212,0.2);
+}
+
+#xenarch-admin .xenarch-earnings-wallet-bal {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--xn-dot-green);
+  margin-left: auto;
+}
+
+#xenarch-admin .xenarch-earnings-btn-withdraw {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--xn-text);
+  background: var(--xn-surface-border);
+  border: 1px solid var(--xn-dim);
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+}
+
+#xenarch-admin .xenarch-earnings-btn-withdraw:hover {
+  background: var(--xn-dim);
+}
+
+/* Stats cards */
+#xenarch-admin .xenarch-earnings-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+#xenarch-admin .xenarch-earnings-stat {
+  background: var(--xn-surface);
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+#xenarch-admin .xenarch-earnings-stat--skeleton {
+  display: flex;
+  flex-direction: column;
+}
+
+#xenarch-admin .xenarch-earnings-stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--xn-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+}
+
+#xenarch-admin .xenarch-earnings-stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--xn-text);
+}
+
+#xenarch-admin .xenarch-earnings-stat-sub {
+  font-size: 11px;
+  color: var(--xn-text-muted);
+  margin-top: 4px;
+}
+
+/* Category breakdown */
+#xenarch-admin .xenarch-earnings-breakdown {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+#xenarch-admin .xenarch-earnings-bd-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--xn-surface);
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 8px;
+}
+
+#xenarch-admin .xenarch-earnings-bd-name {
+  font-size: 12px;
+  color: var(--xn-text-secondary);
+}
+
+#xenarch-admin .xenarch-earnings-bd-amount {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--xn-text);
+}
+
+/* Period row */
+#xenarch-admin .xenarch-earnings-period-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+#xenarch-admin .xenarch-earnings-period-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--xn-text);
+}
+
+/* Filter pills (type + period) */
+#xenarch-admin .xenarch-earnings-pills {
+  display: flex;
+  background: var(--xn-surface);
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+#xenarch-admin .xenarch-earnings-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--xn-text-secondary);
+  padding: 4px 12px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+#xenarch-admin .xenarch-earnings-pill:hover:not(.xenarch-earnings-pill--active) {
+  color: var(--xn-text);
+}
+
+#xenarch-admin .xenarch-earnings-pill--active {
+  background: var(--xn-surface-border);
+  color: var(--xn-text);
+}
+
+/* Transaction table */
+#xenarch-admin .xenarch-earnings-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+#xenarch-admin .xenarch-earnings-table th {
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--xn-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--xn-surface-border);
+}
+
+#xenarch-admin .xenarch-earnings-table td {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--xn-surface);
+  color: var(--xn-text);
+}
+
+#xenarch-admin .xenarch-earnings-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Transaction type pills */
+#xenarch-admin .xenarch-earnings-tx-type {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 400;
+}
+
+#xenarch-admin .xenarch-earnings-tx-type--earn {
+  background: var(--xn-pill-paid-bg);
+  color: var(--xn-dot-green);
+}
+
+#xenarch-admin .xenarch-earnings-tx-type--withdraw {
+  background: var(--xn-pill-blocked-bg);
+  color: var(--xn-dot-red);
+}
+
+/* Table cell styles */
+#xenarch-admin .xenarch-earnings-td-path {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--xn-text-secondary);
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#xenarch-admin .xenarch-earnings-td-agent {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--xn-text-secondary);
+}
+
+#xenarch-admin .xenarch-earnings-td-amount {
+  font-family: 'JetBrains Mono', monospace;
+  text-align: right;
+  color: var(--xn-dot-green);
+}
+
+#xenarch-admin .xenarch-earnings-td-time {
+  font-size: 12px;
+  color: var(--xn-text-muted);
+  text-align: right;
+}
+
+/* Load more */
+#xenarch-admin .xenarch-earnings-more-row {
+  text-align: center;
+  padding: 16px 0;
+}
+
+#xenarch-admin .xenarch-earnings-btn-more {
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  color: var(--xn-text-secondary);
+  background: none;
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+#xenarch-admin .xenarch-earnings-btn-more:hover {
+  border-color: var(--xn-dim);
+  color: var(--xn-text);
+}
+
+/* Empty / message states */
+#xenarch-admin .xenarch-earnings-empty {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+#xenarch-admin .xenarch-earnings-empty-title {
+  font-size: 14px;
+  color: var(--xn-text-secondary);
+  margin-bottom: 4px;
+}
+
+#xenarch-admin .xenarch-earnings-empty-desc {
+  font-size: 13px;
+  color: var(--xn-text-muted);
+}
+
+/* Error link */
+#xenarch-admin .xenarch-earnings-error-link {
+  color: var(--xn-text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+#xenarch-admin .xenarch-earnings-error-link:hover {
+  color: var(--xn-text);
+}
+
+/* Skeleton rows */
+#xenarch-admin .xenarch-earnings-skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--xn-surface);
+}
+
+/* Withdraw panel */
+#xenarch-admin .xenarch-earnings-withdraw-panel {
+  background: var(--xn-surface);
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+#xenarch-admin .xenarch-earnings-withdraw-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--xn-text);
+  margin-bottom: 4px;
+}
+
+#xenarch-admin .xenarch-earnings-withdraw-desc {
+  font-size: 13px;
+  color: var(--xn-text-secondary);
+  margin-bottom: 16px;
+}
+
+#xenarch-admin .xenarch-earnings-withdraw-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+#xenarch-admin .xenarch-earnings-withdraw-row label {
+  font-size: 13px;
+  color: var(--xn-text-secondary);
+  min-width: 80px;
+}
+
+#xenarch-admin .xenarch-earnings-withdraw-row input,
+#xenarch-admin .xenarch-earnings-withdraw-row select {
+  background: var(--xn-input-bg);
+  border: 1px solid var(--xn-input-border);
+  border-radius: 6px;
+  color: var(--xn-text);
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 8px 12px;
+}
+
+#xenarch-admin .xenarch-earnings-withdraw-row input:focus {
+  outline: none;
+  border-color: var(--xn-input-focus);
+}
+
+#xenarch-admin .xenarch-earnings-withdraw-row input {
+  flex: 1;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+#xenarch-admin .xenarch-earnings-withdraw-row select {
+  min-width: 100px;
+  font-family: 'Inter', sans-serif;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+#xenarch-admin .xenarch-earnings-withdraw-unit {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--xn-text-muted);
+}
+
+#xenarch-admin .xenarch-earnings-btn-max {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--xn-dot-green);
+  background: none;
+  border: 1px solid rgba(74,222,128,0.15);
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+#xenarch-admin .xenarch-earnings-withdraw-hint {
+  font-size: 11px;
+  color: var(--xn-text-muted);
+  margin-top: 8px;
+}
+
+#xenarch-admin .xenarch-earnings-withdraw-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+#xenarch-admin .xenarch-earnings-btn-send {
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  background: var(--xn-dot-green);
+  color: var(--xn-btn-primary-text);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+#xenarch-admin .xenarch-earnings-btn-send:hover {
+  opacity: 0.9;
+}
+
+#xenarch-admin .xenarch-earnings-btn-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+#xenarch-admin .xenarch-earnings-btn-cancel {
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  color: var(--xn-text-secondary);
+  background: none;
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+#xenarch-admin .xenarch-earnings-btn-cancel:hover {
+  border-color: var(--xn-dim);
+}
+
+/* Withdraw success message */
+#xenarch-admin .xenarch-earnings-save-status {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--xn-dot-green);
+  margin-bottom: 24px;
+}
+
+/* ═══════ SETTINGS — GATING DISABLED ROW ═══════ */
+
+#xenarch-admin .xenarch-cat-row--disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* ═══════ SETTINGS — PRICING ROW ═══════ */
+
+#xenarch-admin .xenarch-pricing-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+#xenarch-admin .xenarch-pricing-label {
+  font-size: 13px;
+  color: var(--xn-text-secondary);
+  min-width: 100px;
+}
+
+#xenarch-admin .xenarch-pricing-symbol {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--xn-text-secondary);
+}
+
+#xenarch-admin .xenarch-pricing-price-input {
+  max-width: 80px;
+  width: 80px;
+  text-align: right;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+}
+
+#xenarch-admin .xenarch-pricing-unit {
+  font-size: 11px;
+  color: var(--xn-text-muted);
+}
+
+/* Ghost text for empty rules */
+#xenarch-admin .xenarch-ghost-text {
+  font-size: 13px;
+  color: var(--xn-text-muted);
+  font-style: italic;
+  padding: 12px 0;
+}
+
+/* Add rule button */
+#xenarch-admin .xenarch-btn-add {
+  font-size: 13px;
+  color: var(--xn-text-secondary);
+  background: none;
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  margin-top: 8px;
+  font-family: 'Inter', sans-serif;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+#xenarch-admin .xenarch-btn-add:hover {
+  border-color: var(--xn-dim);
+  color: var(--xn-text);
+}
+
+/* ═══════ SETTINGS — PRICING RULE ROW ELEMENTS ═══════ */
+
+#xenarch-admin .xenarch-rule-grip {
+  font-size: 12px;
+  color: var(--xn-dim);
+  cursor: grab;
+  user-select: none;
+}
+
+#xenarch-admin .xenarch-rule-match {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--xn-text-secondary);
+  min-width: 65px;
+  flex-shrink: 0;
+}
+
+#xenarch-admin .xenarch-rule-arrow {
+  font-size: 12px;
+  color: var(--xn-dim);
+  flex-shrink: 0;
+}
+
+#xenarch-admin .xenarch-rule-dollar {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--xn-text-secondary);
+  flex-shrink: 0;
+}
+
+#xenarch-admin .xenarch-rule-price {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+#xenarch-admin .xenarch-rule-price--free {
+  color: var(--xn-dot-green);
+  text-transform: uppercase;
+  font-weight: 500;
+  font-family: 'JetBrains Mono', monospace;
+  cursor: pointer;
+}
+
+#xenarch-admin .xenarch-rule-remove {
+  font-size: 14px;
+  color: var(--xn-dim);
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+#xenarch-admin .xenarch-rule-remove:hover {
+  color: var(--xn-dot-red);
+}
+
+/* ═══════ SETTINGS — WALLET CHANGE BLOCKED ═══════ */
+
+#xenarch-admin .xenarch-wallet-change--disabled {
+  color: var(--xn-dim);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+#xenarch-admin .xenarch-wallet-change--disabled:hover {
+  color: var(--xn-dim);
+}
+
+#xenarch-admin .xenarch-wallet-change-hint {
+  font-size: 11px;
+  color: var(--xn-text-muted);
+  margin-top: 4px;
+}
+
 /* ═══════ RESPONSIVE ═══════ */
 
 @media (max-width: 782px) {
   #xenarch-admin .xenarch-stats-grid {
     grid-template-columns: 1fr;
+  }
+
+  #xenarch-admin .xenarch-earnings-stats {
+    grid-template-columns: 1fr;
+  }
+
+  #xenarch-admin .xenarch-earnings-breakdown {
+    grid-template-columns: 1fr;
+  }
+
+  #xenarch-admin .xenarch-earnings-period-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  #xenarch-admin .xenarch-earnings-wallet-row {
+    flex-wrap: wrap;
   }
 
   #xenarch-admin .xenarch-rule-row {

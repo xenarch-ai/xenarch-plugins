@@ -54,9 +54,6 @@ function xenarch_activate() {
 	if ( false === get_option( 'xenarch_site_token' ) ) {
 		add_option( 'xenarch_site_token', '' );
 	}
-	if ( false === get_option( 'xenarch_email' ) ) {
-		add_option( 'xenarch_email', '' );
-	}
 	if ( false === get_option( 'xenarch_default_price' ) ) {
 		add_option( 'xenarch_default_price', '0.003' );
 	}
@@ -69,9 +66,36 @@ function xenarch_activate() {
 	if ( false === get_option( 'xenarch_pricing_rules' ) ) {
 		add_option( 'xenarch_pricing_rules', '[]' );
 	}
+	// Bot classification options.
+	if ( false === get_option( 'xenarch_gate_enabled' ) ) {
+		add_option( 'xenarch_gate_enabled', '1' );
+	}
+	if ( false === get_option( 'xenarch_bot_categories' ) ) {
+		add_option( 'xenarch_bot_categories', wp_json_encode( array(
+			'ai_search'     => 'allow',
+			'ai_assistants' => 'charge',
+			'ai_agents'     => 'charge',
+			'ai_training'   => 'charge',
+			'scrapers'      => 'charge',
+			'general_ai'    => 'charge',
+		) ) );
+	}
+	if ( false === get_option( 'xenarch_bot_overrides' ) ) {
+		add_option( 'xenarch_bot_overrides', '{}' );
+	}
+	if ( false === get_option( 'xenarch_wallet_type' ) ) {
+		add_option( 'xenarch_wallet_type', '' );
+	}
+	if ( false === get_option( 'xenarch_wallet_network' ) ) {
+		add_option( 'xenarch_wallet_network', 'base' );
+	}
+
 	if ( false === get_option( Xenarch_Browser_Proof::SECRET_OPTION ) && function_exists( 'wp_generate_password' ) ) {
 		add_option( Xenarch_Browser_Proof::SECRET_OPTION, wp_generate_password( 64, true, true ) );
 	}
+
+	// Create bot detection log table.
+	xenarch_create_bot_log_table();
 
 	// Register rewrite rules before flushing so they get written.
 	$discovery = new Xenarch_Discovery();
@@ -114,3 +138,30 @@ function xenarch_init() {
 	new Xenarch_Rest();
 }
 add_action( 'plugins_loaded', 'xenarch_init' );
+
+/**
+ * Create the bot detection log table.
+ */
+function xenarch_create_bot_log_table() {
+	global $wpdb;
+
+	$table_name      = $wpdb->prefix . 'xenarch_bot_log';
+	$charset_collate = $wpdb->get_charset_collate();
+
+	$sql = "CREATE TABLE $table_name (
+		id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+		signature varchar(255) NOT NULL,
+		category varchar(50) NOT NULL DEFAULT '',
+		company varchar(100) NOT NULL DEFAULT '',
+		first_seen datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+		last_seen datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+		hit_count bigint(20) unsigned NOT NULL DEFAULT 0,
+		PRIMARY KEY (id),
+		UNIQUE KEY signature (signature),
+		KEY category (category),
+		KEY last_seen (last_seen)
+	) $charset_collate;";
+
+	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+	dbDelta( $sql );
+}
