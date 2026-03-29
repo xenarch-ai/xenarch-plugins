@@ -69,6 +69,11 @@ class Xenarch_Gate {
 			return;
 		}
 
+		// Master gate toggle — if OFF, allow everything.
+		if ( '1' !== get_option( 'xenarch_gate_enabled', '1' ) ) {
+			return;
+		}
+
 		// Run full non-human traffic detection.
 		$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 		$headers    = self::get_request_headers();
@@ -82,6 +87,11 @@ class Xenarch_Gate {
 		}
 
 		if ( 'allow' === $detection['decision'] ) {
+			return;
+		}
+
+		// Category-based gating: check if this bot's category is set to allow.
+		if ( ! $this->should_gate_bot( $detection ) ) {
 			return;
 		}
 
@@ -274,6 +284,11 @@ class Xenarch_Gate {
 			return $response;
 		}
 
+		// Master gate toggle — if OFF, allow everything.
+		if ( '1' !== get_option( 'xenarch_gate_enabled', '1' ) ) {
+			return $response;
+		}
+
 		$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 		$headers    = self::get_request_headers();
 		$detection  = Xenarch_Bot_Detect::detect_full( $user_agent, $headers, $this->get_request_context( $request_uri, $user_agent ) );
@@ -286,6 +301,11 @@ class Xenarch_Gate {
 		}
 
 		if ( 'allow' === $detection['decision'] ) {
+			return $response;
+		}
+
+		// Category-based gating: check if this bot's category is set to allow.
+		if ( ! $this->should_gate_bot( $detection ) ) {
 			return $response;
 		}
 
@@ -392,6 +412,126 @@ class Xenarch_Gate {
 		if ( function_exists( 'apply_filters' ) && apply_filters( 'xenarch_log_detection_events', false, $event ) ) {
 			error_log( 'xenarch_detection_event ' . wp_json_encode( $event ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 		}
+
+		// Log bot signature to the detection table.
+		$this->log_bot_detection( $detection );
+	}
+
+	/**
+	 * Log a detected bot to the wp_xenarch_bot_log table.
+	 * Updates last_seen and hit_count for known signatures,
+	 * inserts new rows for unknown bots with auto-categorization.
+	 *
+	 * @param array $detection Detection result.
+	 * @return void
+	 */
+	private function log_bot_detection( $detection ) {
+		// Only log UA-matched bots and header-scored suspicious traffic.
+		$method = isset( $detection['method'] ) ? $detection['method'] : '';
+		if ( ! in_array( $method, array( 'ua_match', 'fetcher_ua' ), true ) && 0 !== strpos( $method, 'header_score' ) ) {
+			return;
+		}
+
+		$signature = '';
+		if ( ! empty( $detection['signals'][0] ) ) {
+			$signature = $detection['signals'][0];
+		} elseif ( 0 === strpos( $method, 'header_score' ) ) {
+			// For header-scored bots, use the traffic class as signature.
+			$signature = 'header_scored:' . ( isset( $detection['score'] ) ? $detection['score'] : '?' );
+			return; // Don't log generic header scores — no useful signature.
+		}
+
+		if ( empty( $signature ) ) {
+			return;
+		}
+
+		global $wpdb;
+		$table = $wpdb->prefix . 'xenarch_bot_log';
+		$now   = current_time( 'mysql', true );
+
+		// Try to update existing row first.
+		$updated = $wpdb->query( $wpdb->prepare(
+			"UPDATE $table SET last_seen = %s, hit_count = hit_count + 1 WHERE signature = %s", // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$now,
+			$signature
+		) );
+
+		if ( 0 === (int) $updated ) {
+			// New signature — insert with auto-categorization for unknown bots.
+			$category = Xenarch_Bot_Detect::get_category_for_signature( $signature );
+			$company  = Xenarch_Bot_Detect::get_company_for_signature( $signature );
+
+			if ( empty( $category ) ) {
+				// Unknown bot — auto-categorize from UA pattern.
+				$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
+				$category   = Xenarch_Bot_Detect::auto_categorize( $user_agent );
+				$company    = $signature; // Use signature as company for unknown bots.
+			}
+
+			$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+				$table,
+				array(
+					'signature'  => $signature,
+					'category'   => $category,
+					'company'    => $company,
+					'first_seen' => $now,
+					'last_seen'  => $now,
+					'hit_count'  => 1,
+				),
+				array( '%s', '%s', '%s', '%s', '%s', '%d' )
+			);
+		}
+	}
+
+	/**
+	 * Determine whether a detected bot should be gated based on category
+	 * toggles and per-bot overrides.
+	 *
+	 * Only applies to UA-matched bots (method = 'ua_match'). HTTP client
+	 * libraries, empty UAs, and header-scored bots are always gated.
+	 *
+	 * @param array $detection Detection result from Xenarch_Bot_Detect::detect_full().
+	 * @return bool True if the bot should be gated (charged), false if allowed.
+	 */
+	private function should_gate_bot( $detection ) {
+		// Only category logic applies to UA-matched bots.
+		if ( 'ua_match' !== $detection['method'] ) {
+			return true;
+		}
+
+		$signature = ! empty( $detection['signals'][0] ) ? $detection['signals'][0] : '';
+		if ( empty( $signature ) ) {
+			return true;
+		}
+
+		// Social preview bots are always allowed (not configurable).
+		if ( 'social_preview_fetcher' === $detection['traffic_class'] ) {
+			return false;
+		}
+
+		// Check per-bot override first — always wins.
+		$overrides = json_decode( get_option( 'xenarch_bot_overrides', '{}' ), true );
+		if ( is_array( $overrides ) && isset( $overrides[ $signature ] ) ) {
+			return 'charge' === $overrides[ $signature ];
+		}
+
+		// Fall back to category default.
+		$category = isset( $detection['category'] ) ? $detection['category'] : null;
+		if ( empty( $category ) ) {
+			$category = Xenarch_Bot_Detect::get_category_for_signature( $signature );
+		}
+		if ( empty( $category ) ) {
+			// Unknown signature not in our map — gate it.
+			return true;
+		}
+
+		$categories = json_decode( get_option( 'xenarch_bot_categories', '{}' ), true );
+		if ( is_array( $categories ) && isset( $categories[ $category ] ) ) {
+			return 'charge' === $categories[ $category ];
+		}
+
+		// Default: gate unknown categories.
+		return true;
 	}
 
 	/**
