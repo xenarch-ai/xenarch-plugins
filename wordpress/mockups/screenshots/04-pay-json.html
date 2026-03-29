@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Screenshot 4 — pay.json</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500&family=Space+Grotesk:wght@300;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #f0f0f0; font-family: 'Inter', system-ui, sans-serif; display: flex; justify-content: center; padding: 0; }
+  .frame { width: 1544px; background: #0a0a0a; padding: 48px 80px; }
+  .caption { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 300; color: #f0f0f0; margin-bottom: 8px; }
+  .caption-sub { font-size: 13px; color: #666; margin-bottom: 24px; }
+  .columns { display: flex; gap: 40px; align-items: flex-start; }
+  .code-block { background: #111; border: 1px solid #1a1a1a; border-radius: 12px; overflow: hidden; flex: 1; max-width: 620px; }
+  .code-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: #151515; border-bottom: 1px solid #1a1a1a; }
+  .code-bar-left { display: flex; align-items: center; gap: 8px; }
+  .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-red { background: #ff5f57; } .dot-yellow { background: #febc2e; } .dot-green { background: #28c840; }
+  .code-filename { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #888; margin-left: 8px; }
+  .code-url { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #555; }
+  .code-body { padding: 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7; }
+  .json-key { color: #888; } .json-str { color: #e9d585; } .json-num { color: #7dd3fc; } .json-brace { color: #555; } .json-comment { color: #444; font-style: italic; }
+  .explainer { flex: 0 0 340px; }
+  .explainer-item { margin-bottom: 20px; padding-left: 16px; border-left: 2px solid #1a1a1a; }
+  .explainer-item.highlight { border-left-color: #333; }
+  .explainer-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .explainer-text { font-size: 13px; color: #888; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="caption">pay.json — machine-readable pricing for AI agents</div>
+  <div class="caption-sub">Like robots.txt but for payments. Placed at /.well-known/pay.json on your site. Xenarch generates it automatically.</div>
+  <div class="columns">
+    <div class="code-block">
+      <div class="code-bar"><div class="code-bar-left"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div><span class="code-filename">pay.json</span></div><span class="code-url">myblog.com/.well-known/pay.json</span></div>
+      <div class="code-body">
+        <div><span class="json-brace">{</span></div>
+        <div>&nbsp;&nbsp;<span class="json-key">"version"</span>: <span class="json-str">"1.0"</span>,</div>
+        <div>&nbsp;&nbsp;<span class="json-key">"provider"</span>: <span class="json-str">"xenarch"</span>,</div>
+        <div>&nbsp;&nbsp;<span class="json-key">"protocol"</span>: <span class="json-str">"x402"</span>,</div>
+        <div>&nbsp;&nbsp;<span class="json-key">"network"</span>: <span class="json-str">"base"</span>,</div>
+        <div>&nbsp;&nbsp;<span class="json-key">"asset"</span>: <span class="json-str">"USDC"</span>,</div>
+        <div>&nbsp;&nbsp;<span class="json-key">"receiver"</span>: <span class="json-str">"0x4a2E...8f3D"</span>,</div>
+        <div>&nbsp;&nbsp;<span class="json-key">"seller_wallet"</span>: <span class="json-str">"0x9b2e...f104"</span>,</div>
+        <div>&nbsp;&nbsp;<span class="json-key">"facilitator"</span>: <span class="json-str">"https://api.xenarch.dev/v1/gates"</span>,</div>
+        <div>&nbsp;&nbsp;<span class="json-key">"rules"</span>: <span class="json-brace">[</span></div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-brace">{</span> <span class="json-key">"path"</span>: <span class="json-str">"/*"</span>, <span class="json-key">"price_usd"</span>: <span class="json-str">"0.003"</span> <span class="json-brace">}</span>,</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-brace">{</span> <span class="json-key">"path"</span>: <span class="json-str">"/docs/*"</span>, <span class="json-key">"price_usd"</span>: <span class="json-str">"0.01"</span> <span class="json-brace">}</span>,</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-brace">{</span> <span class="json-key">"path"</span>: <span class="json-str">"/api/*"</span>, <span class="json-key">"price_usd"</span>: <span class="json-str">"0.05"</span> <span class="json-brace">}</span>,</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-brace">{</span> <span class="json-key">"path"</span>: <span class="json-str">"/public/*"</span>, <span class="json-key">"price_usd"</span>: <span class="json-str">"0"</span> <span class="json-brace">}</span> <span class="json-comment">// free</span></div>
+        <div>&nbsp;&nbsp;<span class="json-brace">]</span>,</div>
+        <div>&nbsp;&nbsp;<span class="json-key">"contact"</span>: <span class="json-str">"hello@myblog.com"</span>,</div>
+        <div>&nbsp;&nbsp;<span class="json-key">"terms"</span>: <span class="json-str">"https://myblog.com/terms"</span></div>
+        <div><span class="json-brace">}</span></div>
+      </div>
+    </div>
+    <div class="explainer">
+      <div class="explainer-item highlight"><div class="explainer-label">What it does</div><div class="explainer-text">Tells AI bots: "this site charges for access." Bots check it before crawling, just like they check robots.txt.</div></div>
+      <div class="explainer-item"><div class="explainer-label">Rules</div><div class="explainer-text">Your pricing from the Settings tab, exported as machine-readable JSON. First match wins. Price "0" = free access.</div></div>
+      <div class="explainer-item"><div class="explainer-label">Auto-generated</div><div class="explainer-text">Xenarch creates and serves this file automatically based on your pricing rules. No manual editing needed.</div></div>
+      <div class="explainer-item"><div class="explainer-label">Open standard</div><div class="explainer-text">pay.json is a vendor-neutral spec. Any payment provider can implement it. Not locked to Xenarch.</div></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

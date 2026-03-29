@@ -31,6 +31,12 @@ export function WalletBar({ settings }: Props) {
     }
   }
 
+  // Wallet type labels:
+  //   "External Wallet" = pasted address
+  //   "WalletConnect"   = connected via WalletConnect
+  //   "Xenarch Wallet"  = platform-generated custodial (v2)
+  const walletLabel = settings.wallet_type === 'walletconnect' ? 'WalletConnect' : 'External Wallet'
+
   return (
     <div className="xenarch-wallet-bar">
       <span className="xenarch-dot xenarch-dot--green" />
@@ -38,12 +44,7 @@ export function WalletBar({ settings }: Props) {
       <button className="xenarch-copy-btn" onClick={handleCopy} title="Copy address">
         {copied ? 'Copied!' : 'Copy'}
       </button>
-      {/* Wallet type labels:
-          - "External Wallet" = pasted address (current)
-          - "WalletConnect"   = connected via WalletConnect (XEN-48)
-          - "Xenarch Wallet"  = platform-generated custodial (v2)
-      */}
-      <span className="xenarch-wallet-label">External Wallet</span>
+      <span className="xenarch-wallet-label">{walletLabel}</span>
     </div>
   )
 }

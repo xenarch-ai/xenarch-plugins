@@ -97,6 +97,29 @@ class Xenarch_Admin {
 	}
 
 	/**
+	 * Get the Reown (WalletConnect) project ID from the platform API.
+	 * Cached as a WordPress transient for 24 hours.
+	 *
+	 * @return string Project ID or empty string on failure.
+	 */
+	private function get_wc_project_id() {
+		$cached = get_transient( 'xenarch_wc_project_id' );
+		if ( false !== $cached ) {
+			return $cached;
+		}
+
+		$api    = new Xenarch_Api();
+		$result = $api->get_config();
+
+		if ( ! is_wp_error( $result ) && ! empty( $result['wc_project_id'] ) ) {
+			set_transient( 'xenarch_wc_project_id', $result['wc_project_id'], DAY_IN_SECONDS );
+			return $result['wc_project_id'];
+		}
+
+		return '';
+	}
+
+	/**
 	 * Render the settings page — just a mount point for React.
 	 */
 	public function render_settings_page() {
@@ -104,11 +127,12 @@ class Xenarch_Admin {
 			return;
 		}
 		$config = array(
-			'restUrl'   => rest_url( 'xenarch/v1' ),
-			'nonce'     => wp_create_nonce( 'wp_rest' ),
-			'settings'  => $this->get_initial_settings(),
-			'pluginUrl' => XENARCH_PLUGIN_URL,
-			'version'   => XENARCH_VERSION,
+			'restUrl'     => rest_url( 'xenarch/v1' ),
+			'nonce'       => wp_create_nonce( 'wp_rest' ),
+			'settings'    => $this->get_initial_settings(),
+			'pluginUrl'   => XENARCH_PLUGIN_URL,
+			'version'     => XENARCH_VERSION,
+			'wcProjectId' => $this->get_wc_project_id(),
 		);
 		echo '<div class="wrap xenarch-wrap">';
 		echo '<div class="xenarch-page-container">';
@@ -163,6 +187,7 @@ class Xenarch_Admin {
 			'bot_signature_count'  => count( Xenarch_Bot_Detect::get_signatures() ) + count( Xenarch_Bot_Detect::get_fetcher_signatures() ),
 			'pay_json_url'         => get_site_url() . '/.well-known/pay.json',
 			'xenarch_md_url'       => get_site_url() . '/.well-known/xenarch.md',
+			'wallet_type'          => get_option( 'xenarch_wallet_type', '' ),
 		);
 	}
 }

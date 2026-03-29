@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Screenshot 1 — Settings (Configured)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&family=Space+Grotesk:wght@300;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { display: flex; justify-content: center; padding: 0; }
+  .frame { width: 1544px; display: flex; background: linear-gradient(to right, #0a0a0a 50%, #E8E4DF 50%); }
+  .panel { flex: 1; display: flex; justify-content: center; padding: 48px 40px; }
+  .plugin { max-width: 640px; width: 100%; font-family: 'Inter', system-ui, sans-serif; font-size: 14px; line-height: 1.5; color: var(--fg); }
+  .dark { --bg: #0a0a0a; --fg: #f0f0f0; --secondary: #888; --muted: #555; --dim: #333; --surface: #111; --border: #1a1a1a; --surface-alt: #151515; --success: #4ade80; --btn-bg: #f0f0f0; --btn-fg: #0a0a0a; }
+  .light { --bg: #E8E4DF; --fg: #1a1a1a; --secondary: #555; --muted: #999; --dim: #c8c4bf; --surface: #ddd8d2; --border: #d0ccc7; --surface-alt: #d5d0ca; --success: #16a34a; --btn-bg: #1a1a1a; --btn-fg: #f0f0f0; }
+  .header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .logo { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 300; line-height: 1.2; color: var(--fg); }
+  .version { font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1; color: var(--secondary); background: var(--surface-alt); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); }
+  .subtitle { font-size: 13px; color: var(--secondary); margin-bottom: 24px; }
+  .tabs { display: flex; margin-bottom: 32px; border-bottom: 1px solid var(--border); }
+  .tab { font-size: 13px; color: var(--secondary); padding: 8px 16px; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab.active { color: var(--fg); border-bottom-color: var(--fg); }
+  .section { padding-top: 24px; margin-bottom: 24px; }
+  .section + .section { border-top: 1px solid var(--border); }
+  .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; line-height: 1.2; color: var(--fg); margin-bottom: 4px; }
+  .section-desc { font-size: 13px; color: var(--secondary); margin-bottom: 16px; }
+  .row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .row label { font-size: 13px; color: var(--secondary); min-width: 100px; }
+  .symbol { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--secondary); }
+  .unit { font-size: 11px; color: var(--muted); }
+  .hint { font-size: 11px; color: var(--muted); margin: 4px 0 0 112px; }
+  input[type="text"] { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--fg); font-family: 'JetBrains Mono', monospace; font-size: 13px; padding: 8px 12px; }
+  input.price { width: 80px; text-align: right; }
+  input.path { flex: 1; }
+  input.wallet { flex: 1; }
+  select { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--fg); font-family: 'Inter', sans-serif; font-size: 13px; padding: 8px 32px 8px 12px; appearance: none; -webkit-appearance: none; cursor: pointer; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .toggle-label { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; line-height: 1.2; color: var(--fg); }
+  .toggle-desc { font-size: 13px; color: var(--secondary); margin-top: 4px; }
+  .toggle { width: 44px; height: 24px; background: var(--success); border-radius: 12px; position: relative; flex-shrink: 0; }
+  .toggle .dot { width: 18px; height: 18px; background: white; border-radius: 50%; position: absolute; top: 3px; left: 23px; }
+  .rule { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; }
+  .rule .grip { font-size: 12px; color: var(--dim); }
+  .rule .match { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--secondary); min-width: 65px; }
+  .rule .arrow { font-size: 12px; color: var(--dim); }
+  .rule .dollar { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--secondary); }
+  .rule .remove { font-size: 14px; color: var(--dim); border: none; background: none; padding: 4px 8px; }
+  .btn-add { font-size: 13px; color: var(--secondary); background: none; border: 1px solid var(--border); border-radius: 6px; padding: 8px 16px; margin-top: 8px; }
+  .wallet-status { display: flex; align-items: center; gap: 8px; margin-top: 16px; margin-left: 112px; }
+  .wallet-connected { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success); background: var(--surface); border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; }
+  .btn-save { font-size: 13px; font-weight: 500; background: var(--btn-bg); color: var(--btn-fg); border: none; border-radius: 6px; padding: 10px 20px; }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="panel dark"><div class="plugin">
+    <div class="header"><span class="logo">/xenarch</span><span class="version">v1.0</span></div>
+    <p class="subtitle">AI bots pay to access your content. Set your price, connect your wallet, done.</p>
+    <div class="tabs"><div class="tab active">Settings</div><div class="tab">Earnings</div></div>
+    <div class="section">
+      <div class="toggle-row"><div><div class="toggle-label">Gate AI bots</div><div class="toggle-desc">When on, AI crawlers must pay to access your site</div></div><div class="toggle"><div class="dot"></div></div></div>
+      <div class="row"><label>Default price</label><span class="symbol">$</span><input type="text" class="price" value="0.003"><span class="unit">per page</span></div>
+      <p class="hint">Every page on your site unless a rule below says otherwise</p>
+    </div>
+    <div class="section">
+      <div class="section-title">Pricing rules</div><div class="section-desc">Override price for specific URLs. First match wins.</div>
+      <div class="rule"><span class="grip">&#x2807;</span><span class="match">URL contains</span><input type="text" class="path" value="/docs/"><span class="arrow">&rarr;</span><span class="dollar">$</span><input type="text" class="price" value="0.01"><button class="remove">&times;</button></div>
+      <div class="rule"><span class="grip">&#x2807;</span><span class="match">URL contains</span><input type="text" class="path" value="/api/"><span class="arrow">&rarr;</span><span class="dollar">$</span><input type="text" class="price" value="0.05"><button class="remove">&times;</button></div>
+      <div class="rule"><span class="grip">&#x2807;</span><span class="match">URL contains</span><input type="text" class="path" value="/public/"><span class="arrow">&rarr;</span><span class="dollar">$</span><input type="text" class="price" value="FREE" style="color:var(--success);text-transform:uppercase;"><button class="remove">&times;</button></div>
+      <button class="btn-add">+ add rule</button>
+    </div>
+    <div class="section">
+      <div class="section-title">Wallet</div><div class="section-desc">Your USDC earnings go here</div>
+      <div class="row"><label>USDC address</label><input type="text" class="wallet" value="0x9b2e4f8a1c3d7e6b5f0a9c8d2e1f3b4a6c7d8ef1"></div>
+      <div class="row"><label>Network</label><select><option>Base</option></select></div>
+      <div class="wallet-status"><span class="wallet-connected">connected via MetaMask</span></div>
+    </div>
+    <div style="padding-top:8px;"><button class="btn-save">Save changes</button></div>
+  </div></div>
+  <div class="panel light"><div class="plugin">
+    <div class="header"><span class="logo">/xenarch</span><span class="version">v1.0</span></div>
+    <p class="subtitle">AI bots pay to access your content. Set your price, connect your wallet, done.</p>
+    <div class="tabs"><div class="tab active">Settings</div><div class="tab">Earnings</div></div>
+    <div class="section">
+      <div class="toggle-row"><div><div class="toggle-label">Gate AI bots</div><div class="toggle-desc">When on, AI crawlers must pay to access your site</div></div><div class="toggle"><div class="dot"></div></div></div>
+      <div class="row"><label>Default price</label><span class="symbol">$</span><input type="text" class="price" value="0.003"><span class="unit">per page</span></div>
+      <p class="hint">Every page on your site unless a rule below says otherwise</p>
+    </div>
+    <div class="section">
+      <div class="section-title">Pricing rules</div><div class="section-desc">Override price for specific URLs. First match wins.</div>
+      <div class="rule"><span class="grip">&#x2807;</span><span class="match">URL contains</span><input type="text" class="path" value="/docs/"><span class="arrow">&rarr;</span><span class="dollar">$</span><input type="text" class="price" value="0.01"><button class="remove">&times;</button></div>
+      <div class="rule"><span class="grip">&#x2807;</span><span class="match">URL contains</span><input type="text" class="path" value="/api/"><span class="arrow">&rarr;</span><span class="dollar">$</span><input type="text" class="price" value="0.05"><button class="remove">&times;</button></div>
+      <div class="rule"><span class="grip">&#x2807;</span><span class="match">URL contains</span><input type="text" class="path" value="/public/"><span class="arrow">&rarr;</span><span class="dollar">$</span><input type="text" class="price" value="FREE" style="color:var(--success);text-transform:uppercase;"><button class="remove">&times;</button></div>
+      <button class="btn-add">+ add rule</button>
+    </div>
+    <div class="section">
+      <div class="section-title">Wallet</div><div class="section-desc">Your USDC earnings go here</div>
+      <div class="row"><label>USDC address</label><input type="text" class="wallet" value="0x9b2e4f8a1c3d7e6b5f0a9c8d2e1f3b4a6c7d8ef1"></div>
+      <div class="row"><label>Network</label><select><option>Base</option></select></div>
+      <div class="wallet-status"><span class="wallet-connected">connected via MetaMask</span></div>
+    </div>
+    <div style="padding-top:8px;"><button class="btn-save">Save changes</button></div>
+  </div></div>
+</div>
+</body>
+</html>

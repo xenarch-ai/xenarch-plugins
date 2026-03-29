@@ -1,63 +1,52 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect, useRef } from 'react'
+import { getAppKit } from './config'
 
 interface Props {
-  onConnect: (address: string) => void
+  connected?: boolean
+  onConnect?: (address: string) => void
+  onDisconnect?: () => void
 }
 
-export function WalletConnectButton({ onConnect }: Props) {
-  const [available, setAvailable] = useState(false)
-  const [loading, setLoading] = useState(true)
+export function WalletConnectButton({ connected, onConnect, onDisconnect }: Props) {
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  useEffect(() => {
-    // Only enable WalletConnect if a project ID is configured.
-    const projectId = process.env.REOWN_PROJECT_ID || ''
-    if (!projectId) {
-      setLoading(false)
-      return
-    }
+  const handleConnect = () => {
+    const appKit = getAppKit()
+    if (!appKit) return
+    appKit.open()
 
-    // Dynamically import to avoid loading heavy WalletConnect SDK when no project ID.
-    import('./config')
-      .then(() => {
-        setAvailable(true)
-        setLoading(false)
-      })
-      .catch(() => {
-        setLoading(false)
-      })
-  }, [])
-
-  const handleConnect = useCallback(async () => {
-    if (!available) return
-
-    try {
-      const { appKit } = await import('./config')
-      await appKit.open()
-
-      // Poll for connected address (AppKit events).
-      const checkAddress = setInterval(() => {
-        const address = appKit.getAddress()
-        if (address) {
-          clearInterval(checkAddress)
-          onConnect(address)
+    // Poll for address after modal opens (AppKit has no connect callback).
+    if (onConnect && !pollingRef.current) {
+      pollingRef.current = setInterval(() => {
+        const addr = appKit.getAddress()
+        if (addr) {
+          clearInterval(pollingRef.current!)
+          pollingRef.current = null
+          onConnect(addr)
         }
       }, 500)
-
-      // Stop polling after 60s.
-      setTimeout(() => clearInterval(checkAddress), 60_000)
-    } catch {
-      // User cancelled or error.
     }
-  }, [available, onConnect])
-
-  if (loading) {
-    return null
   }
 
-  if (!available) {
+  // Clean up polling on unmount.
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current)
+    }
+  }, [])
+
+  const handleDisconnect = async () => {
+    const appKit = getAppKit()
+    if (appKit) {
+      try { await appKit.disconnect() } catch {}
+    }
+    onDisconnect?.()
+  }
+
+  if (connected) {
     return (
-      <button className="xenarch-btn xenarch-btn--secondary" disabled>
-        Connect Wallet (configure REOWN_PROJECT_ID to enable)
+      <button className="xenarch-btn xenarch-btn--secondary" onClick={handleDisconnect}>
+        Disconnect Wallet
       </button>
     )
   }
