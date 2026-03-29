@@ -4,29 +4,46 @@ export interface XenarchAdmin {
   settings: Settings
   pluginUrl: string
   version: string
-  wcProjectId: string
+}
+
+export type BotCategoryKey = 'ai_search' | 'ai_assistants' | 'ai_agents' | 'ai_training' | 'scrapers' | 'general_ai'
+export type BotAction = 'allow' | 'charge'
+export type BotCategories = Record<BotCategoryKey, BotAction>
+export type BotOverrides = Record<string, BotAction>
+
+export interface BotSignature {
+  name: string
+  category: BotCategoryKey
+  company: string
+  last_seen: string | null
+  first_seen: string | null
+  hit_count: number
+}
+
+export interface PagePath {
+  path: string
+  title: string
 }
 
 export interface Settings {
   api_key: boolean
   site_id: string
   site_token: string
-  email: string
   default_price: string
   payout_wallet: string
   gate_unknown_traffic: string
-  wallet_type: '' | 'external' | 'walletconnect'
+  gate_enabled: string
+  bot_categories: BotCategories
+  bot_overrides: BotOverrides
+  wallet_type: string
+  wallet_network: string
   domain: string
-  is_registered: boolean
+  has_wallet: boolean
   has_site: boolean
   bot_signature_count: number
   pay_json_url: string
   xenarch_md_url: string
 }
-
-export type SettingsChange = Settings | ((current: Settings) => Settings)
-
-export type SettingsChangeHandler = (change: SettingsChange) => void
 
 export interface PricingRule {
   path_contains: string
@@ -60,6 +77,15 @@ export interface TransactionsResponse {
   total: number
   page: number
   per_page: number
+}
+
+export interface CategoryBreakdownItem {
+  category: string
+  earned_usd: string
+}
+
+export interface WalletBalanceResponse {
+  balance_usd: string
 }
 
 declare global {

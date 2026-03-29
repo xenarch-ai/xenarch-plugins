@@ -1,4 +1,4 @@
-import type { Settings, PricingRule, StatsResponse, TransactionsResponse } from './types'
+import type { Settings, PricingRule, StatsResponse, TransactionsResponse, BotCategories, BotOverrides, BotSignature, BotAction, PagePath, CategoryBreakdownItem, WalletBalanceResponse } from './types'
 
 function getConfig() {
   return window.xenarchAdmin
@@ -65,9 +65,65 @@ export function savePricingRules(rules: PricingRule[]): Promise<{ rules: Pricing
   })
 }
 
+// Bot categories
+export function fetchBotCategories(): Promise<BotCategories> {
+  return apiFetch<BotCategories>('/bot-categories')
+}
+
+export function updateBotCategories(data: Partial<BotCategories>): Promise<BotCategories> {
+  return apiFetch<BotCategories>('/bot-categories', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+// Bot overrides
+export function fetchBotOverrides(): Promise<BotOverrides> {
+  return apiFetch<BotOverrides>('/bot-overrides')
+}
+
+export function updateBotOverrides(data: Record<string, BotAction | null>): Promise<BotOverrides> {
+  return apiFetch<BotOverrides>('/bot-overrides', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+// Bot signatures
+export function fetchBotSignatures(): Promise<{ signatures: BotSignature[] }> {
+  return apiFetch<{ signatures: BotSignature[] }>('/bot-signatures')
+}
+
+// Page paths autocomplete
+export function searchPagePaths(query: string): Promise<{ paths: PagePath[] }> {
+  return apiFetch<{ paths: PagePath[] }>(`/page-paths?q=${encodeURIComponent(query)}`)
+}
+
 // Stats (proxied from platform)
 export function fetchStats(): Promise<StatsResponse> {
   return apiFetch<StatsResponse>('/stats')
+}
+
+// Wallet balance (Xenarch wallets only)
+export function fetchBalance(): Promise<WalletBalanceResponse> {
+  return apiFetch<WalletBalanceResponse>('/balance')
+}
+
+// Category breakdown
+export function fetchCategoryBreakdown(): Promise<{ categories: CategoryBreakdownItem[] }> {
+  return apiFetch<{ categories: CategoryBreakdownItem[] }>('/category-breakdown')
+}
+
+// Withdraw (Xenarch wallets only)
+export function withdraw(
+  toAddress: string,
+  network: string,
+  amountUsd: string
+): Promise<{ success: boolean; tx_hash?: string }> {
+  return apiFetch<{ success: boolean; tx_hash?: string }>('/withdraw', {
+    method: 'POST',
+    body: JSON.stringify({ to_address: toAddress, network, amount_usd: amountUsd }),
+  })
 }
 
 // Transactions (proxied from platform)

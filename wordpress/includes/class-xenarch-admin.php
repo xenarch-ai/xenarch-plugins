@@ -48,8 +48,8 @@ class Xenarch_Admin {
 	 */
 	public function add_menu_page() {
 		add_options_page(
-			__( 'Xenarch Dashboard', 'xenarch' ),
-			__( 'Xenarch', 'xenarch' ),
+			__( '/xenarch dashboard', 'xenarch' ),
+			__( '/xenarch', 'xenarch' ),
 			'manage_options',
 			'xenarch',
 			array( $this, 'render_settings_page' )
@@ -66,12 +66,24 @@ class Xenarch_Admin {
 			return;
 		}
 
+		// Add class to body for full-bleed background styling.
+		add_filter( 'admin_body_class', function( $classes ) {
+			return $classes . ' xenarch-page';
+		} );
+
 		$dist_url = XENARCH_PLUGIN_URL . 'admin-ui/dist/';
+
+		wp_enqueue_style(
+			'xenarch-fonts',
+			'https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&family=Space+Grotesk:wght@300;500;600&display=swap',
+			array(),
+			null
+		);
 
 		wp_enqueue_style(
 			'xenarch-admin',
 			$dist_url . 'xenarch-admin.css',
-			array(),
+			array( 'xenarch-fonts' ),
 			XENARCH_VERSION
 		);
 
@@ -122,9 +134,27 @@ class Xenarch_Admin {
 			'version'     => XENARCH_VERSION,
 			'wcProjectId' => $this->get_wc_project_id(),
 		);
-		echo '<div class="wrap"><h1>' . esc_html( get_admin_page_title() ) . '</h1>';
-		echo '<script>window.xenarchAdmin = ' . wp_json_encode( $config ) . ';</script>';
-		echo '<div id="xenarch-admin"></div></div>';
+		echo '<div class="wrap xenarch-wrap">';
+		echo '<div class="xenarch-page-container">';
+		echo '<div class="xenarch-page-header">';
+		echo '<span class="xenarch-page-logo">/xenarch</span>';
+		echo '<span class="xenarch-page-version">v' . esc_html( XENARCH_VERSION ) . '</span>';
+		echo '<button class="xenarch-page-theme-toggle" onclick="xenarchToggleTheme()" title="Toggle theme" style="margin-left:auto;">';
+		echo '<svg class="xn-icon-sun" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.5M8 13v1.5M2.75 2.75l1.06 1.06M12.19 12.19l1.06 1.06M1.5 8H3M13 8h1.5M2.75 13.25l1.06-1.06M12.19 3.81l1.06-1.06"/></svg>';
+		echo '<svg class="xn-icon-moon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.2 9.5a5.5 5.5 0 01-7-7 5.5 5.5 0 106.7 6.7z"/></svg>';
+		echo '</button>';
+		echo '</div>';
+		echo '<p class="xenarch-page-subtitle">AI bots pay to access your content. Set your price, connect your wallet, done.</p>';
+		echo '<script>window.xenarchAdmin = ' . wp_json_encode( $config ) . ';';
+		echo 'function xenarchToggleTheme(){';
+		echo 'var el=document.getElementById("xenarch-admin");if(!el)return;';
+		echo 'var t=el.getAttribute("data-theme")==="light"?"dark":"light";';
+		echo 'el.setAttribute("data-theme",t);localStorage.setItem("xenarch-theme",t);';
+		echo 'document.body.classList.toggle("xenarch-light",t==="light");';
+		echo '}';
+		echo '</script>';
+		echo '<div id="xenarch-admin"></div>';
+		echo '</div></div>';
 	}
 
 	/**
@@ -136,17 +166,23 @@ class Xenarch_Admin {
 		$api_key    = get_option( 'xenarch_api_key', '' );
 		$site_id    = get_option( 'xenarch_site_id', '' );
 		$site_token = get_option( 'xenarch_site_token', '' );
+		$categories = json_decode( get_option( 'xenarch_bot_categories', '{}' ), true );
+		$overrides  = json_decode( get_option( 'xenarch_bot_overrides', '{}' ), true );
 
 		return array(
 			'api_key'              => ! empty( $api_key ),
 			'site_id'              => $site_id,
 			'site_token'           => $site_token,
-			'email'                => get_option( 'xenarch_email', '' ),
 			'default_price'        => get_option( 'xenarch_default_price', '0.003' ),
 			'payout_wallet'        => get_option( 'xenarch_payout_wallet', '' ),
 			'gate_unknown_traffic' => get_option( 'xenarch_gate_unknown_traffic', '1' ),
+			'gate_enabled'         => get_option( 'xenarch_gate_enabled', '1' ),
+			'bot_categories'       => is_array( $categories ) ? $categories : array(),
+			'bot_overrides'        => is_array( $overrides ) ? $overrides : array(),
+			'wallet_type'          => get_option( 'xenarch_wallet_type', '' ),
+			'wallet_network'       => get_option( 'xenarch_wallet_network', 'base' ),
 			'domain'               => wp_parse_url( get_site_url(), PHP_URL_HOST ),
-			'is_registered'        => ! empty( $api_key ),
+			'has_wallet'           => ! empty( get_option( 'xenarch_payout_wallet', '' ) ),
 			'has_site'             => ! empty( $site_id ) && ! empty( $site_token ),
 			'bot_signature_count'  => count( Xenarch_Bot_Detect::get_signatures() ) + count( Xenarch_Bot_Detect::get_fetcher_signatures() ),
 			'pay_json_url'         => get_site_url() . '/.well-known/pay.json',

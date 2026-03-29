@@ -124,6 +124,97 @@ class Xenarch_Rest {
 				'permission_callback' => array( $this, 'check_admin' ),
 			)
 		);
+
+		// Bot categories.
+		register_rest_route(
+			$this->namespace,
+			'/bot-categories',
+			array(
+				array(
+					'methods'             => 'GET',
+					'callback'            => array( $this, 'get_bot_categories' ),
+					'permission_callback' => array( $this, 'check_admin' ),
+				),
+				array(
+					'methods'             => 'POST',
+					'callback'            => array( $this, 'update_bot_categories' ),
+					'permission_callback' => array( $this, 'check_admin' ),
+				),
+			)
+		);
+
+		// Bot overrides.
+		register_rest_route(
+			$this->namespace,
+			'/bot-overrides',
+			array(
+				array(
+					'methods'             => 'GET',
+					'callback'            => array( $this, 'get_bot_overrides' ),
+					'permission_callback' => array( $this, 'check_admin' ),
+				),
+				array(
+					'methods'             => 'POST',
+					'callback'            => array( $this, 'update_bot_overrides' ),
+					'permission_callback' => array( $this, 'check_admin' ),
+				),
+			)
+		);
+
+		// Bot signatures (read-only metadata for admin modal).
+		register_rest_route(
+			$this->namespace,
+			'/bot-signatures',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'get_bot_signatures' ),
+				'permission_callback' => array( $this, 'check_admin' ),
+			)
+		);
+
+		// Page paths autocomplete.
+		register_rest_route(
+			$this->namespace,
+			'/page-paths',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'get_page_paths' ),
+				'permission_callback' => array( $this, 'check_admin' ),
+			)
+		);
+
+		// Wallet balance (xenarch wallets only).
+		register_rest_route(
+			$this->namespace,
+			'/balance',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'get_balance' ),
+				'permission_callback' => array( $this, 'check_admin' ),
+			)
+		);
+
+		// Category breakdown.
+		register_rest_route(
+			$this->namespace,
+			'/category-breakdown',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'get_category_breakdown' ),
+				'permission_callback' => array( $this, 'check_admin' ),
+			)
+		);
+
+		// Withdraw (xenarch wallets only).
+		register_rest_route(
+			$this->namespace,
+			'/withdraw',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'handle_withdraw' ),
+				'permission_callback' => array( $this, 'check_admin' ),
+			)
+		);
 	}
 
 	/**
@@ -168,7 +259,9 @@ class Xenarch_Rest {
 			'xenarch_default_price',
 			'xenarch_payout_wallet',
 			'xenarch_gate_unknown_traffic',
+			'xenarch_gate_enabled',
 			'xenarch_wallet_type',
+			'xenarch_wallet_network',
 		);
 
 		foreach ( $allowed as $key ) {
@@ -426,6 +519,272 @@ class Xenarch_Rest {
 	}
 
 	// ------------------------------------------------------------------
+	// Bot categories / overrides / signatures
+	// ------------------------------------------------------------------
+
+	/**
+	 * GET /bot-categories.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public function get_bot_categories() {
+		$categories = json_decode( get_option( 'xenarch_bot_categories', '{}' ), true );
+		if ( ! is_array( $categories ) ) {
+			$categories = array();
+		}
+		return new WP_REST_Response( $categories, 200 );
+	}
+
+	/**
+	 * POST /bot-categories — merge updates into category toggles.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response
+	 */
+	public function update_bot_categories( $request ) {
+		$params     = $request->get_json_params();
+		$categories = json_decode( get_option( 'xenarch_bot_categories', '{}' ), true );
+		if ( ! is_array( $categories ) ) {
+			$categories = array();
+		}
+
+		$valid_keys    = Xenarch_Bot_Detect::get_category_keys();
+		$valid_actions = array( 'allow', 'charge' );
+
+		foreach ( $params as $key => $action ) {
+			if ( in_array( $key, $valid_keys, true ) && in_array( $action, $valid_actions, true ) ) {
+				$categories[ $key ] = $action;
+			}
+		}
+
+		update_option( 'xenarch_bot_categories', wp_json_encode( $categories ) );
+
+		return new WP_REST_Response( $categories, 200 );
+	}
+
+	/**
+	 * GET /bot-overrides.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public function get_bot_overrides() {
+		$overrides = json_decode( get_option( 'xenarch_bot_overrides', '{}' ), true );
+		if ( ! is_array( $overrides ) ) {
+			$overrides = array();
+		}
+		return new WP_REST_Response( $overrides, 200 );
+	}
+
+	/**
+	 * POST /bot-overrides — set or remove per-bot overrides.
+	 * Send null as value to remove an override.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response
+	 */
+	public function update_bot_overrides( $request ) {
+		$params    = $request->get_json_params();
+		$overrides = json_decode( get_option( 'xenarch_bot_overrides', '{}' ), true );
+		if ( ! is_array( $overrides ) ) {
+			$overrides = array();
+		}
+
+		$valid_actions = array( 'allow', 'charge' );
+
+		foreach ( $params as $signature => $action ) {
+			$signature = sanitize_text_field( $signature );
+			if ( null === $action ) {
+				unset( $overrides[ $signature ] );
+			} elseif ( in_array( $action, $valid_actions, true ) ) {
+				$overrides[ $signature ] = $action;
+			}
+		}
+
+		update_option( 'xenarch_bot_overrides', wp_json_encode( $overrides ) );
+
+		return new WP_REST_Response( $overrides, 200 );
+	}
+
+	/**
+	 * GET /bot-signatures — all known signatures with metadata.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public function get_bot_signatures() {
+		global $wpdb;
+		$table = $wpdb->prefix . 'xenarch_bot_log';
+
+		// Get live detection data from the database.
+		$log_rows = $wpdb->get_results( "SELECT signature, category, company, first_seen, last_seen, hit_count FROM $table", ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$log_map  = array();
+		if ( is_array( $log_rows ) ) {
+			foreach ( $log_rows as $row ) {
+				$log_map[ $row['signature'] ] = $row;
+			}
+		}
+
+		// Start with static metadata.
+		$static    = Xenarch_Bot_Detect::get_all_signature_metadata();
+		$result    = array();
+		$seen_sigs = array();
+
+		foreach ( $static as $sig ) {
+			$log = isset( $log_map[ $sig['name'] ] ) ? $log_map[ $sig['name'] ] : null;
+			$result[] = array(
+				'name'       => $sig['name'],
+				'category'   => $sig['category'],
+				'company'    => $sig['company'],
+				'last_seen'  => $log ? $log['last_seen'] : null,
+				'hit_count'  => $log ? (int) $log['hit_count'] : 0,
+				'first_seen' => $log ? $log['first_seen'] : null,
+			);
+			$seen_sigs[ $sig['name'] ] = true;
+		}
+
+		// Add dynamically detected bots not in static list.
+		foreach ( $log_map as $sig => $row ) {
+			if ( isset( $seen_sigs[ $sig ] ) ) {
+				continue;
+			}
+			$result[] = array(
+				'name'       => $sig,
+				'category'   => $row['category'],
+				'company'    => $row['company'],
+				'last_seen'  => $row['last_seen'],
+				'hit_count'  => (int) $row['hit_count'],
+				'first_seen' => $row['first_seen'],
+			);
+		}
+
+		return new WP_REST_Response( array( 'signatures' => $result ), 200 );
+	}
+
+	/**
+	 * GET /page-paths — autocomplete for pricing rule path input.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response
+	 */
+	public function get_page_paths( $request ) {
+		$query = $request->get_param( 'q' );
+		if ( empty( $query ) || strlen( $query ) < 2 ) {
+			return new WP_REST_Response( array( 'paths' => array() ), 200 );
+		}
+
+		$posts = get_posts( array(
+			'post_type'      => array( 'post', 'page' ),
+			'post_status'    => 'publish',
+			's'              => sanitize_text_field( $query ),
+			'posts_per_page' => 10,
+			'orderby'        => 'relevance',
+		) );
+
+		$results = array();
+		foreach ( $posts as $post ) {
+			$permalink = get_permalink( $post );
+			$path      = wp_parse_url( $permalink, PHP_URL_PATH );
+			if ( ! empty( $path ) ) {
+				$results[] = array(
+					'path'  => $path,
+					'title' => $post->post_title,
+				);
+			}
+		}
+
+		return new WP_REST_Response( array( 'paths' => $results ), 200 );
+	}
+
+	// ------------------------------------------------------------------
+	// Balance / Category breakdown / Withdraw
+	// ------------------------------------------------------------------
+
+	/**
+	 * GET /balance — wallet balance for xenarch-managed wallets.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public function get_balance() {
+		$site_id = get_option( 'xenarch_site_id', '' );
+		if ( empty( $site_id ) ) {
+			return new WP_REST_Response( array( 'balance_usd' => '0.00' ), 200 );
+		}
+
+		$result = $this->api->get_balance( $site_id );
+
+		if ( is_wp_error( $result ) ) {
+			return new WP_REST_Response( array( 'balance_usd' => '0.00' ), 200 );
+		}
+
+		return new WP_REST_Response(
+			array( 'balance_usd' => isset( $result['balance_usd'] ) ? $result['balance_usd'] : '0.00' ),
+			200
+		);
+	}
+
+	/**
+	 * GET /category-breakdown — earnings aggregated by bot category.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public function get_category_breakdown() {
+		$site_id = get_option( 'xenarch_site_id', '' );
+		if ( empty( $site_id ) ) {
+			return new WP_REST_Response( array( 'categories' => array() ), 200 );
+		}
+
+		$result = $this->api->get_category_breakdown( $site_id );
+
+		if ( is_wp_error( $result ) ) {
+			return new WP_REST_Response( array( 'categories' => array() ), 200 );
+		}
+
+		return new WP_REST_Response(
+			array( 'categories' => isset( $result['categories'] ) ? $result['categories'] : array() ),
+			200
+		);
+	}
+
+	/**
+	 * POST /withdraw — initiate USDC withdrawal for xenarch wallets.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response
+	 */
+	public function handle_withdraw( $request ) {
+		$params = $request->get_json_params();
+
+		$to_address = isset( $params['to_address'] ) ? sanitize_text_field( $params['to_address'] ) : '';
+		$network    = isset( $params['network'] ) ? sanitize_text_field( $params['network'] ) : 'Base';
+		$amount_usd = isset( $params['amount_usd'] ) ? sanitize_text_field( $params['amount_usd'] ) : '';
+
+		if ( empty( $to_address ) || empty( $amount_usd ) ) {
+			return new WP_REST_Response( array( 'error' => 'Address and amount are required.' ), 400 );
+		}
+
+		$site_id = get_option( 'xenarch_site_id', '' );
+		if ( empty( $site_id ) ) {
+			return new WP_REST_Response( array( 'error' => 'Site not configured.' ), 400 );
+		}
+
+		$result = $this->api->withdraw( $site_id, $to_address, $network, $amount_usd );
+
+		if ( is_wp_error( $result ) ) {
+			return new WP_REST_Response(
+				array( 'error' => $result->get_error_message() ),
+				502
+			);
+		}
+
+		return new WP_REST_Response(
+			array(
+				'success' => true,
+				'tx_hash' => isset( $result['tx_hash'] ) ? $result['tx_hash'] : null,
+			),
+			200
+		);
+	}
+
+	// ------------------------------------------------------------------
 	// Helpers
 	// ------------------------------------------------------------------
 
@@ -435,21 +794,27 @@ class Xenarch_Rest {
 	 * @return array
 	 */
 	private function get_all_settings() {
+		$categories = json_decode( get_option( 'xenarch_bot_categories', '{}' ), true );
+		$overrides  = json_decode( get_option( 'xenarch_bot_overrides', '{}' ), true );
+
 		return array(
 			'api_key'              => ! empty( get_option( 'xenarch_api_key', '' ) ),
 			'site_id'              => get_option( 'xenarch_site_id', '' ),
 			'site_token'           => get_option( 'xenarch_site_token', '' ),
-			'email'                => get_option( 'xenarch_email', '' ),
 			'default_price'        => get_option( 'xenarch_default_price', '0.003' ),
 			'payout_wallet'        => get_option( 'xenarch_payout_wallet', '' ),
 			'gate_unknown_traffic' => get_option( 'xenarch_gate_unknown_traffic', '1' ),
+			'gate_enabled'         => get_option( 'xenarch_gate_enabled', '1' ),
+			'bot_categories'       => is_array( $categories ) ? $categories : array(),
+			'bot_overrides'        => is_array( $overrides ) ? $overrides : array(),
+			'wallet_type'          => get_option( 'xenarch_wallet_type', '' ),
+			'wallet_network'       => get_option( 'xenarch_wallet_network', 'base' ),
 			'domain'               => wp_parse_url( get_site_url(), PHP_URL_HOST ),
-			'is_registered'        => ! empty( get_option( 'xenarch_api_key', '' ) ),
+			'has_wallet'           => ! empty( get_option( 'xenarch_payout_wallet', '' ) ),
 			'has_site'             => ! empty( get_option( 'xenarch_site_id', '' ) ) && ! empty( get_option( 'xenarch_site_token', '' ) ),
 			'bot_signature_count'  => count( Xenarch_Bot_Detect::get_signatures() ) + count( Xenarch_Bot_Detect::get_fetcher_signatures() ),
 			'pay_json_url'         => get_site_url() . '/.well-known/pay.json',
 			'xenarch_md_url'       => get_site_url() . '/.well-known/xenarch.md',
-			'wallet_type'          => get_option( 'xenarch_wallet_type', '' ),
 		);
 	}
 }

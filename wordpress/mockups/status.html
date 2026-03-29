@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xenarch WP Plugin — Status</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&family=Space+Grotesk:wght@300;500;600&display=swap" rel="stylesheet">
+<style>
+  :root, [data-theme="dark"] {
+    /* Layer 0: page bg */
+    --bg: #0a0a0a;
+    /* Layer 1: main card */
+    --card: #111; --card-border: #1a1a1a;
+    /* Layer 2: inner elements */
+    --surface: #191919; --surface-border: #252525;
+    /* Inputs recessed into surfaces */
+    --input-bg: #111; --input-border: #252525; --input-focus: #444;
+    /* Text */
+    --fg: #f0f0f0; --secondary: #999; --muted: #666; --dim: #444;
+    /* Status */
+    --success: #4ade80; --success-bg: rgba(74,222,128,0.08); --error: #f87171; --error-bg: rgba(248,113,113,0.08);
+  }
+  [data-theme="light"] {
+    --bg: #E8E4DF;
+    --card: #f5f2ee; --card-border: #d5d0ca;
+    --surface: #ece8e3; --surface-border: #d0ccc7;
+    --input-bg: #fff; --input-border: #d0ccc7; --input-focus: #999;
+    --fg: #1a1a1a; --secondary: #555; --muted: #888; --dim: #bbb;
+    --success: #16a34a; --success-bg: rgba(22,163,74,0.08); --error: #dc2626; --error-bg: rgba(220,38,38,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: 'Inter', system-ui, sans-serif; font-size: 14px; line-height: 1.5; padding: 48px; display: flex; justify-content: center; }
+  .page { max-width: 760px; width: 100%; }
+  .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 24px; }
+  .header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .logo { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 300; line-height: 1.2; color: var(--fg); }
+  .version { font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1; color: var(--muted); background: var(--surface); padding: 5px 8px; border-radius: 4px; border: 1px solid var(--surface-border); }
+  .theme-toggle { margin-left: auto; background: none; border: none; padding: 4px; cursor: pointer; color: var(--muted); display: flex; align-items: center; justify-content: center; }
+  .theme-toggle:hover { color: var(--fg); }
+  [data-theme="dark"] .icon-moon, [data-theme="light"] .icon-sun { display: none; }
+  .subtitle { font-size: 13px; color: var(--secondary); margin-bottom: 24px; }
+  .tabs { display: flex; margin-bottom: 24px; border-bottom: 1px solid var(--card-border); }
+  .tab { font-size: 13px; color: var(--secondary); padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab.active { color: var(--fg); border-bottom-color: var(--fg); }
+  .tab:hover { color: var(--fg); }
+
+  /* Status card */
+  .status-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 10px; padding: 32px; }
+  .data-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--surface-border); }
+  .data-row:last-child { border-bottom: none; }
+  .data-key { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); width: 140px; flex-shrink: 0; }
+  .data-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--fg); display: flex; align-items: center; gap: 6px; }
+  .data-val a { color: var(--secondary); text-decoration: none; }
+  .data-val a:hover { color: var(--fg); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .dot-ok { background: var(--success); }
+  .dot-err { background: var(--error); }
+  .status-pill { display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; padding: 4px 12px; border-radius: 100px; }
+  .status-pill-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .status-pill.ok { color: var(--success); background: var(--success-bg); }
+  .status-pill.err { color: var(--error); background: var(--error-bg); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <span class="logo">/xenarch</span>
+    <span class="version">v1.0</span>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+      <svg class="icon-sun" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.5M8 13v1.5M2.75 2.75l1.06 1.06M12.19 12.19l1.06 1.06M1.5 8H3M13 8h1.5M2.75 13.25l1.06-1.06M12.19 3.81l1.06-1.06"/></svg>
+      <svg class="icon-moon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.2 9.5a5.5 5.5 0 01-7-7 5.5 5.5 0 106.7 6.7z"/></svg>
+    </button>
+  </div>
+  <p class="subtitle">AI bots pay to access your content. Set your price, connect your wallet, done.</p>
+  <div class="card">
+  <div class="tabs">
+    <div class="tab">Earnings</div>
+    <div class="tab">Settings</div>
+    <div class="tab active">Status</div>
+  </div>
+
+  <div class="status-card">
+    <div class="data-row">
+      <span class="data-key">status</span>
+      <span class="data-val"><span class="status-pill ok"><span class="status-pill-dot"></span>connected</span></span>
+    </div>
+    <div class="data-row">
+      <span class="data-key">site token</span>
+      <span class="data-val">st_ME9Jb...F_7o</span>
+    </div>
+    <div class="data-row">
+      <span class="data-key">server-side</span>
+      <span class="data-val"><span class="dot dot-ok"></span>Active — 155 bot signatures</span>
+    </div>
+    <div class="data-row">
+      <span class="data-key">l.js</span>
+      <span class="data-val"><span class="dot dot-ok"></span>Loading on frontend</span>
+    </div>
+    <div class="data-row">
+      <span class="data-key">pay.json</span>
+      <span class="data-val"><a href="#">https://yoursite.com/.well-known/pay.json</a></span>
+    </div>
+    <div class="data-row">
+      <span class="data-key">xenarch.md</span>
+      <span class="data-val"><a href="#">https://yoursite.com/.well-known/xenarch.md</a></span>
+    </div>
+  </div>
+
+  </div>
+</div>
+<script>
+function toggleTheme() {
+  var html = document.documentElement;
+  html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+</script>
+</body>
+</html>

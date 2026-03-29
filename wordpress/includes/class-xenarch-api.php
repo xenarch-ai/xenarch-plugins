@@ -78,6 +78,22 @@ class Xenarch_Api {
 	}
 
 	/**
+	 * Verify an access token against the platform.
+	 *
+	 * @param string $token The bearer token to verify.
+	 * @return array|WP_Error Response with 'valid' boolean, or WP_Error on failure.
+	 */
+	public function verify_access_token( $token ) {
+		$site_token = get_option( 'xenarch_site_token', '' );
+
+		return $this->post(
+			'/v1/access-tokens/verify',
+			array( 'token' => $token ),
+			array( 'X-Site-Token' => $site_token )
+		);
+	}
+
+	/**
 	 * List sites for the authenticated publisher.
 	 *
 	 * @return array|WP_Error
@@ -112,15 +128,20 @@ class Xenarch_Api {
 	/**
 	 * Update payout wallet for the authenticated publisher.
 	 *
-	 * @param string $wallet Wallet address (0x...).
+	 * @param string $wallet  Wallet address (0x...).
+	 * @param string $network Network name (default: value from wp_options, fallback: 'base').
 	 * @return array|WP_Error
 	 */
-	public function update_payout( $wallet ) {
+	public function update_payout( $wallet, $network = '' ) {
+		if ( empty( $network ) ) {
+			$network = get_option( 'xenarch_wallet_network', 'base' );
+		}
+
 		return $this->post(
 			'/v1/publishers/me/payout',
 			array(
 				'wallet'  => $wallet,
-				'network' => 'base',
+				'network' => $network,
 			),
 			$this->auth_headers(),
 			'PUT'
@@ -168,6 +189,47 @@ class Xenarch_Api {
 	 * @param string $site_id Site UUID.
 	 * @return array|WP_Error
 	 */
+	/**
+	 * Get wallet balance for a site.
+	 *
+	 * @param string $site_id Site UUID.
+	 * @return array|WP_Error
+	 */
+	public function get_balance( $site_id ) {
+		return $this->get( '/v1/sites/' . urlencode( $site_id ) . '/balance', $this->auth_headers() );
+	}
+
+	/**
+	 * Get earnings by category for a site.
+	 *
+	 * @param string $site_id Site UUID.
+	 * @return array|WP_Error
+	 */
+	public function get_category_breakdown( $site_id ) {
+		return $this->get( '/v1/sites/' . urlencode( $site_id ) . '/category-breakdown', $this->auth_headers() );
+	}
+
+	/**
+	 * Initiate a withdrawal for a site.
+	 *
+	 * @param string $site_id    Site UUID.
+	 * @param string $to_address Destination wallet address.
+	 * @param string $network    Network (Base, Solana, etc.).
+	 * @param string $amount_usd Amount in USD.
+	 * @return array|WP_Error
+	 */
+	public function withdraw( $site_id, $to_address, $network, $amount_usd ) {
+		return $this->post(
+			'/v1/sites/' . urlencode( $site_id ) . '/withdraw',
+			array(
+				'to_address' => $to_address,
+				'network'    => $network,
+				'amount_usd' => $amount_usd,
+			),
+			$this->auth_headers()
+		);
+	}
+
 	public function get_stats( $site_id ) {
 		return $this->get(
 			'/v1/sites/' . urlencode( $site_id ) . '/stats',
