@@ -189,6 +189,47 @@ class Xenarch_Api {
 	 * @param string $site_id Site UUID.
 	 * @return array|WP_Error
 	 */
+	/**
+	 * Get wallet balance for a site.
+	 *
+	 * @param string $site_id Site UUID.
+	 * @return array|WP_Error
+	 */
+	public function get_balance( $site_id ) {
+		return $this->get( '/v1/sites/' . urlencode( $site_id ) . '/balance', $this->auth_headers() );
+	}
+
+	/**
+	 * Get earnings by category for a site.
+	 *
+	 * @param string $site_id Site UUID.
+	 * @return array|WP_Error
+	 */
+	public function get_category_breakdown( $site_id ) {
+		return $this->get( '/v1/sites/' . urlencode( $site_id ) . '/category-breakdown', $this->auth_headers() );
+	}
+
+	/**
+	 * Initiate a withdrawal for a site.
+	 *
+	 * @param string $site_id    Site UUID.
+	 * @param string $to_address Destination wallet address.
+	 * @param string $network    Network (Base, Solana, etc.).
+	 * @param string $amount_usd Amount in USD.
+	 * @return array|WP_Error
+	 */
+	public function withdraw( $site_id, $to_address, $network, $amount_usd ) {
+		return $this->post(
+			'/v1/sites/' . urlencode( $site_id ) . '/withdraw',
+			array(
+				'to_address' => $to_address,
+				'network'    => $network,
+				'amount_usd' => $amount_usd,
+			),
+			$this->auth_headers()
+		);
+	}
+
 	public function get_stats( $site_id ) {
 		return $this->get(
 			'/v1/sites/' . urlencode( $site_id ) . '/stats',

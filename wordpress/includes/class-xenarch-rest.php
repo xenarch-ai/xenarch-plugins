@@ -182,6 +182,39 @@ class Xenarch_Rest {
 				'permission_callback' => array( $this, 'check_admin' ),
 			)
 		);
+
+		// Wallet balance (xenarch wallets only).
+		register_rest_route(
+			$this->namespace,
+			'/balance',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'get_balance' ),
+				'permission_callback' => array( $this, 'check_admin' ),
+			)
+		);
+
+		// Category breakdown.
+		register_rest_route(
+			$this->namespace,
+			'/category-breakdown',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'get_category_breakdown' ),
+				'permission_callback' => array( $this, 'check_admin' ),
+			)
+		);
+
+		// Withdraw (xenarch wallets only).
+		register_rest_route(
+			$this->namespace,
+			'/withdraw',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'handle_withdraw' ),
+				'permission_callback' => array( $this, 'check_admin' ),
+			)
+		);
 	}
 
 	/**
@@ -659,6 +692,96 @@ class Xenarch_Rest {
 		}
 
 		return new WP_REST_Response( array( 'paths' => $results ), 200 );
+	}
+
+	// ------------------------------------------------------------------
+	// Balance / Category breakdown / Withdraw
+	// ------------------------------------------------------------------
+
+	/**
+	 * GET /balance — wallet balance for xenarch-managed wallets.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public function get_balance() {
+		$site_id = get_option( 'xenarch_site_id', '' );
+		if ( empty( $site_id ) ) {
+			return new WP_REST_Response( array( 'balance_usd' => '0.00' ), 200 );
+		}
+
+		$result = $this->api->get_balance( $site_id );
+
+		if ( is_wp_error( $result ) ) {
+			return new WP_REST_Response( array( 'balance_usd' => '0.00' ), 200 );
+		}
+
+		return new WP_REST_Response(
+			array( 'balance_usd' => isset( $result['balance_usd'] ) ? $result['balance_usd'] : '0.00' ),
+			200
+		);
+	}
+
+	/**
+	 * GET /category-breakdown — earnings aggregated by bot category.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public function get_category_breakdown() {
+		$site_id = get_option( 'xenarch_site_id', '' );
+		if ( empty( $site_id ) ) {
+			return new WP_REST_Response( array( 'categories' => array() ), 200 );
+		}
+
+		$result = $this->api->get_category_breakdown( $site_id );
+
+		if ( is_wp_error( $result ) ) {
+			return new WP_REST_Response( array( 'categories' => array() ), 200 );
+		}
+
+		return new WP_REST_Response(
+			array( 'categories' => isset( $result['categories'] ) ? $result['categories'] : array() ),
+			200
+		);
+	}
+
+	/**
+	 * POST /withdraw — initiate USDC withdrawal for xenarch wallets.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response
+	 */
+	public function handle_withdraw( $request ) {
+		$params = $request->get_json_params();
+
+		$to_address = isset( $params['to_address'] ) ? sanitize_text_field( $params['to_address'] ) : '';
+		$network    = isset( $params['network'] ) ? sanitize_text_field( $params['network'] ) : 'Base';
+		$amount_usd = isset( $params['amount_usd'] ) ? sanitize_text_field( $params['amount_usd'] ) : '';
+
+		if ( empty( $to_address ) || empty( $amount_usd ) ) {
+			return new WP_REST_Response( array( 'error' => 'Address and amount are required.' ), 400 );
+		}
+
+		$site_id = get_option( 'xenarch_site_id', '' );
+		if ( empty( $site_id ) ) {
+			return new WP_REST_Response( array( 'error' => 'Site not configured.' ), 400 );
+		}
+
+		$result = $this->api->withdraw( $site_id, $to_address, $network, $amount_usd );
+
+		if ( is_wp_error( $result ) ) {
+			return new WP_REST_Response(
+				array( 'error' => $result->get_error_message() ),
+				502
+			);
+		}
+
+		return new WP_REST_Response(
+			array(
+				'success' => true,
+				'tx_hash' => isset( $result['tx_hash'] ) ? $result['tx_hash'] : null,
+			),
+			200
+		);
 	}
 
 	// ------------------------------------------------------------------
