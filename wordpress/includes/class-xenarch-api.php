@@ -78,6 +78,22 @@ class Xenarch_Api {
 	}
 
 	/**
+	 * Verify an access token against the platform.
+	 *
+	 * @param string $token The bearer token to verify.
+	 * @return array|WP_Error Response with 'valid' boolean, or WP_Error on failure.
+	 */
+	public function verify_access_token( $token ) {
+		$site_token = get_option( 'xenarch_site_token', '' );
+
+		return $this->post(
+			'/v1/access-tokens/verify',
+			array( 'token' => $token ),
+			array( 'X-Site-Token' => $site_token )
+		);
+	}
+
+	/**
 	 * List sites for the authenticated publisher.
 	 *
 	 * @return array|WP_Error
