@@ -11,9 +11,12 @@ export function App() {
   const [activeTab, setActiveTab] = useState<Tab>('settings')
   const [settings, setSettings] = useState<Settings>(window.xenarchAdmin.settings)
 
-  // Apply initial theme from localStorage.
+  // Apply initial theme from localStorage, or auto-detect system preference.
   useEffect(() => {
-    const theme = localStorage.getItem('xenarch-theme') || 'dark'
+    const stored = localStorage.getItem('xenarch-theme')
+    const theme = (stored === 'light' || stored === 'dark')
+      ? stored
+      : window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
     const root = document.getElementById('xenarch-admin')
     if (root) root.setAttribute('data-theme', theme)
     document.body.classList.toggle('xenarch-light', theme === 'light')
