@@ -8,7 +8,7 @@ import { StatusTab } from './components/StatusTab'
 type Tab = 'earnings' | 'settings' | 'status'
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('settings')
+  const [activeTab, setActiveTab] = useState<Tab>('earnings')
   const [settings, setSettings] = useState<Settings>(window.xenarchAdmin.settings)
 
   // Apply initial theme from localStorage, or auto-detect system preference.

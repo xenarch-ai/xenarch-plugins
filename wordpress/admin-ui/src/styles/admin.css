@@ -1818,6 +1818,11 @@
   color: var(--xn-dot-red);
 }
 
+#xenarch-admin .xenarch-earnings-tx-type--blocked {
+  background: var(--xn-surface);
+  color: var(--xn-text-muted);
+}
+
 /* Table cell styles */
 #xenarch-admin .xenarch-earnings-td-path {
   font-family: 'JetBrains Mono', monospace;
