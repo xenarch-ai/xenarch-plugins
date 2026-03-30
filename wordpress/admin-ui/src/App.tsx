@@ -4,6 +4,7 @@ import { Onboarding } from './components/Onboarding'
 import { SettingsTab } from './components/SettingsTab'
 import { EarningsTab } from './components/EarningsTab'
 import { StatusTab } from './components/StatusTab'
+import { initAppKit } from './wallet/config'
 
 type Tab = 'earnings' | 'settings' | 'status'
 
@@ -11,7 +12,7 @@ export function App() {
   const [activeTab, setActiveTab] = useState<Tab>('earnings')
   const [settings, setSettings] = useState<Settings>(window.xenarchAdmin.settings)
 
-  // Apply initial theme from localStorage, or auto-detect system preference.
+  // Apply initial theme + initialize AppKit after DOM is ready.
   useEffect(() => {
     const stored = localStorage.getItem('xenarch-theme')
     const theme = (stored === 'light' || stored === 'dark')
@@ -20,6 +21,12 @@ export function App() {
     const root = document.getElementById('xenarch-admin')
     if (root) root.setAttribute('data-theme', theme)
     document.body.classList.toggle('xenarch-light', theme === 'light')
+
+    // Initialize AppKit after DOM is ready (newer versions need DOM for theming).
+    const wcProjectId = window.xenarchAdmin?.wcProjectId || ''
+    if (wcProjectId) {
+      initAppKit(wcProjectId)
+    }
   }, [])
 
   const onSettingsChange = useCallback((updated: Settings) => {

@@ -4,6 +4,7 @@ export interface XenarchAdmin {
   settings: Settings
   pluginUrl: string
   version: string
+  wcProjectId: string
 }
 
 export type BotCategoryKey = 'ai_search' | 'ai_assistants' | 'ai_agents' | 'ai_training' | 'scrapers' | 'general_ai'

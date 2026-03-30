@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import type { Settings } from '../types'
 import * as api from '../api'
 import { WalletConnectButton } from '../wallet/WalletConnectButton'
+import { getAppKit } from '../wallet/config'
 
 interface Props {
   settings: Settings
@@ -50,9 +51,21 @@ export function Onboarding({ onSettingsChange }: Props) {
       <div className="xenarch-onboarding-title">Where do you want to receive payments?</div>
       <div className="xenarch-onboarding-desc">This is how you'll get paid when AI bots access your content.</div>
 
-      {phase === 'cards' && (
+      {phase === 'cards' && (() => {
+        const appKit = getAppKit()
+        const appKitConnected = appKit?.getIsConnectedState?.() ?? false
+        const handleDisconnect = async () => {
+          if (appKit) { try { await appKit.disconnect() } catch {} }
+        }
+        return (
         <div className="xenarch-wallet-options">
-          <WalletConnectButton onConnect={(address) => saveWallet(address, 'connected', 'base')} />
+          {appKitConnected ? (
+            <button className="xenarch-wallet-opt xenarch-wallet-opt--disconnect" onClick={handleDisconnect}>
+              <div className="xenarch-wallet-opt-title">Disconnect Wallet</div>
+            </button>
+          ) : (
+            <WalletConnectButton onConnect={(address) => saveWallet(address, 'connected', 'base')} />
+          )}
           <button
             className="xenarch-wallet-opt"
             onClick={handleCreateWallet}
@@ -69,7 +82,8 @@ export function Onboarding({ onSettingsChange }: Props) {
             <div className="xenarch-wallet-opt-desc">Paste an address</div>
           </button>
         </div>
-      )}
+        )
+      })()}
 
       {phase === 'manual' && (
         <div className="xenarch-wallet-manual">

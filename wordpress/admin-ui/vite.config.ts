@@ -11,8 +11,9 @@ export default defineConfig({
       output: {
         entryFileNames: 'xenarch-admin.js',
         assetFileNames: 'xenarch-admin.[ext]',
-        chunkFileNames: 'chunks/[name]-[hash].js',
+        manualChunks: () => 'xenarch-admin',
       },
     },
+    chunkSizeWarningLimit: 2000,
   },
 })
