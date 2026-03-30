@@ -19,9 +19,16 @@ const PERIODS = [
   { value: 'all', label: 'All' },
 ]
 
-const TYPE_FILTERS = [
+const STATUS_FILTERS = [
   { value: 'all', label: 'All' },
-  { value: 'earned', label: 'Earned' },
+  { value: 'paid', label: 'Paid' },
+  { value: 'blocked', label: 'Blocked' },
+]
+
+const STATUS_FILTERS_WITH_WITHDRAW = [
+  { value: 'all', label: 'All' },
+  { value: 'paid', label: 'Paid' },
+  { value: 'blocked', label: 'Blocked' },
   { value: 'withdrew', label: 'Withdrew' },
 ]
 
@@ -66,7 +73,7 @@ export function EarningsTab({ settings }: Props) {
   const [breakdown, setBreakdown] = useState<CategoryBreakdownItem[] | null>(null)
   const [balance, setBalance] = useState<WalletBalanceResponse | null>(null)
   const [period, setPeriod] = useState('7d')
-  const [typeFilter, setTypeFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('all')
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [txLoading, setTxLoading] = useState(false)
@@ -112,20 +119,28 @@ export function EarningsTab({ settings }: Props) {
   useEffect(() => {
     if (!settings.has_site) return
     setTxLoading(true)
+    const apiStatus = statusFilter === 'withdrew' ? 'all' : statusFilter
     api
-      .fetchTransactions(period, page, 25, typeFilter)
-      .then(setTransactions)
+      .fetchTransactions(period, page, 25, apiStatus)
+      .then((result) => {
+        if (statusFilter === 'withdrew') {
+          const filtered = result.transactions.filter((tx) => tx.type === 'withdraw')
+          setTransactions({ ...result, transactions: filtered, total: filtered.length })
+        } else {
+          setTransactions(result)
+        }
+      })
       .catch(() => {})
       .finally(() => setTxLoading(false))
-  }, [period, typeFilter, page, settings.has_site])
+  }, [period, statusFilter, page, settings.has_site])
 
   const handlePeriodChange = (p: string) => {
     setPeriod(p)
     setPage(1)
   }
 
-  const handleTypeChange = (t: string) => {
-    setTypeFilter(t)
+  const handleStatusChange = (t: string) => {
+    setStatusFilter(t)
     setPage(1)
   }
 
@@ -162,7 +177,8 @@ export function EarningsTab({ settings }: Props) {
         api.fetchBalance().then(setBalance).catch(() => {})
       }
       // Refresh transactions
-      api.fetchTransactions(period, 1, 25, typeFilter).then(setTransactions).catch(() => {})
+      const refreshStatus = statusFilter === 'withdrew' ? 'all' : statusFilter
+      api.fetchTransactions(period, 1, 25, refreshStatus).then(setTransactions).catch(() => {})
       setPage(1)
       // Clear success message after 5 seconds
       setTimeout(() => setWithdrawMsg(null), 5000)
@@ -346,23 +362,22 @@ export function EarningsTab({ settings }: Props) {
   // ---- Period row + type filter pills ----
 
   function renderPeriodRow() {
+    const filters = isXenarch ? STATUS_FILTERS_WITH_WITHDRAW : STATUS_FILTERS
     return (
       <div className="xenarch-earnings-period-row">
         <span className="xenarch-earnings-period-title">Transactions</span>
         <div style={{ display: 'flex', gap: 8 }}>
-          {isXenarch && (
-            <div className="xenarch-earnings-pills">
-              {TYPE_FILTERS.map((f) => (
-                <button
-                  key={f.value}
-                  className={`xenarch-earnings-pill${typeFilter === f.value ? ' xenarch-earnings-pill--active' : ''}`}
-                  onClick={() => handleTypeChange(f.value)}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="xenarch-earnings-pills">
+            {filters.map((f) => (
+              <button
+                key={f.value}
+                className={`xenarch-earnings-pill${statusFilter === f.value ? ' xenarch-earnings-pill--active' : ''}`}
+                onClick={() => handleStatusChange(f.value)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
           <div className="xenarch-earnings-pills">
             {PERIODS.map((p) => (
               <button
@@ -422,13 +437,24 @@ export function EarningsTab({ settings }: Props) {
           <tbody>
             {txRows.map((tx) => {
               const isWithdraw = tx.type === 'withdraw'
+              const isPaid = !isWithdraw && tx.status === 'paid'
+              const isBlocked = !isWithdraw && tx.status !== 'paid'
+
+              let pillClass = ' xenarch-earnings-tx-type--earn'
+              let pillLabel = 'earn'
+              if (isWithdraw) {
+                pillClass = ' xenarch-earnings-tx-type--withdraw'
+                pillLabel = 'withdraw'
+              } else if (isBlocked) {
+                pillClass = ' xenarch-earnings-tx-type--blocked'
+                pillLabel = 'blocked'
+              }
+
               return (
                 <tr key={tx.id}>
                   <td>
-                    <span
-                      className={`xenarch-earnings-tx-type${isWithdraw ? ' xenarch-earnings-tx-type--withdraw' : ' xenarch-earnings-tx-type--earn'}`}
-                    >
-                      {isWithdraw ? 'withdraw' : 'earn'}
+                    <span className={`xenarch-earnings-tx-type${pillClass}`}>
+                      {pillLabel}
                     </span>
                   </td>
                   <td
@@ -447,10 +473,12 @@ export function EarningsTab({ settings }: Props) {
                     style={
                       isWithdraw
                         ? { color: 'var(--xn-dot-red)' }
-                        : undefined
+                        : isBlocked
+                          ? { color: 'var(--xn-text-muted)' }
+                          : undefined
                     }
                   >
-                    {isWithdraw ? `-$${tx.amount_usd}` : `+$${tx.amount_usd}`}
+                    {isWithdraw ? `-$${tx.amount_usd}` : isPaid ? `+$${tx.amount_usd}` : `$${tx.amount_usd}`}
                   </td>
                   <td className="xenarch-earnings-td-time">
                     {formatTime(tx.created_at)}
