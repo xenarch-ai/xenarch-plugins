@@ -1,6 +1,21 @@
 /* Xenarch Design System — Protocol Dark (default) + Structural (light) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 
+/* Hide Reown AppKit's auto-rendered floating connect button.
+   We use our own button and call appKit.open() imperatively.
+   Do NOT hide w3m-modal — that's the actual connect modal we need. */
+appkit-button,
+appkit-connect-button,
+appkit-account-button,
+w3m-button,
+w3m-connect-button,
+w3m-account-button {
+  position: fixed !important;
+  top: -9999px !important;
+  left: -9999px !important;
+  pointer-events: none !important;
+}
+
 /* ═══════ THEME TOKENS ═══════ */
 
 #xenarch-admin,
@@ -1419,6 +1434,20 @@
 
 #xenarch-admin .xenarch-wallet-opt:hover {
   border-color: var(--xn-dim);
+}
+
+#xenarch-admin .xenarch-wallet-opt--disconnect .xenarch-wallet-opt-title {
+  color: var(--xn-dot-red);
+}
+
+#xenarch-admin .xenarch-wallet-opt--disconnect:hover {
+  border-color: var(--xn-dot-red);
+}
+
+#xenarch-admin .xenarch-wallet-disconnect-notice {
+  font-size: 12px;
+  color: var(--xn-text-muted);
+  margin-bottom: 8px;
 }
 
 #xenarch-admin .xenarch-wallet-opt-title {

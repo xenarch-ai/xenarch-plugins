@@ -17,19 +17,19 @@ const DARK_THEME = {
   '--apkt-font-family': 'Inter, system-ui, sans-serif',
   '--apkt-accent': '#4ade80',
   '--apkt-color-mix': '#0a0a0a',
-  '--apkt-color-mix-strength': 25,
-  '--apkt-border-radius-master': 2,
-  '--apkt-z-index': 100000,
-} as Record<string, string | number>
+  '--apkt-color-mix-strength': '25',
+  '--apkt-border-radius-master': '2',
+  '--apkt-z-index': '100000',
+} as Record<string, string>
 
 const LIGHT_THEME = {
   '--apkt-font-family': 'Inter, system-ui, sans-serif',
   '--apkt-accent': '#16a34a',
   '--apkt-color-mix': '#E8E4DF',
-  '--apkt-color-mix-strength': 25,
-  '--apkt-border-radius-master': 2,
-  '--apkt-z-index': 100000,
-} as Record<string, string | number>
+  '--apkt-color-mix-strength': '25',
+  '--apkt-border-radius-master': '2',
+  '--apkt-z-index': '100000',
+} as Record<string, string>
 
 function getCurrentTheme(): 'dark' | 'light' {
   const stored = localStorage.getItem('xenarch-theme')

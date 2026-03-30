@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import type { Settings } from '../types'
 import * as api from '../api'
 import { WalletConnectButton } from '../wallet/WalletConnectButton'
+import { getAppKit } from '../wallet/config'
 
 interface Props {
   settings: Settings
@@ -71,6 +72,26 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
     saveWallet(manualAddress.trim(), 'manual', manualNetwork)
   }, [manualAddress, manualNetwork, saveWallet])
 
+  const [disconnecting, setDisconnecting] = useState(false)
+
+  const handleDisconnect = useCallback(async () => {
+    setDisconnecting(true)
+    const appKit = getAppKit()
+    if (appKit) {
+      try { await appKit.disconnect() } catch {}
+    }
+    try {
+      const updated = await api.updateSettings({
+        xenarch_payout_wallet: '',
+        xenarch_wallet_type: '',
+        xenarch_wallet_network: '',
+      })
+      onSettingsChange(updated)
+    } catch {}
+    setDisconnecting(false)
+    setPhase('setup')
+  }, [onSettingsChange])
+
   const handleChange = () => {
     // Xenarch wallet with balance > 0: block change.
     if (isXenarchWallet && balance && parseFloat(balance) > 0) return
@@ -110,23 +131,38 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
       <div className="xenarch-section-title">Wallet</div>
 
       {/* Phase 1: Setup -- 3 option cards */}
-      {phase === 'setup' && (
-        <>
-          <div className="xenarch-section-desc">Where do you want to receive payments?</div>
-          <div className="xenarch-wallet-options">
-            <WalletConnectButton onConnect={(address) => handleWalletConnect(address)} />
-            <button className="xenarch-wallet-opt" onClick={handleCreateWallet} disabled={saving}>
-              <div className="xenarch-wallet-opt-title">Create for me</div>
-              <div className="xenarch-wallet-opt-desc">Easiest setup</div>
-            </button>
-            <button className="xenarch-wallet-opt" onClick={() => setPhase('manual')}>
-              <div className="xenarch-wallet-opt-title">Enter manually</div>
-              <div className="xenarch-wallet-opt-desc">Paste an address</div>
-            </button>
-          </div>
-          {error && <div className="xenarch-onboarding-error">{error}</div>}
-        </>
-      )}
+      {phase === 'setup' && (() => {
+        const appKit = getAppKit()
+        const appKitConnected = appKit?.getIsConnectedState?.() ?? false
+        return (
+          <>
+            <div className="xenarch-section-desc">Where do you want to receive payments?</div>
+            {appKitConnected && (
+              <div className="xenarch-wallet-disconnect-notice">
+                Connected via WalletConnect. Disconnect to connect a different wallet.
+              </div>
+            )}
+            <div className="xenarch-wallet-options">
+              {appKitConnected ? (
+                <button className="xenarch-wallet-opt xenarch-wallet-opt--disconnect" onClick={handleDisconnect} disabled={disconnecting}>
+                  <div className="xenarch-wallet-opt-title">{disconnecting ? 'Disconnecting...' : 'Disconnect Wallet'}</div>
+                </button>
+              ) : (
+                <WalletConnectButton onConnect={(address) => handleWalletConnect(address)} />
+              )}
+              <button className="xenarch-wallet-opt" onClick={handleCreateWallet} disabled={saving}>
+                <div className="xenarch-wallet-opt-title">Create for me</div>
+                <div className="xenarch-wallet-opt-desc">Easiest setup</div>
+              </button>
+              <button className="xenarch-wallet-opt" onClick={() => setPhase('manual')}>
+                <div className="xenarch-wallet-opt-title">Enter manually</div>
+                <div className="xenarch-wallet-opt-desc">Paste an address</div>
+              </button>
+            </div>
+            {error && <div className="xenarch-onboarding-error">{error}</div>}
+          </>
+        )
+      })()}
 
       {/* Phase 1b: Manual entry */}
       {phase === 'manual' && (
