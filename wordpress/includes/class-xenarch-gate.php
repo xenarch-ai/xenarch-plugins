@@ -75,6 +75,17 @@ class Xenarch_Gate {
 			return;
 		}
 
+		// Never gate 404s — only gate real content.
+		if ( is_404() ) {
+			return;
+		}
+
+		// Skip static assets — not paywalled content.
+		$ext = strtolower( pathinfo( $request_uri, PATHINFO_EXTENSION ) );
+		if ( in_array( $ext, array( 'ico', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'css', 'js', 'woff', 'woff2', 'ttf', 'map' ), true ) ) {
+			return;
+		}
+
 		// Run full non-human traffic detection.
 		$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 		$headers    = self::get_request_headers();
