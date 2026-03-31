@@ -45,15 +45,16 @@ export function WalletConnectButton({ connected, onConnect, onDisconnect }: Prop
 
   if (connected) {
     return (
-      <button className="xenarch-btn xenarch-btn--secondary" onClick={handleDisconnect}>
-        Disconnect Wallet
+      <button className="xenarch-wallet-opt" onClick={handleDisconnect}>
+        <div className="xenarch-wallet-opt-title">Disconnect wallet</div>
       </button>
     )
   }
 
   return (
-    <button className="xenarch-btn xenarch-btn--secondary" onClick={handleConnect}>
-      Connect Wallet
+    <button className="xenarch-wallet-opt" onClick={handleConnect}>
+      <div className="xenarch-wallet-opt-title">Connect wallet</div>
+      <div className="xenarch-wallet-opt-desc">MetaMask, Coinbase, etc.</div>
     </button>
   )
 }

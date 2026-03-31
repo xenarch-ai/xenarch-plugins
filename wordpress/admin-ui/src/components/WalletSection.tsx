@@ -145,7 +145,7 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
             <div className="xenarch-wallet-options">
               {appKitConnected ? (
                 <button className="xenarch-wallet-opt xenarch-wallet-opt--disconnect" onClick={handleDisconnect} disabled={disconnecting}>
-                  <div className="xenarch-wallet-opt-title">{disconnecting ? 'Disconnecting...' : 'Disconnect Wallet'}</div>
+                  <div className="xenarch-wallet-opt-title">{disconnecting ? 'Disconnecting...' : 'Disconnect wallet'}</div>
                 </button>
               ) : (
                 <WalletConnectButton onConnect={(address) => handleWalletConnect(address)} />
