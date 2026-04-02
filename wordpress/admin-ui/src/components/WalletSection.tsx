@@ -3,6 +3,7 @@ import type { Settings } from '../types'
 import * as api from '../api'
 import { WalletConnectButton } from '../wallet/WalletConnectButton'
 import { getAppKit } from '../wallet/config'
+import { CreateWalletModal } from './CreateWalletModal'
 
 interface Props {
   settings: Settings
@@ -21,7 +22,7 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
   const [balance, setBalance] = useState<string | null>(null)
 
   const walletType = settings.wallet_type || 'manual'
-  const isXenarchWallet = walletType === 'xenarch'
+  const isXenarchWallet = walletType === 'xenarch' || walletType === 'coinbase'
 
   // Fetch balance for Xenarch wallets to know if change should be blocked.
   useEffect(() => {
@@ -53,19 +54,18 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
     saveWallet(address, 'connected', 'base')
   }, [saveWallet])
 
-  const [error, setError] = useState('')
+  const [error] = useState('')
 
-  const handleCreateWallet = useCallback(async () => {
-    setSaving(true)
-    setError('')
-    try {
-      // TODO: wire to Xenarch platform API
-      throw new Error('Wallet creation is not available yet.')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
-    }
-    setSaving(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+
+  const handleCreateWallet = useCallback(() => {
+    setShowCreateModal(true)
   }, [])
+
+  const handleWalletCreated = useCallback((address: string) => {
+    setShowCreateModal(false)
+    saveWallet(address, 'coinbase', 'base')
+  }, [saveWallet])
 
   const handleManualSave = useCallback(() => {
     if (!manualAddress.trim()) return
@@ -103,8 +103,8 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`
   }
 
-  const badgeText = walletType === 'xenarch' ? 'xenarch wallet' : walletType === 'connected' ? 'connected via WalletConnect' : 'your wallet'
-  const badgeClass = walletType === 'xenarch' ? 'xenarch-wallet-badge--xenarch' : 'xenarch-wallet-badge--external'
+  const badgeText = walletType === 'xenarch' || walletType === 'coinbase' ? 'xenarch wallet' : walletType === 'connected' ? 'connected via WalletConnect' : 'your wallet'
+  const badgeClass = walletType === 'xenarch' || walletType === 'coinbase' ? 'xenarch-wallet-badge--xenarch' : 'xenarch-wallet-badge--external'
   const noteText = isXenarchWallet
     ? 'Your wallet. Withdraw anytime from the Earnings tab.'
     : 'Settled on-chain via splitter contract. No funds held by Xenarch.'
@@ -134,16 +134,18 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
       {phase === 'setup' && (() => {
         const appKit = getAppKit()
         const appKitConnected = appKit?.getIsConnectedState?.() ?? false
+        const needsDisconnect = appKitConnected || settings.wallet_type === 'coinbase'
+        const disconnectLabel = settings.wallet_type === 'coinbase' ? 'Coinbase' : 'WalletConnect'
         return (
           <>
             <div className="xenarch-section-desc">Where do you want to receive payments?</div>
-            {appKitConnected && (
+            {needsDisconnect && (
               <div className="xenarch-wallet-disconnect-notice">
-                Connected via WalletConnect. Disconnect to connect a different wallet.
+                Connected via {disconnectLabel}. Disconnect to connect a different wallet.
               </div>
             )}
             <div className="xenarch-wallet-options">
-              {appKitConnected ? (
+              {needsDisconnect ? (
                 <button className="xenarch-wallet-opt xenarch-wallet-opt--disconnect" onClick={handleDisconnect} disabled={disconnecting}>
                   <div className="xenarch-wallet-opt-title">{disconnecting ? 'Disconnecting...' : 'Disconnect wallet'}</div>
                 </button>
@@ -225,6 +227,13 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
             )}
           </div>
         </div>
+      )}
+
+      {showCreateModal && (
+        <CreateWalletModal
+          onWalletCreated={handleWalletCreated}
+          onClose={() => setShowCreateModal(false)}
+        />
       )}
     </div>
   )

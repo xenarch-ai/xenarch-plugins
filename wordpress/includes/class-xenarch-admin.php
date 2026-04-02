@@ -120,6 +120,35 @@ class Xenarch_Admin {
 	}
 
 	/**
+	 * Get the Coinbase CDP project ID from the platform API.
+	 * Cached as a WordPress transient for 24 hours.
+	 *
+	 * @return string Project ID or empty string on failure.
+	 */
+	private function get_cdp_project_id() {
+		// Check WordPress option first (for manual/testing override).
+		$option = get_option( 'xenarch_cdp_project_id', '' );
+		if ( ! empty( $option ) ) {
+			return $option;
+		}
+
+		$cached = get_transient( 'xenarch_cdp_project_id' );
+		if ( false !== $cached ) {
+			return $cached;
+		}
+
+		$api    = new Xenarch_Api();
+		$result = $api->get_config();
+
+		if ( ! is_wp_error( $result ) && ! empty( $result['cdp_project_id'] ) ) {
+			set_transient( 'xenarch_cdp_project_id', $result['cdp_project_id'], DAY_IN_SECONDS );
+			return $result['cdp_project_id'];
+		}
+
+		return '';
+	}
+
+	/**
 	 * Render the settings page — just a mount point for React.
 	 */
 	public function render_settings_page() {
@@ -132,7 +161,8 @@ class Xenarch_Admin {
 			'settings'    => $this->get_initial_settings(),
 			'pluginUrl'   => XENARCH_PLUGIN_URL,
 			'version'     => XENARCH_VERSION,
-			'wcProjectId' => $this->get_wc_project_id(),
+			'wcProjectId'  => $this->get_wc_project_id(),
+			'cdpProjectId' => $this->get_cdp_project_id(),
 		);
 		echo '<div class="wrap xenarch-wrap">';
 		echo '<div class="xenarch-page-container">';
