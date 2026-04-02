@@ -3,6 +3,7 @@ import type { Settings } from '../types'
 import * as api from '../api'
 import { WalletConnectButton } from '../wallet/WalletConnectButton'
 import { getAppKit } from '../wallet/config'
+import { CreateWalletModal } from './CreateWalletModal'
 
 interface Props {
   settings: Settings
@@ -34,17 +35,16 @@ export function Onboarding({ onSettingsChange }: Props) {
     setSaving(false)
   }, [onSettingsChange])
 
-  const handleCreateWallet = useCallback(async () => {
-    setSaving(true)
-    setError('')
-    try {
-      // TODO: wire to Xenarch platform API for wallet creation
-      throw new Error('Wallet creation is not available yet.')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
-    }
-    setSaving(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+
+  const handleCreateWallet = useCallback(() => {
+    setShowCreateModal(true)
   }, [])
+
+  const handleWalletCreated = useCallback((address: string) => {
+    setShowCreateModal(false)
+    saveWallet(address, 'coinbase', 'base')
+  }, [saveWallet])
 
   return (
     <div className="xenarch-onboarding">
@@ -128,6 +128,13 @@ export function Onboarding({ onSettingsChange }: Props) {
       )}
 
       <div className="xenarch-onboarding-footer">One step. That's it. Everything else is configured for you.</div>
+
+      {showCreateModal && (
+        <CreateWalletModal
+          onWalletCreated={handleWalletCreated}
+          onClose={() => setShowCreateModal(false)}
+        />
+      )}
     </div>
   )
 }

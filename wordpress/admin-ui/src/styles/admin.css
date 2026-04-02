@@ -1450,6 +1450,196 @@ w3m-account-button {
   margin-bottom: 8px;
 }
 
+/* Coinbase auth flow */
+#xenarch-admin .xenarch-coinbase-auth {
+  padding: 16px;
+  background: var(--xn-surface);
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 8px;
+}
+
+#xenarch-admin .xenarch-coinbase-auth-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--xn-text-fg);
+  margin-bottom: 4px;
+}
+
+#xenarch-admin .xenarch-coinbase-auth-desc {
+  font-size: 12px;
+  color: var(--xn-text-muted);
+  margin-bottom: 12px;
+}
+
+#xenarch-admin .xenarch-coinbase-auth-error {
+  font-size: 12px;
+  color: var(--xn-dot-red);
+  margin-top: 8px;
+}
+
+/* ═══════ CREATE WALLET MODAL ═══════ */
+
+#xenarch-admin .xenarch-modal--wallet {
+  width: 380px;
+  max-height: 80vh;
+  background: var(--xn-card);
+  border: 1px solid var(--xn-card-border);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+#xenarch-admin .xenarch-modal-overlay.xenarch-modal-overlay--wallet {
+  background: rgba(0,0,0,0.7);
+}
+
+#xenarch-admin .xenarch-wallet-modal-body {
+  padding: 20px 24px;
+}
+
+#xenarch-admin .xenarch-wallet-modal-center {
+  text-align: center;
+  padding: 24px 0;
+}
+
+#xenarch-admin .xenarch-wallet-modal-label {
+  display: block;
+  font-size: 12px;
+  color: var(--xn-text-muted);
+  margin-bottom: 6px;
+}
+
+#xenarch-admin .xenarch-wallet-modal-input {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--xn-input-bg);
+  border: 1px solid var(--xn-input-border);
+  border-radius: 6px;
+  color: var(--xn-text);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  outline: none;
+}
+
+#xenarch-admin .xenarch-wallet-modal-input:focus {
+  border-color: var(--xn-input-focus);
+}
+
+#xenarch-admin .xenarch-wallet-modal-input::placeholder {
+  color: var(--xn-text-muted);
+}
+
+#xenarch-admin .xenarch-wallet-modal-otp {
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.3em;
+  text-align: center;
+  font-size: 20px;
+}
+
+#xenarch-admin .xenarch-wallet-modal-btn {
+  width: 100%;
+  padding: 10px;
+  margin-top: 12px;
+  background: var(--xn-dot-green);
+  color: #0a0a0a;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+#xenarch-admin .xenarch-wallet-modal-btn:hover {
+  opacity: 0.85;
+}
+
+#xenarch-admin .xenarch-wallet-modal-btn:disabled {
+  background: var(--xn-dim);
+  color: var(--xn-text-muted);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+#xenarch-admin .xenarch-wallet-modal-btn--secondary {
+  background: transparent;
+  color: var(--xn-text-secondary);
+  border: 1px solid var(--xn-surface-border);
+  margin-top: 8px;
+}
+
+#xenarch-admin .xenarch-wallet-modal-btn--secondary:hover {
+  border-color: var(--xn-dim);
+  color: var(--xn-text);
+}
+
+#xenarch-admin .xenarch-wallet-modal-error {
+  color: var(--xn-dot-red);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+#xenarch-admin .xenarch-wallet-modal-info {
+  color: var(--xn-text-muted);
+  font-size: 12px;
+  margin-top: 12px;
+}
+
+#xenarch-admin .xenarch-wallet-modal-check {
+  font-size: 32px;
+  color: var(--xn-dot-green);
+  margin-bottom: 8px;
+}
+
+#xenarch-admin .xenarch-wallet-modal-success-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+#xenarch-admin .xenarch-wallet-modal-address {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: var(--xn-dot-green);
+  word-break: break-all;
+  margin: 12px 0;
+}
+
+#xenarch-admin .xenarch-wallet-modal-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+#xenarch-admin .xenarch-wallet-modal-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--xn-surface-border);
+  border-top-color: var(--xn-dot-green);
+  border-radius: 50%;
+  animation: xenarch-spin 0.8s linear infinite;
+}
+
+@keyframes xenarch-spin {
+  to { transform: rotate(360deg); }
+}
+
+#xenarch-admin .xenarch-wallet-modal-footer {
+  color: var(--xn-text-muted);
+  font-size: 11px;
+  text-align: center;
+  padding: 12px 24px 16px;
+  border-top: 1px solid var(--xn-surface-border);
+}
+
+/* Legacy — remove after Coinbase modal replaces popup */
+#xenarch-admin .xenarch-coinbase-auth-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 #xenarch-admin .xenarch-wallet-opt-title {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 13px;
