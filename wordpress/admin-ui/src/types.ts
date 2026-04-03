@@ -89,6 +89,21 @@ export interface WalletBalanceResponse {
   balance_usd: string
 }
 
+export interface SellOptions {
+  payment_methods: Array<{ id: string; name: string; min_amount: string; max_amount: string }>
+  sell_assets: Array<{ asset: string; network: string }>
+  error?: string
+  supported?: boolean
+}
+
+export interface SellQuote {
+  offramp_url: string
+  sell_amount: string
+  buy_amount: string
+  fee_amount: string
+  expires_at: string
+}
+
 declare global {
   interface Window {
     xenarchAdmin: XenarchAdmin

@@ -7,6 +7,7 @@ import type {
   WalletBalanceResponse,
 } from '../types'
 import * as api from '../api'
+import { CashOutModal } from './CashOutModal'
 
 interface Props {
   settings: Settings
@@ -23,13 +24,6 @@ const STATUS_FILTERS = [
   { value: 'all', label: 'All' },
   { value: 'paid', label: 'Paid' },
   { value: 'blocked', label: 'Blocked' },
-]
-
-const STATUS_FILTERS_WITH_WITHDRAW = [
-  { value: 'all', label: 'All' },
-  { value: 'paid', label: 'Paid' },
-  { value: 'blocked', label: 'Blocked' },
-  { value: 'withdrew', label: 'Withdrew' },
 ]
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -78,14 +72,9 @@ export function EarningsTab({ settings }: Props) {
   const [loading, setLoading] = useState(true)
   const [txLoading, setTxLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [withdrawOpen, setWithdrawOpen] = useState(false)
-  const [withdrawMsg, setWithdrawMsg] = useState<string | null>(null)
-  const [withdrawTo, setWithdrawTo] = useState('')
-  const [withdrawNetwork, setWithdrawNetwork] = useState('Base')
-  const [withdrawAmount, setWithdrawAmount] = useState('')
-  const [withdrawSending, setWithdrawSending] = useState(false)
+  const [showCashOut, setShowCashOut] = useState(false)
 
-  const isXenarch = settings.wallet_type === 'xenarch'
+  const isXenarch = settings.wallet_type === 'xenarch' || settings.wallet_type === 'coinbase'
   const wallet = settings.payout_wallet
 
   // ---- Data loading ----
@@ -119,17 +108,9 @@ export function EarningsTab({ settings }: Props) {
   useEffect(() => {
     if (!settings.has_site) return
     setTxLoading(true)
-    const apiStatus = statusFilter === 'withdrew' ? 'all' : statusFilter
     api
-      .fetchTransactions(period, page, 25, apiStatus)
-      .then((result) => {
-        if (statusFilter === 'withdrew') {
-          const filtered = result.transactions.filter((tx) => tx.type === 'withdraw')
-          setTransactions({ ...result, transactions: filtered, total: filtered.length })
-        } else {
-          setTransactions(result)
-        }
-      })
+      .fetchTransactions(period, page, 25, statusFilter)
+      .then(setTransactions)
       .catch(() => {})
       .finally(() => setTxLoading(false))
   }, [period, statusFilter, page, settings.has_site])
@@ -152,46 +133,15 @@ export function EarningsTab({ settings }: Props) {
     setPage((p) => p + 1)
   }
 
-  // ---- Withdraw ----
-
-  const handleWithdrawToggle = () => {
-    setWithdrawOpen((prev) => !prev)
-    setWithdrawMsg(null)
-  }
-
-  const handleWithdrawMax = () => {
-    if (balance) setWithdrawAmount(balance.balance_usd)
-  }
-
-  const handleWithdrawSend = async () => {
-    if (!withdrawTo || !withdrawAmount) return
-    setWithdrawSending(true)
-    try {
-      await api.withdraw(withdrawTo, withdrawNetwork, withdrawAmount)
-      setWithdrawMsg('\u2713 withdrawal sent \u2014 arriving in ~2 seconds')
-      setWithdrawOpen(false)
-      setWithdrawTo('')
-      setWithdrawAmount('')
-      // Refresh balance
-      if (isXenarch) {
-        api.fetchBalance().then(setBalance).catch(() => {})
-      }
-      // Refresh transactions
-      const refreshStatus = statusFilter === 'withdrew' ? 'all' : statusFilter
-      api.fetchTransactions(period, 1, 25, refreshStatus).then(setTransactions).catch(() => {})
-      setPage(1)
-      // Clear success message after 5 seconds
-      setTimeout(() => setWithdrawMsg(null), 5000)
-    } catch {
-      // Could show error, but mockup doesn't specify withdraw error state
-    } finally {
-      setWithdrawSending(false)
+  const handleCashOutComplete = useCallback(() => {
+    setShowCashOut(false)
+    // Refresh balance + transactions
+    if (isXenarch) {
+      api.fetchBalance().then(setBalance).catch(() => {})
     }
-  }
-
-  const handleWithdrawCancel = () => {
-    setWithdrawOpen(false)
-  }
+    api.fetchTransactions(period, 1, 25, statusFilter).then(setTransactions).catch(() => {})
+    setPage(1)
+  }, [isXenarch, period, statusFilter])
 
   // ---- Helpers for zero-state detection ----
 
@@ -232,79 +182,13 @@ export function EarningsTab({ settings }: Props) {
           <>
             <span className="xenarch-earnings-wallet-bal">{balanceUsd}</span>
             <button
-              className="xenarch-earnings-btn-withdraw"
-              onClick={handleWithdrawToggle}
-              style={withdrawOpen ? { background: 'var(--xn-dim)' } : undefined}
+              className="xenarch-earnings-btn-cashout"
+              onClick={() => setShowCashOut(true)}
             >
-              Withdraw
+              Cash out
             </button>
           </>
         )}
-      </div>
-    )
-  }
-
-  // ---- Withdraw panel ----
-
-  function renderWithdrawPanel() {
-    if (!withdrawOpen || !isXenarch) return null
-
-    return (
-      <div className="xenarch-earnings-withdraw-panel">
-        <div className="xenarch-earnings-withdraw-title">Withdraw USDC</div>
-        <div className="xenarch-earnings-withdraw-desc">
-          Send to any wallet or exchange address
-        </div>
-        <div className="xenarch-earnings-withdraw-row">
-          <label>To address</label>
-          <input
-            type="text"
-            placeholder="0x... or paste exchange deposit address"
-            value={withdrawTo}
-            onChange={(e) => setWithdrawTo(e.target.value)}
-          />
-        </div>
-        <div className="xenarch-earnings-withdraw-row">
-          <label>Network</label>
-          <select
-            value={withdrawNetwork}
-            onChange={(e) => setWithdrawNetwork(e.target.value)}
-          >
-            <option>Base</option>
-            <option>Ethereum</option>
-            <option>Solana</option>
-            <option>TRON</option>
-          </select>
-        </div>
-        <div className="xenarch-earnings-withdraw-row">
-          <label>Amount</label>
-          <input
-            type="text"
-            placeholder="0.00"
-            style={{ width: 140, flex: 'none' }}
-            value={withdrawAmount}
-            onChange={(e) => setWithdrawAmount(e.target.value)}
-          />
-          <span className="xenarch-earnings-withdraw-unit">USDC</span>
-          <button className="xenarch-earnings-btn-max" onClick={handleWithdrawMax}>
-            MAX
-          </button>
-        </div>
-        <div className="xenarch-earnings-withdraw-hint">
-          Network fee: ~$0.001 (Base). Arrives in ~2 seconds.
-        </div>
-        <div className="xenarch-earnings-withdraw-actions">
-          <button
-            className="xenarch-earnings-btn-send"
-            onClick={handleWithdrawSend}
-            disabled={withdrawSending || !withdrawTo || !withdrawAmount}
-          >
-            {withdrawSending ? 'Sending...' : 'Send'}
-          </button>
-          <button className="xenarch-earnings-btn-cancel" onClick={handleWithdrawCancel}>
-            Cancel
-          </button>
-        </div>
       </div>
     )
   }
@@ -362,13 +246,12 @@ export function EarningsTab({ settings }: Props) {
   // ---- Period row + type filter pills ----
 
   function renderPeriodRow() {
-    const filters = isXenarch ? STATUS_FILTERS_WITH_WITHDRAW : STATUS_FILTERS
     return (
       <div className="xenarch-earnings-period-row">
         <span className="xenarch-earnings-period-title">Transactions</span>
         <div style={{ display: 'flex', gap: 8 }}>
           <div className="xenarch-earnings-pills">
-            {filters.map((f) => (
+            {STATUS_FILTERS.map((f) => (
               <button
                 key={f.value}
                 className={`xenarch-earnings-pill${statusFilter === f.value ? ' xenarch-earnings-pill--active' : ''}`}
@@ -577,15 +460,18 @@ export function EarningsTab({ settings }: Props) {
 
   return (
     <>
-      {withdrawMsg && (
-        <div className="xenarch-earnings-save-status">{withdrawMsg}</div>
-      )}
       {renderWalletRow()}
-      {renderWithdrawPanel()}
       {renderStats()}
       {renderBreakdown()}
       {renderPeriodRow()}
       {renderTransactions()}
+      {showCashOut && (
+        <CashOutModal
+          balance={balance?.balance_usd || '0.00'}
+          onComplete={handleCashOutComplete}
+          onClose={() => setShowCashOut(false)}
+        />
+      )}
     </>
   )
 }

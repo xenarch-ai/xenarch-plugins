@@ -205,16 +205,28 @@ class Xenarch_Rest {
 			)
 		);
 
-		// Withdraw (xenarch wallets only).
+		// Offramp — sell options (available methods and limits).
 		register_rest_route(
 			$this->namespace,
-			'/withdraw',
+			'/sell-options',
 			array(
-				'methods'             => 'POST',
-				'callback'            => array( $this, 'handle_withdraw' ),
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'get_sell_options' ),
 				'permission_callback' => array( $this, 'check_admin' ),
 			)
 		);
+
+		// Offramp — sell quote (returns Coinbase offramp URL).
+		register_rest_route(
+			$this->namespace,
+			'/sell-quote',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'handle_sell_quote' ),
+				'permission_callback' => array( $this, 'check_admin' ),
+			)
+		);
+
 	}
 
 	/**
@@ -744,29 +756,23 @@ class Xenarch_Rest {
 		);
 	}
 
+	// ------------------------------------------------------------------
+	// Offramp (Coinbase cash out)
+	// ------------------------------------------------------------------
+
 	/**
-	 * POST /withdraw — initiate USDC withdrawal for xenarch wallets.
+	 * GET /sell-options — available offramp payment methods and limits.
 	 *
 	 * @param WP_REST_Request $request Request object.
 	 * @return WP_REST_Response
 	 */
-	public function handle_withdraw( $request ) {
-		$params = $request->get_json_params();
-
-		$to_address = isset( $params['to_address'] ) ? sanitize_text_field( $params['to_address'] ) : '';
-		$network    = isset( $params['network'] ) ? sanitize_text_field( $params['network'] ) : 'Base';
-		$amount_usd = isset( $params['amount_usd'] ) ? sanitize_text_field( $params['amount_usd'] ) : '';
-
-		if ( empty( $to_address ) || empty( $amount_usd ) ) {
-			return new WP_REST_Response( array( 'error' => 'Address and amount are required.' ), 400 );
+	public function get_sell_options( $request ) {
+		$country = $request->get_param( 'country' );
+		if ( empty( $country ) ) {
+			return new WP_REST_Response( array( 'error' => 'Country is required.' ), 400 );
 		}
 
-		$site_id = get_option( 'xenarch_site_id', '' );
-		if ( empty( $site_id ) ) {
-			return new WP_REST_Response( array( 'error' => 'Site not configured.' ), 400 );
-		}
-
-		$result = $this->api->withdraw( $site_id, $to_address, $network, $amount_usd );
+		$result = $this->api->get_sell_options( sanitize_text_field( $country ) );
 
 		if ( is_wp_error( $result ) ) {
 			return new WP_REST_Response(
@@ -775,13 +781,39 @@ class Xenarch_Rest {
 			);
 		}
 
-		return new WP_REST_Response(
-			array(
-				'success' => true,
-				'tx_hash' => isset( $result['tx_hash'] ) ? $result['tx_hash'] : null,
-			),
-			200
-		);
+		return new WP_REST_Response( $result, 200 );
+	}
+
+	/**
+	 * POST /sell-quote — create a Coinbase sell quote and return the offramp URL.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response
+	 */
+	public function handle_sell_quote( $request ) {
+		$params     = $request->get_json_params();
+		$amount_usd = isset( $params['amount_usd'] ) ? sanitize_text_field( $params['amount_usd'] ) : '';
+		$country    = isset( $params['country'] ) ? sanitize_text_field( $params['country'] ) : '';
+
+		if ( empty( $amount_usd ) || empty( $country ) ) {
+			return new WP_REST_Response( array( 'error' => 'Amount and country are required.' ), 400 );
+		}
+
+		$site_id = get_option( 'xenarch_site_id', '' );
+		if ( empty( $site_id ) ) {
+			return new WP_REST_Response( array( 'error' => 'Site not configured.' ), 400 );
+		}
+
+		$result = $this->api->create_sell_quote( $site_id, $amount_usd, $country );
+
+		if ( is_wp_error( $result ) ) {
+			return new WP_REST_Response(
+				array( 'error' => $result->get_error_message() ),
+				502
+			);
+		}
+
+		return new WP_REST_Response( $result, 200 );
 	}
 
 	// ------------------------------------------------------------------

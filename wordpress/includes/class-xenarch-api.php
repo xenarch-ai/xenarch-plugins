@@ -210,21 +210,33 @@ class Xenarch_Api {
 	}
 
 	/**
-	 * Initiate a withdrawal for a site.
+	 * Get offramp sell options for a country.
 	 *
-	 * @param string $site_id    Site UUID.
-	 * @param string $to_address Destination wallet address.
-	 * @param string $network    Network (Base, Solana, etc.).
-	 * @param string $amount_usd Amount in USD.
+	 * @param string $country Two-letter country code (e.g. "US").
 	 * @return array|WP_Error
 	 */
-	public function withdraw( $site_id, $to_address, $network, $amount_usd ) {
+	public function get_sell_options( $country ) {
+		return $this->get(
+			'/v1/offramp/sell-options?country=' . urlencode( $country ),
+			$this->auth_headers()
+		);
+	}
+
+	/**
+	 * Create a Coinbase sell quote for offramp (USDC → fiat).
+	 *
+	 * @param string $site_id    Site UUID.
+	 * @param string $amount_usd Amount in USD (e.g. "50.00").
+	 * @param string $country    Two-letter country code.
+	 * @return array|WP_Error
+	 */
+	public function create_sell_quote( $site_id, $amount_usd, $country ) {
 		return $this->post(
-			'/v1/sites/' . urlencode( $site_id ) . '/withdraw',
+			'/v1/offramp/sell-quote',
 			array(
-				'to_address' => $to_address,
-				'network'    => $network,
+				'site_id'    => $site_id,
 				'amount_usd' => $amount_usd,
+				'country'    => $country,
 			),
 			$this->auth_headers()
 		);
