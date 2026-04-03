@@ -122,7 +122,7 @@ export async function createWalletBridge(siteToken: string): Promise<WalletBridg
     oauthPopup = null
   }
 
-  window.addEventListener('message', (event) => {
+  function messageHandler(event: MessageEvent) {
     if (event.origin !== expectedOrigin) return
     if (event.data?.type === 'xenarch-wallet-created') {
       cleanupPopup()
@@ -136,7 +136,9 @@ export async function createWalletBridge(siteToken: string): Promise<WalletBridg
         oauthErrorCb(event.data.error || 'OAuth failed')
       }
     }
-  })
+  }
+
+  window.addEventListener('message', messageHandler)
 
   return {
     async sendOtp(email: string) {
@@ -204,6 +206,7 @@ export async function createWalletBridge(siteToken: string): Promise<WalletBridg
     destroy() {
       walletCreatedCb = null
       oauthErrorCb = null
+      window.removeEventListener('message', messageHandler)
       if (oauthPopup && !oauthPopup.closed) {
         oauthPopup.close()
       }
