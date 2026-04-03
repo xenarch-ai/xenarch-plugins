@@ -106,7 +106,7 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
   const badgeText = walletType === 'xenarch' || walletType === 'coinbase' ? 'xenarch wallet' : walletType === 'connected' ? 'connected via WalletConnect' : 'your wallet'
   const badgeClass = walletType === 'xenarch' || walletType === 'coinbase' ? 'xenarch-wallet-badge--xenarch' : 'xenarch-wallet-badge--external'
   const noteText = isXenarchWallet
-    ? 'Your wallet. Withdraw anytime from the Earnings tab.'
+    ? 'Your wallet. Cash out to your bank from the Earnings tab.'
     : 'Settled on-chain via splitter contract. No funds held by Xenarch.'
 
   const changeBlocked = isXenarchWallet && balance !== null && parseFloat(balance) > 0
@@ -223,7 +223,7 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
               Change
             </button>
             {changeBlocked && (
-              <div className="xenarch-wallet-change-hint">Withdraw your balance before changing wallet</div>
+              <div className="xenarch-wallet-change-hint">Cash out your balance first — go to the Earnings tab</div>
             )}
           </div>
         </div>

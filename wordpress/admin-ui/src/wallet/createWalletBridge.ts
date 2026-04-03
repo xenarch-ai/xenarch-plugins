@@ -4,6 +4,8 @@
  * Same pattern as Reown AppKit: visible modal in the page DOM,
  * hidden iframe to api.xenarch.dev for the actual Coinbase SDK calls.
  * Communication via postMessage.
+ *
+ * Supports: email + OTP, Google OAuth, Apple OAuth.
  */
 
 const PLATFORM_BASE = 'https://api.xenarch.dev'
@@ -12,6 +14,9 @@ const BRIDGE_TIMEOUT_MS = 15000
 export interface WalletBridge {
   sendOtp(email: string): Promise<{ flowId: string }>
   verifyOtp(flowId: string, otp: string): Promise<{ address: string; isNewUser: boolean }>
+  startOAuth(provider: 'google' | 'apple'): Promise<void>
+  onWalletCreated(cb: (data: { address: string; isNewUser: boolean }) => void): void
+  onOAuthError(cb: (error: string) => void): void
   destroy(): void
 }
 
@@ -101,6 +106,38 @@ export async function createWalletBridge(siteToken: string): Promise<WalletBridg
     })
   }
 
+  // OAuth popup lifecycle
+  let oauthPopup: Window | null = null
+  let popupPollInterval: ReturnType<typeof setInterval> | null = null
+
+  // Persistent listeners for OAuth (popup posts to opener) and iframe wallet creation
+  let walletCreatedCb: ((data: { address: string; isNewUser: boolean }) => void) | null = null
+  let oauthErrorCb: ((error: string) => void) | null = null
+
+  function cleanupPopup() {
+    if (popupPollInterval) {
+      clearInterval(popupPollInterval)
+      popupPollInterval = null
+    }
+    oauthPopup = null
+  }
+
+  window.addEventListener('message', (event) => {
+    if (event.origin !== expectedOrigin) return
+    if (event.data?.type === 'xenarch-wallet-created') {
+      cleanupPopup()
+      if (walletCreatedCb) {
+        walletCreatedCb({ address: event.data.address, isNewUser: event.data.isNewUser ?? false })
+      }
+    }
+    if (event.data?.type === 'xenarch-oauth-error') {
+      cleanupPopup()
+      if (oauthErrorCb) {
+        oauthErrorCb(event.data.error || 'OAuth failed')
+      }
+    }
+  })
+
   return {
     async sendOtp(email: string) {
       const promise = waitForMessage('xenarch-otp-sent', 'xenarch-otp-error')
@@ -116,7 +153,61 @@ export async function createWalletBridge(siteToken: string): Promise<WalletBridg
       return { address: data.address, isNewUser: data.isNewUser ?? false }
     },
 
+    async startOAuth(provider: 'google' | 'apple') {
+      // Close any existing OAuth popup
+      if (oauthPopup && !oauthPopup.closed) {
+        oauthPopup.close()
+      }
+      cleanupPopup()
+
+      // Create a fresh session for the OAuth popup (parent_origin is derived
+      // server-side from the registered site domain, not client-controlled).
+      const sessionRes = await fetch(`${PLATFORM_BASE}/v1/wallet-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Site-Token': siteToken },
+      })
+      if (!sessionRes.ok) throw new Error('Failed to create OAuth session')
+      const { session_id } = await sessionRes.json()
+      if (!session_id) throw new Error('No session ID returned')
+
+      const popupUrl = `${PLATFORM_BASE}/v1/wallet/oauth?provider=${provider}&session=${session_id}`
+      oauthPopup = window.open(
+        popupUrl,
+        'xenarch-oauth',
+        'width=500,height=600,menubar=no,toolbar=no,status=no,scrollbars=yes',
+      )
+
+      if (!oauthPopup) {
+        throw new Error('Popup blocked. Please allow popups for this site.')
+      }
+
+      // Poll for user manually closing the popup
+      popupPollInterval = setInterval(() => {
+        if (oauthPopup && oauthPopup.closed) {
+          cleanupPopup()
+          if (oauthErrorCb) {
+            oauthErrorCb('Sign-in window was closed')
+          }
+        }
+      }, 500)
+      // Result comes async via onWalletCreated / onOAuthError callbacks
+    },
+
+    onWalletCreated(cb) {
+      walletCreatedCb = cb
+    },
+
+    onOAuthError(cb) {
+      oauthErrorCb = cb
+    },
+
     destroy() {
+      walletCreatedCb = null
+      oauthErrorCb = null
+      if (oauthPopup && !oauthPopup.closed) {
+        oauthPopup.close()
+      }
+      cleanupPopup()
       if (iframe.parentNode) {
         iframe.parentNode.removeChild(iframe)
       }

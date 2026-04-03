@@ -1,4 +1,4 @@
-import type { Settings, PricingRule, StatsResponse, TransactionsResponse, BotCategories, BotOverrides, BotSignature, BotAction, PagePath, CategoryBreakdownItem, WalletBalanceResponse } from './types'
+import type { Settings, PricingRule, StatsResponse, TransactionsResponse, BotCategories, BotOverrides, BotSignature, BotAction, PagePath, CategoryBreakdownItem, WalletBalanceResponse, SellOptions, SellQuote } from './types'
 
 function getConfig() {
   return window.xenarchAdmin
@@ -114,15 +114,16 @@ export function fetchCategoryBreakdown(): Promise<{ categories: CategoryBreakdow
   return apiFetch<{ categories: CategoryBreakdownItem[] }>('/category-breakdown')
 }
 
-// Withdraw (Xenarch wallets only)
-export function withdraw(
-  toAddress: string,
-  network: string,
-  amountUsd: string
-): Promise<{ success: boolean; tx_hash?: string }> {
-  return apiFetch<{ success: boolean; tx_hash?: string }>('/withdraw', {
+// Offramp — sell options (available methods and limits)
+export function fetchSellOptions(country: string): Promise<SellOptions> {
+  return apiFetch<SellOptions>(`/sell-options?country=${encodeURIComponent(country)}`)
+}
+
+// Offramp — create sell quote (returns Coinbase offramp URL)
+export function createSellQuote(amountUsd: string, country: string): Promise<SellQuote> {
+  return apiFetch<SellQuote>('/sell-quote', {
     method: 'POST',
-    body: JSON.stringify({ to_address: toAddress, network, amount_usd: amountUsd }),
+    body: JSON.stringify({ amount_usd: amountUsd, country }),
   })
 }
 

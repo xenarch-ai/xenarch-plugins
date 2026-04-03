@@ -1572,6 +1572,38 @@ w3m-account-button {
   color: var(--xn-text);
 }
 
+#xenarch-admin .xenarch-wallet-modal-btn--oauth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--xn-surface);
+  border: 1px solid var(--xn-surface-border);
+  color: var(--xn-text);
+  margin-bottom: 8px;
+}
+
+#xenarch-admin .xenarch-wallet-modal-btn--oauth:hover {
+  background: var(--xn-dim);
+  opacity: 1;
+}
+
+#xenarch-admin .xenarch-wallet-modal-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+  color: var(--xn-text-muted);
+  font-size: 12px;
+}
+
+#xenarch-admin .xenarch-wallet-modal-divider::before,
+#xenarch-admin .xenarch-wallet-modal-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--xn-surface-border);
+}
+
 #xenarch-admin .xenarch-wallet-modal-error {
   color: var(--xn-dot-red);
   font-size: 12px;
@@ -1853,6 +1885,23 @@ w3m-account-button {
   font-size: 13px;
   color: var(--xn-dot-green);
   margin-left: auto;
+}
+
+#xenarch-admin .xenarch-earnings-btn-cashout {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--xn-text);
+  background: var(--xn-surface-border);
+  border: 1px solid var(--xn-dim);
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+}
+
+#xenarch-admin .xenarch-earnings-btn-cashout:hover {
+  background: var(--xn-dim);
 }
 
 #xenarch-admin .xenarch-earnings-btn-withdraw {
@@ -2455,4 +2504,114 @@ w3m-account-button {
     flex-wrap: wrap;
     gap: 8px;
   }
+}
+
+/* --------------------------------------------------------
+   Cash Out Modal (Coinbase Offramp)
+   -------------------------------------------------------- */
+
+#xenarch-admin .xenarch-cashout-balance {
+  font-size: 13px;
+  color: var(--xn-text-secondary);
+  margin-bottom: 16px;
+}
+
+#xenarch-admin .xenarch-cashout-balance strong {
+  color: var(--xn-success);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+#xenarch-admin .xenarch-cashout-amount-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#xenarch-admin .xenarch-cashout-amount-row .xenarch-wallet-modal-input {
+  flex: 1;
+}
+
+#xenarch-admin .xenarch-cashout-btn-max {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--xn-success);
+  background: transparent;
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+#xenarch-admin .xenarch-cashout-btn-max:hover {
+  border-color: var(--xn-success);
+}
+
+#xenarch-admin .xenarch-cashout-meta {
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+#xenarch-admin .xenarch-cashout-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--xn-text-secondary);
+  padding: 4px 0;
+}
+
+#xenarch-admin .xenarch-cashout-country-input {
+  width: 40px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--xn-text);
+  background: var(--xn-bg);
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  text-transform: uppercase;
+}
+
+#xenarch-admin .xenarch-cashout-country-input:focus {
+  border-color: var(--xn-success);
+  outline: none;
+}
+
+#xenarch-admin .xenarch-cashout-quote-card {
+  background: var(--xn-surface);
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+#xenarch-admin .xenarch-cashout-quote-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--xn-text-secondary);
+  padding: 4px 0;
+}
+
+#xenarch-admin .xenarch-cashout-quote-row strong {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--xn-text);
+}
+
+#xenarch-admin .xenarch-cashout-waiting-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--xn-success);
+  margin: 0 auto 16px;
+  animation: xenarch-cashout-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes xenarch-cashout-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
 }
