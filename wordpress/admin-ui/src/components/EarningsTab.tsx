@@ -23,7 +23,7 @@ const PERIODS = [
 const STATUS_FILTERS = [
   { value: 'all', label: 'All' },
   { value: 'paid', label: 'Paid' },
-  { value: 'blocked', label: 'Blocked' },
+  { value: 'blocked', label: 'Gated' },
 ]
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -110,7 +110,16 @@ export function EarningsTab({ settings }: Props) {
     setTxLoading(true)
     api
       .fetchTransactions(period, page, 25, statusFilter)
-      .then(setTransactions)
+      .then((data) => {
+        if (page > 1 && transactions) {
+          setTransactions({
+            ...data,
+            transactions: [...transactions.transactions, ...data.transactions],
+          })
+        } else {
+          setTransactions(data)
+        }
+      })
       .catch(() => {})
       .finally(() => setTxLoading(false))
   }, [period, statusFilter, page, settings.has_site])
@@ -330,7 +339,7 @@ export function EarningsTab({ settings }: Props) {
                 pillLabel = 'withdraw'
               } else if (isBlocked) {
                 pillClass = ' xenarch-earnings-tx-type--blocked'
-                pillLabel = 'blocked'
+                pillLabel = 'gated'
               }
 
               return (
