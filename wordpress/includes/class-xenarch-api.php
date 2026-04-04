@@ -362,7 +362,7 @@ class Xenarch_Api {
 			return $data;
 		}
 
-		$message = isset( $data['message'] ) ? $data['message'] : 'Unknown API error';
+		$message = isset( $data['message'] ) ? $data['message'] : ( isset( $data['detail'] ) ? $data['detail'] : 'Unknown API error' );
 		$error   = isset( $data['error'] ) ? $data['error'] : 'api_error';
 
 		return new WP_Error(

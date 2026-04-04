@@ -20,30 +20,50 @@ const COUNTRY_LS_KEY = 'xenarch-cashout-country'
 
 /** Map of ISO 3166-1 alpha-2 codes to country names. */
 const COUNTRY_NAMES: Record<string, string> = {
-  AD: 'Andorra', AE: 'United Arab Emirates', AL: 'Albania', AR: 'Argentina',
-  AT: 'Austria', AU: 'Australia', BE: 'Belgium', BG: 'Bulgaria',
-  BH: 'Bahrain', BR: 'Brazil', CA: 'Canada', CH: 'Switzerland',
-  CL: 'Chile', CO: 'Colombia', CR: 'Costa Rica', CY: 'Cyprus',
-  CZ: 'Czechia', DE: 'Germany', DK: 'Denmark', DO: 'Dominican Republic',
-  EC: 'Ecuador', EE: 'Estonia', ES: 'Spain', FI: 'Finland',
-  FR: 'France', GB: 'United Kingdom', GR: 'Greece', GT: 'Guatemala',
-  HK: 'Hong Kong', HR: 'Croatia', HU: 'Hungary', ID: 'Indonesia',
-  IE: 'Ireland', IL: 'Israel', IN: 'India', IS: 'Iceland',
-  IT: 'Italy', JM: 'Jamaica', JO: 'Jordan', JP: 'Japan',
-  KE: 'Kenya', KR: 'South Korea', KW: 'Kuwait', LI: 'Liechtenstein',
-  LT: 'Lithuania', LU: 'Luxembourg', LV: 'Latvia', MA: 'Morocco',
-  MC: 'Monaco', MT: 'Malta', MX: 'Mexico', MY: 'Malaysia',
-  NG: 'Nigeria', NL: 'Netherlands', NO: 'Norway', NZ: 'New Zealand',
-  OM: 'Oman', PA: 'Panama', PE: 'Peru', PH: 'Philippines',
-  PL: 'Poland', PT: 'Portugal', PY: 'Paraguay', QA: 'Qatar',
-  RO: 'Romania', SA: 'Saudi Arabia', SE: 'Sweden', SG: 'Singapore',
-  SI: 'Slovenia', SK: 'Slovakia', SV: 'El Salvador', TH: 'Thailand',
-  TN: 'Tunisia', TR: 'Turkey', TW: 'Taiwan', UA: 'Ukraine',
-  US: 'United States', UY: 'Uruguay', VN: 'Vietnam', ZA: 'South Africa',
+  AD: 'Andorra', AE: 'United Arab Emirates', AL: 'Albania', AM: 'Armenia',
+  AO: 'Angola', AR: 'Argentina', AT: 'Austria', AU: 'Australia',
+  BB: 'Barbados', BD: 'Bangladesh', BE: 'Belgium', BF: 'Burkina Faso',
+  BG: 'Bulgaria', BH: 'Bahrain', BJ: 'Benin', BO: 'Bolivia',
+  BR: 'Brazil', BY: 'Belarus', CA: 'Canada', CG: 'Congo',
+  CH: 'Switzerland', CI: 'Ivory Coast', CL: 'Chile', CM: 'Cameroon',
+  CO: 'Colombia', CR: 'Costa Rica', CY: 'Cyprus', CZ: 'Czechia',
+  DE: 'Germany', DK: 'Denmark', DO: 'Dominican Republic', DZ: 'Algeria',
+  EC: 'Ecuador', EE: 'Estonia', EG: 'Egypt', ES: 'Spain',
+  ET: 'Ethiopia', FI: 'Finland', FR: 'France', GA: 'Gabon',
+  GB: 'United Kingdom', GE: 'Georgia', GG: 'Guernsey', GH: 'Ghana',
+  GI: 'Gibraltar', GR: 'Greece', GT: 'Guatemala', HK: 'Hong Kong',
+  HN: 'Honduras', HR: 'Croatia', HT: 'Haiti', HU: 'Hungary',
+  ID: 'Indonesia', IE: 'Ireland', IL: 'Israel', IM: 'Isle of Man',
+  IN: 'India', IS: 'Iceland', IT: 'Italy', JE: 'Jersey',
+  JM: 'Jamaica', JP: 'Japan', KE: 'Kenya', KG: 'Kyrgyzstan',
+  KH: 'Cambodia', KR: 'South Korea', KW: 'Kuwait', KY: 'Cayman Islands',
+  KZ: 'Kazakhstan', LB: 'Lebanon', LC: 'Saint Lucia', LI: 'Liechtenstein',
+  LK: 'Sri Lanka', LT: 'Lithuania', LU: 'Luxembourg', LV: 'Latvia',
+  MA: 'Morocco', MC: 'Monaco', MD: 'Moldova', MK: 'North Macedonia',
+  MM: 'Myanmar', MN: 'Mongolia', MT: 'Malta', MV: 'Maldives',
+  MX: 'Mexico', MY: 'Malaysia', MZ: 'Mozambique', NE: 'Niger',
+  NG: 'Nigeria', NI: 'Nicaragua', NL: 'Netherlands', NO: 'Norway',
+  NP: 'Nepal', NZ: 'New Zealand', PA: 'Panama', PE: 'Peru',
+  PH: 'Philippines', PK: 'Pakistan', PL: 'Poland', PT: 'Portugal',
+  PY: 'Paraguay', RO: 'Romania', RS: 'Serbia', SA: 'Saudi Arabia',
+  SD: 'Sudan', SE: 'Sweden', SG: 'Singapore', SI: 'Slovenia',
+  SK: 'Slovakia', SM: 'San Marino', SN: 'Senegal', SV: 'El Salvador',
+  TG: 'Togo', TH: 'Thailand', TN: 'Tunisia', TR: 'Turkey',
+  TT: 'Trinidad and Tobago', TW: 'Taiwan', UA: 'Ukraine',
+  US: 'United States', VN: 'Vietnam', ZA: 'South Africa',
 }
 
 function getCountryName(code: string): string {
   return COUNTRY_NAMES[code] || code
+}
+
+/** Extract FIAT_WALLET limits for USD from sell-options response. */
+function getUsdLimits(options: SellOptions | null): { min: string; max: string } | null {
+  if (!options?.cashout_currencies) return null
+  const usd = options.cashout_currencies.find((c) => c.id === 'USD')
+  if (!usd) return null
+  const fiat = usd.limits.find((l) => l.id === 'FIAT_WALLET')
+  return fiat ? { min: fiat.min, max: fiat.max } : null
 }
 
 export function CashOutModal({ balance, onComplete, onClose }: Props) {
@@ -73,7 +93,10 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
           setPhase('error')
           return
         }
-        const sorted = [...data.countries].sort((a, b) =>
+        const fiatCountries = data.countries.filter((c) =>
+          c.payment_methods.some((m) => m === 'FIAT_WALLET' || (typeof m === 'object' && (m as any).id === 'FIAT_WALLET'))
+        )
+        const sorted = [...fiatCountries].sort((a, b) =>
           getCountryName(a.id).localeCompare(getCountryName(b.id))
         )
         setCountries(sorted)
@@ -106,6 +129,9 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
         } else {
           setOptions(data)
           localStorage.setItem(COUNTRY_LS_KEY, countryCode)
+          // Auto-fill amount with the country minimum
+          const limits = getUsdLimits(data)
+          if (limits) setAmount(limits.min)
         }
         setOptionsLoading(false)
         setPhase('form')
@@ -147,7 +173,13 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
   }, [phase, onComplete])
 
   const handleGetQuote = useCallback(async () => {
-    if (!amount || parseFloat(amount) <= 0 || !country) return
+    if (!amount || parseFloat(amount) <= 0 || !country || !options) return
+    const limits = getUsdLimits(options)
+    const min = parseFloat(limits?.min || '2')
+    if (parseFloat(amount) < min) {
+      setError(`Minimum amount is $${min}`)
+      return
+    }
     setLoading(true)
     setError('')
     try {
@@ -155,10 +187,15 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
       setQuote(q)
       setPhase('quote')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get quote.')
+      const msg = err instanceof Error ? err.message : 'Failed to get quote.'
+      if (msg.toLowerCase().includes('not supported')) {
+        setError('Cash out is not available in this country yet.')
+      } else {
+        setError(msg)
+      }
     }
     setLoading(false)
-  }, [amount, country])
+  }, [amount, country, options])
 
   const handleContinue = useCallback(() => {
     if (!quote?.offramp_url) return
@@ -174,10 +211,10 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
     if (e.target === e.currentTarget) onClose()
   }
 
-  const minAmount = options?.payment_methods?.[0]?.min_amount || '1.00'
-  const maxAmount = options?.payment_methods?.[0]?.max_amount || '25000.00'
-  const paymentMethod = options?.payment_methods?.[0]?.name || 'Bank account'
-  const canGetQuote = !!country && !!options && !error && !!amount && parseFloat(amount) > 0
+  const usdLimits = getUsdLimits(options)
+  const minAmount = usdLimits?.min || '2'
+  const maxAmount = usdLimits?.max || '25000'
+  const canGetQuote = !!country && !!options && !error && !!amount && parseFloat(amount) >= parseFloat(minAmount)
 
   return (
     <div className="xenarch-modal-overlay xenarch-modal-overlay--wallet" onClick={handleOverlayClick}>
@@ -243,14 +280,17 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
                     ))}
                   </select>
                 </div>
+                <div className="xenarch-cashout-meta-row xenarch-wallet-modal-info" style={{ fontSize: '11px' }}>
+                  Country not listed? Withdraw to an external wallet that supports your country.
+                </div>
                 {options && (
                   <>
                     <div className="xenarch-cashout-meta-row">
                       <span>Method</span>
-                      <span>{paymentMethod}</span>
+                      <span>Coinbase balance</span>
                     </div>
                     <div className="xenarch-cashout-meta-row xenarch-wallet-modal-info">
-                      Min ${minAmount} &middot; Max ${maxAmount} &middot; Zero fees for USDC
+                      Min ${minAmount} &middot; Max ${maxAmount}
                     </div>
                   </>
                 )}

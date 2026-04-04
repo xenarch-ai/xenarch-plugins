@@ -100,9 +100,20 @@ export interface SellConfig {
   error?: string
 }
 
+export interface SellOptionsLimit {
+  id: string
+  min: string
+  max: string
+}
+
+export interface SellOptionsCurrency {
+  id: string
+  limits: SellOptionsLimit[]
+}
+
 export interface SellOptions {
-  payment_methods: Array<{ id: string; name: string; min_amount: string; max_amount: string }>
-  sell_assets: Array<{ asset: string; network: string }>
+  cashout_currencies: SellOptionsCurrency[]
+  sell_currencies?: Array<{ id: string; name: string; symbol: string }>
   error?: string
   supported?: boolean
 }
