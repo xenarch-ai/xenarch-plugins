@@ -205,6 +205,17 @@ class Xenarch_Rest {
 			)
 		);
 
+		// Offramp — sell config (supported countries).
+		register_rest_route(
+			$this->namespace,
+			'/sell-config',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'get_sell_config' ),
+				'permission_callback' => array( $this, 'check_admin' ),
+			)
+		);
+
 		// Offramp — sell options (available methods and limits).
 		register_rest_route(
 			$this->namespace,
@@ -627,7 +638,7 @@ class Xenarch_Rest {
 		$table = $wpdb->prefix . 'xenarch_bot_log';
 
 		// Get live detection data from the database.
-		$log_rows = $wpdb->get_results( "SELECT signature, category, company, first_seen, last_seen, hit_count FROM $table", ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$log_rows = $wpdb->get_results( "SELECT signature, category, company, first_seen, last_seen, hit_count FROM $table", ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $table is $wpdb->prefix constant.
 		$log_map  = array();
 		if ( is_array( $log_rows ) ) {
 			foreach ( $log_rows as $row ) {
@@ -759,6 +770,24 @@ class Xenarch_Rest {
 	// ------------------------------------------------------------------
 	// Offramp (Coinbase cash out)
 	// ------------------------------------------------------------------
+
+	/**
+	 * GET /sell-config — supported countries for offramp.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public function get_sell_config() {
+		$result = $this->api->get_sell_config();
+
+		if ( is_wp_error( $result ) ) {
+			return new WP_REST_Response(
+				array( 'error' => $result->get_error_message() ),
+				502
+			);
+		}
+
+		return new WP_REST_Response( $result, 200 );
+	}
 
 	/**
 	 * GET /sell-options — available offramp payment methods and limits.

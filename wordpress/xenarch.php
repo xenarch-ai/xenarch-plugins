@@ -3,14 +3,14 @@
  * Plugin Name: Xenarch
  * Plugin URI:  https://xenarch.com
  * Description: Monetize AI bot traffic on your WordPress site. Xenarch detects AI agents and charges micropayments for content access via the x402 protocol.
- * Version:     1.7.8
+ * Version:     0.7.9
  * Author:      Xenarch
  * Author URI:  https://xenarch.com
  * License:     GPL-2.0+
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: xenarch
  * Requires PHP: 7.4
- * Requires at least: 5.0
+ * Requires at least: 6.0
  */
 
 // Prevent direct file access.
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Plugin constants.
  */
-define( 'XENARCH_VERSION', '1.7.8' );
+define( 'XENARCH_VERSION', '0.7.9' );
 define( 'XENARCH_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'XENARCH_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'XENARCH_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );

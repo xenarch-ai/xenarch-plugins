@@ -1,4 +1,4 @@
-import type { Settings, PricingRule, StatsResponse, TransactionsResponse, BotCategories, BotOverrides, BotSignature, BotAction, PagePath, CategoryBreakdownItem, WalletBalanceResponse, SellOptions, SellQuote } from './types'
+import type { Settings, PricingRule, StatsResponse, TransactionsResponse, BotCategories, BotOverrides, BotSignature, BotAction, PagePath, CategoryBreakdownItem, WalletBalanceResponse, SellConfig, SellOptions, SellQuote } from './types'
 
 function getConfig() {
   return window.xenarchAdmin
@@ -112,6 +112,11 @@ export function fetchBalance(): Promise<WalletBalanceResponse> {
 // Category breakdown
 export function fetchCategoryBreakdown(): Promise<{ categories: CategoryBreakdownItem[] }> {
   return apiFetch<{ categories: CategoryBreakdownItem[] }>('/category-breakdown')
+}
+
+// Offramp — sell config (supported countries)
+export function fetchSellConfig(): Promise<SellConfig> {
+  return apiFetch<SellConfig>('/sell-config')
 }
 
 // Offramp — sell options (available methods and limits)

@@ -215,6 +215,13 @@ class Xenarch_Api {
 	 * @param string $country Two-letter country code (e.g. "US").
 	 * @return array|WP_Error
 	 */
+	public function get_sell_config() {
+		return $this->get(
+			'/v1/offramp/sell-config',
+			$this->auth_headers()
+		);
+	}
+
 	public function get_sell_options( $country ) {
 		return $this->get(
 			'/v1/offramp/sell-options?country=' . urlencode( $country ),

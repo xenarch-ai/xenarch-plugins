@@ -89,6 +89,17 @@ export interface WalletBalanceResponse {
   balance_usd: string
 }
 
+export interface SellConfigCountry {
+  id: string
+  payment_methods: string[]
+  subdivisions?: string[]
+}
+
+export interface SellConfig {
+  countries: SellConfigCountry[]
+  error?: string
+}
+
 export interface SellOptions {
   payment_methods: Array<{ id: string; name: string; min_amount: string; max_amount: string }>
   sell_assets: Array<{ asset: string; network: string }>
