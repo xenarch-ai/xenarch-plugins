@@ -237,13 +237,14 @@ class Xenarch_Api {
 	 * @param string $country    Two-letter country code.
 	 * @return array|WP_Error
 	 */
-	public function create_sell_quote( $site_id, $amount_usd, $country ) {
+	public function create_sell_quote( $site_id, $amount_usd, $country, $payment_method = 'FIAT_WALLET' ) {
 		return $this->post(
 			'/v1/offramp/sell-quote',
 			array(
-				'site_id'    => $site_id,
-				'amount_usd' => $amount_usd,
-				'country'    => $country,
+				'site_id'        => $site_id,
+				'amount_usd'     => $amount_usd,
+				'country'        => $country,
+				'payment_method' => $payment_method,
 			),
 			$this->auth_headers()
 		);

@@ -820,9 +820,10 @@ class Xenarch_Rest {
 	 * @return WP_REST_Response
 	 */
 	public function handle_sell_quote( $request ) {
-		$params     = $request->get_json_params();
-		$amount_usd = isset( $params['amount_usd'] ) ? sanitize_text_field( $params['amount_usd'] ) : '';
-		$country    = isset( $params['country'] ) ? sanitize_text_field( $params['country'] ) : '';
+		$params         = $request->get_json_params();
+		$amount_usd     = isset( $params['amount_usd'] ) ? sanitize_text_field( $params['amount_usd'] ) : '';
+		$country        = isset( $params['country'] ) ? sanitize_text_field( $params['country'] ) : '';
+		$payment_method = isset( $params['payment_method'] ) ? sanitize_text_field( $params['payment_method'] ) : 'FIAT_WALLET';
 
 		if ( empty( $amount_usd ) || empty( $country ) ) {
 			return new WP_REST_Response( array( 'error' => 'Amount and country are required.' ), 400 );
@@ -833,7 +834,7 @@ class Xenarch_Rest {
 			return new WP_REST_Response( array( 'error' => 'Site not configured.' ), 400 );
 		}
 
-		$result = $this->api->create_sell_quote( $site_id, $amount_usd, $country );
+		$result = $this->api->create_sell_quote( $site_id, $amount_usd, $country, $payment_method );
 
 		if ( is_wp_error( $result ) ) {
 			return new WP_REST_Response(

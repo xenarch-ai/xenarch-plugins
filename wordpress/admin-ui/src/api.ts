@@ -125,10 +125,10 @@ export function fetchSellOptions(country: string): Promise<SellOptions> {
 }
 
 // Offramp — create sell quote (returns Coinbase offramp URL)
-export function createSellQuote(amountUsd: string, country: string): Promise<SellQuote> {
+export function createSellQuote(amountUsd: string, country: string, paymentMethod: string = 'FIAT_WALLET'): Promise<SellQuote> {
   return apiFetch<SellQuote>('/sell-quote', {
     method: 'POST',
-    body: JSON.stringify({ amount_usd: amountUsd, country }),
+    body: JSON.stringify({ amount_usd: amountUsd, country, payment_method: paymentMethod }),
   })
 }
 

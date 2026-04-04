@@ -57,19 +57,33 @@ function getCountryName(code: string): string {
   return COUNTRY_NAMES[code] || code
 }
 
-/** Extract FIAT_WALLET limits for USD from sell-options response. */
-function getUsdLimits(options: SellOptions | null): { min: string; max: string } | null {
+/** Extract USD limits for a given payment method from sell-options response. */
+function getUsdLimits(options: SellOptions | null, method: string): { min: string; max: string } | null {
   if (!options?.cashout_currencies) return null
   const usd = options.cashout_currencies.find((c) => c.id === 'USD')
   if (!usd) return null
-  const fiat = usd.limits.find((l) => l.id === 'FIAT_WALLET')
-  return fiat ? { min: fiat.min, max: fiat.max } : null
+  const lim = usd.limits.find((l) => l.id === method)
+  return lim ? { min: lim.min, max: lim.max } : null
+}
+
+/** Get available USD payment methods from sell-options. */
+function getUsdMethods(options: SellOptions | null): string[] {
+  if (!options?.cashout_currencies) return []
+  const usd = options.cashout_currencies.find((c) => c.id === 'USD')
+  if (!usd) return []
+  return usd.limits.map((l) => l.id)
+}
+
+const DESTINATION_LABELS: Record<string, string> = {
+  FIAT_WALLET: 'Coinbase balance',
+  ACH_BANK_ACCOUNT: 'Bank account (ACH)',
 }
 
 export function CashOutModal({ balance, onComplete, onClose }: Props) {
   const [phase, setPhase] = useState<Phase>('loading')
   const [countries, setCountries] = useState<SellConfigCountry[]>([])
   const [country, setCountry] = useState('')
+  const [destination, setDestination] = useState('')
   const [amount, setAmount] = useState(balance)
   const [options, setOptions] = useState<SellOptions | null>(null)
   const [quote, setQuote] = useState<SellQuote | null>(null)
@@ -129,9 +143,15 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
         } else {
           setOptions(data)
           localStorage.setItem(COUNTRY_LS_KEY, countryCode)
-          // Auto-fill amount with the country minimum
-          const limits = getUsdLimits(data)
-          if (limits) setAmount(limits.min)
+          // Auto-select destination if only one method available
+          const methods = getUsdMethods(data)
+          if (methods.length === 1 && methods[0]) {
+            setDestination(methods[0])
+            const limits = getUsdLimits(data, methods[0]!)
+            if (limits) setAmount(limits.min)
+          } else {
+            setDestination('')
+          }
         }
         setOptionsLoading(false)
         setPhase('form')
@@ -146,6 +166,7 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
 
   const handleCountrySelect = useCallback((newCountry: string) => {
     setCountry(newCountry)
+    setDestination('')
     setOptions(null)
     setError('')
     if (newCountry) {
@@ -173,8 +194,8 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
   }, [phase, onComplete])
 
   const handleGetQuote = useCallback(async () => {
-    if (!amount || parseFloat(amount) <= 0 || !country || !options) return
-    const limits = getUsdLimits(options)
+    if (!amount || parseFloat(amount) <= 0 || !country || !destination || !options) return
+    const limits = getUsdLimits(options, destination)
     const min = parseFloat(limits?.min || '2')
     if (parseFloat(amount) < min) {
       setError(`Minimum amount is $${min}`)
@@ -183,7 +204,7 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
     setLoading(true)
     setError('')
     try {
-      const q = await api.createSellQuote(amount, country)
+      const q = await api.createSellQuote(amount, country, destination)
       setQuote(q)
       setPhase('quote')
     } catch (err) {
@@ -195,7 +216,7 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
       }
     }
     setLoading(false)
-  }, [amount, country, options])
+  }, [amount, country, destination, options])
 
   const handleContinue = useCallback(() => {
     if (!quote?.offramp_url) return
@@ -211,10 +232,18 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
     if (e.target === e.currentTarget) onClose()
   }
 
-  const usdLimits = getUsdLimits(options)
+  const availableMethods = getUsdMethods(options)
+  const hasMultipleDestinations = availableMethods.length > 1
+  const usdLimits = getUsdLimits(options, destination)
   const minAmount = usdLimits?.min || '2'
   const maxAmount = usdLimits?.max || '25000'
-  const canGetQuote = !!country && !!options && !error && !!amount && parseFloat(amount) >= parseFloat(minAmount)
+  const canGetQuote = !!country && !!destination && !!options && !error && !!amount && parseFloat(amount) >= parseFloat(minAmount)
+
+  const handleDestinationSelect = (method: string) => {
+    setDestination(method)
+    const limits = getUsdLimits(options, method)
+    if (limits) setAmount(limits.min)
+  }
 
   return (
     <div className="xenarch-modal-overlay xenarch-modal-overlay--wallet" onClick={handleOverlayClick}>
@@ -264,41 +293,73 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
               </div>
 
               <div className="xenarch-cashout-meta">
-                <div className="xenarch-cashout-meta-row">
-                  <span>Country</span>
-                  <select
-                    className="xenarch-cashout-country-select"
-                    value={country}
-                    onChange={(e) => handleCountrySelect(e.target.value)}
-                    disabled={optionsLoading}
-                  >
-                    <option value="" disabled>Select country</option>
-                    {countries.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {getCountryName(c.id)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="xenarch-cashout-meta-row xenarch-wallet-modal-info" style={{ fontSize: '11px' }}>
-                  Country not listed? Withdraw to an external wallet that supports your country.
-                </div>
+                {!optionsLoading && (
+                  <div className="xenarch-cashout-meta-row">
+                    <span>Country</span>
+                    <select
+                      className="xenarch-cashout-country-select"
+                      value={country}
+                      onChange={(e) => handleCountrySelect(e.target.value)}
+                    >
+                      <option value="" disabled>Select country</option>
+                      {countries.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {getCountryName(c.id)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {!country && (
+                  <div className="xenarch-cashout-meta-row xenarch-wallet-modal-info" style={{ fontSize: '11px' }}>
+                    Country not listed? Withdraw to an external wallet that supports your country.
+                  </div>
+                )}
                 {options && (
                   <>
                     <div className="xenarch-cashout-meta-row">
-                      <span>Method</span>
-                      <span>Coinbase balance</span>
+                      <span>Destination</span>
+                      {hasMultipleDestinations ? (
+                        <select
+                          className="xenarch-cashout-country-select"
+                          value={destination}
+                          onChange={(e) => handleDestinationSelect(e.target.value)}
+                        >
+                          <option value="" disabled>Select destination</option>
+                          {availableMethods.map((m) => (
+                            <option key={m} value={m}>
+                              {DESTINATION_LABELS[m] || m}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="xenarch-cashout-country-select" style={{ cursor: 'default' }}>
+                          {DESTINATION_LABELS[destination] || destination}
+                        </span>
+                      )}
                     </div>
-                    <div className="xenarch-cashout-meta-row xenarch-wallet-modal-info">
-                      Min ${minAmount} &middot; Max ${maxAmount}
-                    </div>
+                    {destination && (
+                      <div className="xenarch-cashout-meta-row xenarch-wallet-modal-info" style={{ fontSize: '11px' }}>
+                        {destination === 'ACH_BANK_ACCOUNT'
+                          ? 'Funds will be sent directly to your linked bank account.'
+                          : 'Funds will be added to your Coinbase balance. To withdraw to your bank, log in to coinbase.com with the same email or social login used to create your Xenarch wallet.'}
+                      </div>
+                    )}
+                    {destination && (
+                      <div className="xenarch-cashout-meta-row xenarch-wallet-modal-info">
+                        Min ${minAmount} &middot; Max ${maxAmount}
+                      </div>
+                    )}
                   </>
                 )}
               </div>
 
               {optionsLoading && (
-                <div className="xenarch-wallet-modal-info" style={{ textAlign: 'center' }}>
-                  Checking availability...
+                <div className="xenarch-wallet-modal-center">
+                  <div className="xenarch-wallet-modal-loading">
+                    <div className="xenarch-wallet-modal-spinner" />
+                    <div className="xenarch-wallet-modal-info">Checking availability...</div>
+                  </div>
                 </div>
               )}
 
@@ -331,7 +392,7 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
               </div>
 
               <div className="xenarch-wallet-modal-info">
-                You'll be redirected to Coinbase to complete the sale. Funds arrive in 1-3 business days.
+                Funds will be converted and added to your Coinbase balance. To withdraw to your bank, log in to coinbase.com with the same email or social login used to create your Xenarch wallet.
               </div>
 
               <button className="xenarch-wallet-modal-btn" onClick={handleContinue}>

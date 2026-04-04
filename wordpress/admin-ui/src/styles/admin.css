@@ -2580,8 +2580,12 @@ w3m-account-button {
 }
 
 #xenarch-admin .xenarch-cashout-country-select:disabled {
-  opacity: 0.5;
+  color: var(--xn-text-secondary);
+  -webkit-text-fill-color: var(--xn-text-secondary);
+  opacity: 1;
   cursor: not-allowed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #xenarch-admin .xenarch-cashout-quote-card {
