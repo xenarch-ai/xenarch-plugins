@@ -22,7 +22,7 @@ const PERIODS = [
 
 const STATUS_FILTERS = [
   { value: 'all', label: 'All' },
-  { value: 'paid', label: 'Paid' },
+  { value: 'paid', label: 'Earned' },
   { value: 'blocked', label: 'Gated' },
 ]
 
@@ -66,8 +66,8 @@ export function EarningsTab({ settings }: Props) {
   const [transactions, setTransactions] = useState<TransactionsResponse | null>(null)
   const [breakdown, setBreakdown] = useState<CategoryBreakdownItem[] | null>(null)
   const [balance, setBalance] = useState<WalletBalanceResponse | null>(null)
-  const [period, setPeriod] = useState('7d')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [period, setPeriod] = useState('30d')
+  const [statusFilter, setStatusFilter] = useState('paid')
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [txLoading, setTxLoading] = useState(false)
@@ -358,7 +358,7 @@ export function EarningsTab({ settings }: Props) {
                       : tx.path}
                   </td>
                   <td className="xenarch-earnings-td-agent">
-                    {tx.agent_name || '-'}
+                    {tx.agent_name && /^(empty_ua|header_score|unknown_non_browser|browser_headers)/.test(tx.agent_name) ? 'Unknown Bot' : tx.agent_name || '-'}
                   </td>
                   <td
                     className="xenarch-earnings-td-amount"
@@ -370,7 +370,7 @@ export function EarningsTab({ settings }: Props) {
                           : undefined
                     }
                   >
-                    {isWithdraw ? `-$${tx.amount_usd}` : isPaid ? `+$${tx.amount_usd}` : `$${tx.amount_usd}`}
+                    {isWithdraw ? `-$${tx.amount_usd}` : isPaid ? `+$${tx.amount_usd}` : '\u2014'}
                   </td>
                   <td className="xenarch-earnings-td-time">
                     {formatTime(tx.created_at)}
