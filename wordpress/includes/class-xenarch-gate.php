@@ -463,38 +463,27 @@ class Xenarch_Gate {
 		$table = $wpdb->prefix . 'xenarch_bot_log';
 		$now   = current_time( 'mysql', true );
 
-		// Try to update existing row first.
-		$updated = $wpdb->query( $wpdb->prepare(
-			"UPDATE $table SET last_seen = %s, hit_count = hit_count + 1 WHERE signature = %s", // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $table is $wpdb->prefix constant.
-			$now,
-			$signature
-		) );
+		// Atomic upsert — avoids race condition when two concurrent requests
+		// try to insert the same new signature simultaneously (XEN-62).
+		$category = Xenarch_Bot_Detect::get_category_for_signature( $signature );
+		$company  = Xenarch_Bot_Detect::get_company_for_signature( $signature );
 
-		if ( 0 === (int) $updated ) {
-			// New signature — insert with auto-categorization for unknown bots.
-			$category = Xenarch_Bot_Detect::get_category_for_signature( $signature );
-			$company  = Xenarch_Bot_Detect::get_company_for_signature( $signature );
-
-			if ( empty( $category ) ) {
-				// Unknown bot — auto-categorize from UA pattern.
-				$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
-				$category   = Xenarch_Bot_Detect::auto_categorize( $user_agent );
-				$company    = $signature; // Use signature as company for unknown bots.
-			}
-
-			$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-				$table,
-				array(
-					'signature'  => $signature,
-					'category'   => $category,
-					'company'    => $company,
-					'first_seen' => $now,
-					'last_seen'  => $now,
-					'hit_count'  => 1,
-				),
-				array( '%s', '%s', '%s', '%s', '%s', '%d' )
-			);
+		if ( empty( $category ) ) {
+			$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
+			$category   = Xenarch_Bot_Detect::auto_categorize( $user_agent );
+			$company    = $signature;
 		}
+
+		$wpdb->query( $wpdb->prepare( // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $table is $wpdb->prefix constant.
+			"INSERT INTO $table (signature, category, company, first_seen, last_seen, hit_count)
+			 VALUES (%s, %s, %s, %s, %s, 1)
+			 ON DUPLICATE KEY UPDATE last_seen = VALUES(last_seen), hit_count = hit_count + 1",
+			$signature,
+			$category,
+			$company,
+			$now,
+			$now
+		) );
 	}
 
 	/**
