@@ -167,148 +167,146 @@ class Xenarch_Discovery {
 			$contact_line = "- Publisher contact: {$email}\n";
 		}
 
-		$md = <<<MD
-# Xenarch Payment Gate — {$domain}
-
-## What's Happening
-
-This site charges AI agents for content access using the x402 micropayment protocol. You received an HTTP 402 response because your request was identified as coming from an AI agent.
-
-This is not an error. It means the content is available for purchase.
-
-## How to Pay Programmatically
-
-### Step 1: Get Gate Details
-
-Make a request to any page. If you are detected as an AI agent, you'll receive:
-
-```
-HTTP/1.1 402 Payment Required
-Content-Type: application/json
-
-{
-  "xenarch": true,
-  "gate_id": "<uuid>",
-  "price_usd": "{$price}",
-  "splitter": "<contract_address>",
-  "collector": "<publisher_wallet>",
-  "network": "base",
-  "asset": "USDC",
-  "protocol": "x402",
-  "verify_url": "{$api_base}/v1/gates/<gate_id>/verify",
-  "expires": "<iso8601>"
-}
-```
-
-### Step 2: Send USDC Payment
-
-Send `price_usd` worth of USDC to the `splitter` contract on Base network. The contract splits the payment between the publisher (`collector`) and the protocol.
-
-### Step 3: Verify Payment
-
-```
-POST {$api_base}/v1/gates/<gate_id>/verify
-Content-Type: application/json
-
-{
-  "tx_hash": "0x<your_transaction_hash>"
-}
-```
-
-Response:
-```json
-{
-  "access_token": "<jwt>",
-  "expires_at": "<iso8601>"
-}
-```
-
-### Step 4: Access Content
-
-```
-GET {$site_url}/your-page
-Authorization: Bearer <access_token>
-```
-
-You will receive the full page content with HTTP 200.
-
-## Important: No Registration Required
-
-AI agents do NOT need to register or log in. You only need a funded wallet. Do not run `xenarch register` or `xenarch login` — those are for publishers (site owners), not agents.
-
-## For AI Agents (Autonomous Flow)
-
-1. Check if the Xenarch CLI is already installed and a wallet is configured:
-   ```bash
-   xenarch wallet balance
-   ```
-2. If a wallet exists and has USDC, skip to step 5.
-3. If no wallet is configured, ask the human operator to set one up (one-time setup — see below).
-4. Wait for the human to confirm the wallet is ready.
-5. Pay and access:
-   ```bash
-   xenarch pay {$site_url}/your-page
-   ```
-   This pays, verifies, and returns an access token. Use the token to fetch content:
-   ```bash
-   curl -H "Authorization: Bearer <token>" {$site_url}/your-page
-   ```
-
-## For Human Operators
-
-If you are an AI assistant and need the human to set up a wallet, here is a suggested message:
-
-> This site ({$domain}) charges \${$price} per page for AI access. I need a funded USDC wallet on Base network to pay. This is a one-time setup.
->
-> **Option A — Connect your existing wallet (recommended):**
-> ```
-> npm install -g xenarch
-> xenarch wallet connect
-> ```
-> Scan the QR code with your wallet app (MetaMask, Rainbow, etc.). Your keys stay on your phone.
->
-> **Option B — Generate a disposable wallet:**
-> ```
-> npm install -g xenarch
-> xenarch wallet generate
-> ```
-> Then fund the displayed address with USDC + a small amount of ETH for gas on Base network.
->
-> Let me know when the wallet is ready and I'll proceed.
-
-## CLI Quickstart
-
-```bash
-# Install
-npm install -g xenarch
-
-# Option A: Connect your phone wallet (recommended)
-xenarch wallet connect
-
-# Option B: Generate a local wallet
-xenarch wallet generate
-# Then fund it with USDC + ETH on Base
-
-# Pay for a page
-xenarch pay {$site_url}/your-page
-
-# Check if a site uses Xenarch
-xenarch check {$site_url}/
-```
-
-## Pricing
-
-- Default price: \${$price} per page
-- Full pricing rules: {$site_url}/.well-known/pay.json
-- Maximum price: \$1.00 (protocol limit)
-
-## Links
-
-- Xenarch documentation: https://xenarch.com/docs
-- pay.json standard: https://payjson.org
-- pay.json for this site: {$site_url}/.well-known/pay.json
-{$contact_line}
-MD;
+		$md = "# Xenarch Payment Gate — {$domain}\n"
+			. "\n"
+			. "## What's Happening\n"
+			. "\n"
+			. "This site charges AI agents for content access using the x402 micropayment protocol. You received an HTTP 402 response because your request was identified as coming from an AI agent.\n"
+			. "\n"
+			. "This is not an error. It means the content is available for purchase.\n"
+			. "\n"
+			. "## How to Pay Programmatically\n"
+			. "\n"
+			. "### Step 1: Get Gate Details\n"
+			. "\n"
+			. "Make a request to any page. If you are detected as an AI agent, you'll receive:\n"
+			. "\n"
+			. "```\n"
+			. "HTTP/1.1 402 Payment Required\n"
+			. "Content-Type: application/json\n"
+			. "\n"
+			. "{\n"
+			. "  \"xenarch\": true,\n"
+			. "  \"gate_id\": \"<uuid>\",\n"
+			. "  \"price_usd\": \"{$price}\",\n"
+			. "  \"splitter\": \"<contract_address>\",\n"
+			. "  \"collector\": \"<publisher_wallet>\",\n"
+			. "  \"network\": \"base\",\n"
+			. "  \"asset\": \"USDC\",\n"
+			. "  \"protocol\": \"x402\",\n"
+			. "  \"verify_url\": \"{$api_base}/v1/gates/<gate_id>/verify\",\n"
+			. "  \"expires\": \"<iso8601>\"\n"
+			. "}\n"
+			. "```\n"
+			. "\n"
+			. "### Step 2: Send USDC Payment\n"
+			. "\n"
+			. "Send `price_usd` worth of USDC to the `splitter` contract on Base network. The contract splits the payment between the publisher (`collector`) and the protocol.\n"
+			. "\n"
+			. "### Step 3: Verify Payment\n"
+			. "\n"
+			. "```\n"
+			. "POST {$api_base}/v1/gates/<gate_id>/verify\n"
+			. "Content-Type: application/json\n"
+			. "\n"
+			. "{\n"
+			. "  \"tx_hash\": \"0x<your_transaction_hash>\"\n"
+			. "}\n"
+			. "```\n"
+			. "\n"
+			. "Response:\n"
+			. "```json\n"
+			. "{\n"
+			. "  \"access_token\": \"<jwt>\",\n"
+			. "  \"expires_at\": \"<iso8601>\"\n"
+			. "}\n"
+			. "```\n"
+			. "\n"
+			. "### Step 4: Access Content\n"
+			. "\n"
+			. "```\n"
+			. "GET {$site_url}/your-page\n"
+			. "Authorization: Bearer <access_token>\n"
+			. "```\n"
+			. "\n"
+			. "You will receive the full page content with HTTP 200.\n"
+			. "\n"
+			. "## Important: No Registration Required\n"
+			. "\n"
+			. "AI agents do NOT need to register or log in. You only need a funded wallet. Do not run `xenarch register` or `xenarch login` — those are for publishers (site owners), not agents.\n"
+			. "\n"
+			. "## For AI Agents (Autonomous Flow)\n"
+			. "\n"
+			. "1. Check if the Xenarch CLI is already installed and a wallet is configured:\n"
+			. "   ```bash\n"
+			. "   xenarch wallet balance\n"
+			. "   ```\n"
+			. "2. If a wallet exists and has USDC, skip to step 5.\n"
+			. "3. If no wallet is configured, ask the human operator to set one up (one-time setup — see below).\n"
+			. "4. Wait for the human to confirm the wallet is ready.\n"
+			. "5. Pay and access:\n"
+			. "   ```bash\n"
+			. "   xenarch pay {$site_url}/your-page\n"
+			. "   ```\n"
+			. "   This pays, verifies, and returns an access token. Use the token to fetch content:\n"
+			. "   ```bash\n"
+			. "   curl -H \"Authorization: Bearer <token>\" {$site_url}/your-page\n"
+			. "   ```\n"
+			. "\n"
+			. "## For Human Operators\n"
+			. "\n"
+			. "If you are an AI assistant and need the human to set up a wallet, here is a suggested message:\n"
+			. "\n"
+			. "> This site ({$domain}) charges \${$price} per page for AI access. I need a funded USDC wallet on Base network to pay. This is a one-time setup.\n"
+			. ">\n"
+			. "> **Option A — Connect your existing wallet (recommended):**\n"
+			. "> ```\n"
+			. "> npm install -g xenarch\n"
+			. "> xenarch wallet connect\n"
+			. "> ```\n"
+			. "> Scan the QR code with your wallet app (MetaMask, Rainbow, etc.). Your keys stay on your phone.\n"
+			. ">\n"
+			. "> **Option B — Generate a disposable wallet:**\n"
+			. "> ```\n"
+			. "> npm install -g xenarch\n"
+			. "> xenarch wallet generate\n"
+			. "> ```\n"
+			. "> Then fund the displayed address with USDC + a small amount of ETH for gas on Base network.\n"
+			. ">\n"
+			. "> Let me know when the wallet is ready and I'll proceed.\n"
+			. "\n"
+			. "## CLI Quickstart\n"
+			. "\n"
+			. "```bash\n"
+			. "# Install\n"
+			. "npm install -g xenarch\n"
+			. "\n"
+			. "# Option A: Connect your phone wallet (recommended)\n"
+			. "xenarch wallet connect\n"
+			. "\n"
+			. "# Option B: Generate a local wallet\n"
+			. "xenarch wallet generate\n"
+			. "# Then fund it with USDC + ETH on Base\n"
+			. "\n"
+			. "# Pay for a page\n"
+			. "xenarch pay {$site_url}/your-page\n"
+			. "\n"
+			. "# Check if a site uses Xenarch\n"
+			. "xenarch check {$site_url}/\n"
+			. "```\n"
+			. "\n"
+			. "## Pricing\n"
+			. "\n"
+			. "- Default price: \${$price} per page\n"
+			. "- Full pricing rules: {$site_url}/.well-known/pay.json\n"
+			. "- Maximum price: \$1.00 (protocol limit)\n"
+			. "\n"
+			. "## Links\n"
+			. "\n"
+			. "- Xenarch documentation: https://xenarch.com/docs\n"
+			. "- pay.json standard: https://payjson.org\n"
+			. "- pay.json for this site: {$site_url}/.well-known/pay.json\n"
+			. $contact_line;
 
 		status_header( 200 );
 		header( 'Content-Type: text/markdown; charset=utf-8' );
