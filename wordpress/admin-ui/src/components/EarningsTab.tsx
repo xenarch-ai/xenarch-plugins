@@ -23,7 +23,7 @@ const PERIODS = [
 const STATUS_FILTERS = [
   { value: 'all', label: 'All' },
   { value: 'paid', label: 'Earned' },
-  { value: 'blocked', label: 'Gated' },
+  { value: 'blocked', label: 'Cashed out' },
 ]
 
 const CATEGORY_LABELS: Record<string, string> = {

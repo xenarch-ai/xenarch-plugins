@@ -3,6 +3,7 @@ import type { Settings } from '../types'
 import * as api from '../api'
 import { WalletConnectButton } from '../wallet/WalletConnectButton'
 import { getAppKit } from '../wallet/config'
+import { NetworkSelect } from './NetworkSelect'
 import { CreateWalletModal } from './CreateWalletModal'
 
 interface Props {
@@ -72,7 +73,7 @@ export function Onboarding({ onSettingsChange }: Props) {
             disabled={saving}
           >
             <div className="xenarch-wallet-opt-title">Create for me</div>
-            <div className="xenarch-wallet-opt-desc">Easiest setup</div>
+            <div className="xenarch-wallet-opt-desc">Powered by Coinbase</div>
           </button>
           <button
             className="xenarch-wallet-opt"
@@ -97,14 +98,7 @@ export function Onboarding({ onSettingsChange }: Props) {
             autoFocus
             style={{ fontFamily: "'JetBrains Mono', monospace" }}
           />
-          <select
-            className="xenarch-wallet-network-select"
-            value={manualNetwork}
-            onChange={(e) => setManualNetwork(e.target.value)}
-          >
-            <option value="base">Base</option>
-            <option value="solana">Solana</option>
-          </select>
+          <NetworkSelect value={manualNetwork} onChange={setManualNetwork} />
           <button
             className="xenarch-wallet-icon-btn xenarch-wallet-icon-btn--confirm"
             onClick={() => { if (manualAddress.trim()) saveWallet(manualAddress.trim(), 'manual', manualNetwork) }}
@@ -123,7 +117,7 @@ export function Onboarding({ onSettingsChange }: Props) {
 
       {error && (
         <div className="xenarch-onboarding-error">
-          {error} {error.includes('not available') ? '' : <span className="xenarch-onboarding-retry" onClick={() => setError('')}>Try again</span>}
+          Something went wrong. Try again.
         </div>
       )}
 
