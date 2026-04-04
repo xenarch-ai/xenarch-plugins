@@ -2562,22 +2562,30 @@ w3m-account-button {
   padding: 4px 0;
 }
 
-#xenarch-admin .xenarch-cashout-country-input {
-  width: 40px;
-  text-align: center;
+#xenarch-admin .xenarch-cashout-country-select {
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
   color: var(--xn-text);
   background: var(--xn-bg);
   border: 1px solid var(--xn-surface-border);
   border-radius: 4px;
-  padding: 2px 6px;
-  text-transform: uppercase;
+  padding: 4px 8px;
+  cursor: pointer;
+  max-width: 180px;
 }
 
-#xenarch-admin .xenarch-cashout-country-input:focus {
+#xenarch-admin .xenarch-cashout-country-select:focus {
   border-color: var(--xn-success);
   outline: none;
+}
+
+#xenarch-admin .xenarch-cashout-country-select:disabled {
+  color: var(--xn-text-secondary);
+  -webkit-text-fill-color: var(--xn-text-secondary);
+  opacity: 1;
+  cursor: not-allowed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #xenarch-admin .xenarch-cashout-quote-card {

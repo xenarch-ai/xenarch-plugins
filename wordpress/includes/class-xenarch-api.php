@@ -215,6 +215,13 @@ class Xenarch_Api {
 	 * @param string $country Two-letter country code (e.g. "US").
 	 * @return array|WP_Error
 	 */
+	public function get_sell_config() {
+		return $this->get(
+			'/v1/offramp/sell-config',
+			$this->auth_headers()
+		);
+	}
+
 	public function get_sell_options( $country ) {
 		return $this->get(
 			'/v1/offramp/sell-options?country=' . urlencode( $country ),
@@ -230,13 +237,14 @@ class Xenarch_Api {
 	 * @param string $country    Two-letter country code.
 	 * @return array|WP_Error
 	 */
-	public function create_sell_quote( $site_id, $amount_usd, $country ) {
+	public function create_sell_quote( $site_id, $amount_usd, $country, $payment_method = 'FIAT_WALLET' ) {
 		return $this->post(
 			'/v1/offramp/sell-quote',
 			array(
-				'site_id'    => $site_id,
-				'amount_usd' => $amount_usd,
-				'country'    => $country,
+				'site_id'        => $site_id,
+				'amount_usd'     => $amount_usd,
+				'country'        => $country,
+				'payment_method' => $payment_method,
 			),
 			$this->auth_headers()
 		);
@@ -355,7 +363,7 @@ class Xenarch_Api {
 			return $data;
 		}
 
-		$message = isset( $data['message'] ) ? $data['message'] : 'Unknown API error';
+		$message = isset( $data['message'] ) ? $data['message'] : ( isset( $data['detail'] ) ? $data['detail'] : 'Unknown API error' );
 		$error   = isset( $data['error'] ) ? $data['error'] : 'api_error';
 
 		return new WP_Error(

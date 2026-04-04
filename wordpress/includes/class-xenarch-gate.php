@@ -219,6 +219,7 @@ class Xenarch_Gate {
 		header( 'Cache-Control: no-store, private' );
 		header( 'X-Xenarch-Bot: ' . $detection['method'] );
 		header( 'X-Xenarch-Decision: challenge' );
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- build_challenge_html() escapes all dynamic values via json_encode with JSON_HEX_TAG|JSON_HEX_AMP.
 		echo Xenarch_Gate_Response::build_challenge_html( $path, $cookie_value );
 		exit;
 	}
@@ -464,7 +465,7 @@ class Xenarch_Gate {
 
 		// Try to update existing row first.
 		$updated = $wpdb->query( $wpdb->prepare(
-			"UPDATE $table SET last_seen = %s, hit_count = hit_count + 1 WHERE signature = %s", // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			"UPDATE $table SET last_seen = %s, hit_count = hit_count + 1 WHERE signature = %s", // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $table is $wpdb->prefix constant.
 			$now,
 			$signature
 		) );

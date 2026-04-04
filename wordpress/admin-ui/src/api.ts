@@ -1,4 +1,4 @@
-import type { Settings, PricingRule, StatsResponse, TransactionsResponse, BotCategories, BotOverrides, BotSignature, BotAction, PagePath, CategoryBreakdownItem, WalletBalanceResponse, SellOptions, SellQuote } from './types'
+import type { Settings, PricingRule, StatsResponse, TransactionsResponse, BotCategories, BotOverrides, BotSignature, BotAction, PagePath, CategoryBreakdownItem, WalletBalanceResponse, SellConfig, SellOptions, SellQuote } from './types'
 
 function getConfig() {
   return window.xenarchAdmin
@@ -114,16 +114,21 @@ export function fetchCategoryBreakdown(): Promise<{ categories: CategoryBreakdow
   return apiFetch<{ categories: CategoryBreakdownItem[] }>('/category-breakdown')
 }
 
+// Offramp — sell config (supported countries)
+export function fetchSellConfig(): Promise<SellConfig> {
+  return apiFetch<SellConfig>('/sell-config')
+}
+
 // Offramp — sell options (available methods and limits)
 export function fetchSellOptions(country: string): Promise<SellOptions> {
   return apiFetch<SellOptions>(`/sell-options?country=${encodeURIComponent(country)}`)
 }
 
 // Offramp — create sell quote (returns Coinbase offramp URL)
-export function createSellQuote(amountUsd: string, country: string): Promise<SellQuote> {
+export function createSellQuote(amountUsd: string, country: string, paymentMethod: string = 'FIAT_WALLET'): Promise<SellQuote> {
   return apiFetch<SellQuote>('/sell-quote', {
     method: 'POST',
-    body: JSON.stringify({ amount_usd: amountUsd, country }),
+    body: JSON.stringify({ amount_usd: amountUsd, country, payment_method: paymentMethod }),
   })
 }
 
