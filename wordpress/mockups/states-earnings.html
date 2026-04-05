@@ -106,6 +106,44 @@
   .btn-more { font-size: 13px; color: var(--secondary); background: none; border: 1px solid var(--surface-border); border-radius: 6px; padding: 8px 16px; cursor: pointer; }
   .btn-more:hover { border-color: var(--dim); color: var(--fg); }
 
+  /* Cash out modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; }
+  .modal-static { position: relative; margin: 32px auto; }
+  .modal { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; width: 380px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 24px 24px 0; }
+  .modal-title { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; color: var(--fg); }
+  .modal-close { font-size: 18px; color: var(--muted); background: none; border: none; cursor: pointer; }
+  .modal-close:hover { color: var(--error); }
+  .modal-body { padding: 20px 24px; }
+  .modal-footer { color: var(--muted); font-size: 11px; text-align: center; padding: 12px 24px 16px; border-top: 1px solid var(--surface-border); }
+  .co-balance { font-size: 13px; color: var(--secondary); margin-bottom: 16px; }
+  .co-balance strong { color: var(--success); font-family: 'JetBrains Mono', monospace; }
+  .co-label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .co-amount-row { display: flex; gap: 8px; align-items: center; }
+  .co-input { flex: 1; padding: 10px 12px; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 6px; color: var(--fg); font-family: 'JetBrains Mono', monospace; font-size: 14px; outline: none; }
+  .co-input:focus { border-color: var(--input-focus); }
+  .co-btn-max { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; color: var(--success); background: transparent; border: 1px solid var(--surface-border); border-radius: 4px; padding: 6px 10px; cursor: pointer; }
+  .co-btn-max:hover { border-color: var(--success); }
+  .co-meta { margin: 16px 0; }
+  .co-meta-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--secondary); padding: 4px 0; }
+  .co-select { display: inline-flex; align-items: center; gap: 8px; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--fg); background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 6px; padding: 8px 12px; height: 38px; box-sizing: border-box; cursor: pointer; }
+  .co-select:hover { border-color: var(--dim); }
+  .co-select svg { color: var(--muted); flex-shrink: 0; }
+  .co-quote-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+  .co-quote-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--secondary); padding: 4px 0; }
+  .co-quote-row strong { font-family: 'JetBrains Mono', monospace; color: var(--fg); }
+  .co-btn { width: 100%; padding: 10px; margin-top: 12px; background: var(--success); color: var(--btn-primary-fg); border: none; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; }
+  .co-btn:hover { opacity: 0.85; }
+  .co-btn:disabled { background: var(--dim); color: var(--muted); cursor: not-allowed; opacity: 1; }
+  .co-btn--secondary { background: transparent; color: var(--secondary); border: 1px solid var(--surface-border); margin-top: 8px; }
+  .co-btn--secondary:hover { border-color: var(--dim); color: var(--fg); opacity: 1; }
+  .co-info { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 12px; }
+  .co-error { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--error); margin-top: 8px; }
+  .co-waiting-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--success); margin: 0 auto 16px; animation: co-pulse 1.5s ease-in-out infinite; }
+  @keyframes co-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
+  .co-center { text-align: center; padding: 24px 0; }
+  .co-success-title { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; margin-bottom: 8px; }
+
   /* State labels */
   .state-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; margin: 32px 0 16px; padding-top: 32px; border-top: 1px dashed var(--surface-border); }
   .state-label:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
@@ -410,6 +448,100 @@
       </tbody>
     </table>
     <div class="more-row"><button class="btn-more">Load more</button></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- CASH OUT MODAL STATES -->
+  <!-- ============================================================ -->
+
+  <div class="state-label">Cash out modal — Form</div>
+  <div class="modal-static">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Cash out</div>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="co-balance">Balance: <strong>$891.05 USDC</strong></div>
+        <label class="co-label">Amount (USDC)</label>
+        <div class="co-amount-row">
+          <input type="text" class="co-input" value="250">
+          <button class="co-btn-max">MAX</button>
+        </div>
+        <div class="co-meta">
+          <div class="co-meta-row">
+            <span>Country</span>
+            <div class="co-select">Czechia <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 5l3 3 3-3"/></svg></div>
+          </div>
+          <div class="co-meta-row">
+            <span>Destination</span>
+            <div class="co-select">Coinbase balance <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 5l3 3 3-3"/></svg></div>
+          </div>
+          <div class="co-info" style="margin-top:4px;">Funds will be added to your Coinbase balance. To withdraw to your bank, log in to coinbase.com with the same email or social login used to create your Xenarch wallet.</div>
+          <div class="co-meta-row co-info">Min $2 &middot; Max $1000000</div>
+        </div>
+        <button class="co-btn">Get quote</button>
+      </div>
+      <div class="modal-footer">Secured by Coinbase</div>
+    </div>
+  </div>
+
+  <div class="state-label">Cash out modal — Quote</div>
+  <div class="modal-static">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Cash out</div>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="co-quote-card">
+          <div class="co-quote-row"><span>You sell</span><strong>250 USDC</strong></div>
+          <div class="co-quote-row"><span>You receive</span><strong>$248.75 USD</strong></div>
+          <div class="co-quote-row"><span>Fees</span><span>$1.25</span></div>
+        </div>
+        <div class="co-info">Funds will be converted and added to your Coinbase balance. To withdraw to your bank, log in to coinbase.com with the same email or social login used to create your Xenarch wallet.</div>
+        <button class="co-btn">Continue to Coinbase</button>
+        <button class="co-btn co-btn--secondary">Back</button>
+      </div>
+      <div class="modal-footer">Secured by Coinbase</div>
+    </div>
+  </div>
+
+  <div class="state-label">Cash out modal — Redirected (waiting)</div>
+  <div class="modal-static">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Cash out</div>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="co-center">
+          <div class="co-waiting-dot"></div>
+          <div class="co-success-title">Complete your cash out on Coinbase</div>
+          <div class="co-info">This page will update when done. If you've already finished:</div>
+          <button class="co-btn">I'm done</button>
+        </div>
+      </div>
+      <div class="modal-footer">Secured by Coinbase</div>
+    </div>
+  </div>
+
+  <div class="state-label">Cash out modal — Error</div>
+  <div class="modal-static">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Cash out</div>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="co-center">
+          <div class="co-error">Cash out is temporarily unavailable. Please try again later.</div>
+          <button class="co-btn co-btn--secondary">Try again</button>
+          <button class="co-btn co-btn--secondary">Close</button>
+        </div>
+      </div>
+      <div class="modal-footer">Secured by Coinbase</div>
+    </div>
   </div>
 
 </div>
