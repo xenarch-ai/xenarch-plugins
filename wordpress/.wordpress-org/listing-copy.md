@@ -247,7 +247,7 @@ Current screenshots (retaken April 5 2026):
 1. **Settings — Gate section** — Master toggle ON, AI Search OFF (allowed), rest gated with green counts. Dark + light side by side.
 2. **Settings — Bot modal** — Manage bots modal with category pills, per-bot allow/charge controls, search bar, bulk actions.
 3. **Settings — Pricing** — Default price $0.003 + URL rules for /docs/ and /public/ (FREE). Dark + light side by side.
-4. **Onboarding — Wallet setup** — "Where do you want to receive payments?" with 3 wallet option cards (Connect wallet, Create for me / Powered by Coinbase, Enter manually). Dark + light side by side. *(Retaken April 5 — old screenshot had stale subtitle.)*
+4. **Onboarding — Wallet setup** — "Where do you want to receive payments?" with 3 wallet option cards (Connect wallet, Create for me / Cash out to your bank, Enter manually / Base or Solana address). Dark + light side by side.
 5. **Earnings — With data** — Wallet bar with balance and Cash out button, stats cards (Today/Month/All time), category breakdown grid, transaction table. Dark + light side by side.
 6. **Status — Connected** — Diagnostic card with connection status, site token, server-side/l.js status, pay.json and xenarch.md URLs. Dark + light side by side.
 7. **Terminal — 402 response** — curl command with GPTBot UA showing HTTP/2 402 response, x-payment headers, and JSON gate payload.

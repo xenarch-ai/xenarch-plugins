@@ -167,7 +167,7 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
               ) : (
                 <button className="xenarch-wallet-opt" onClick={handleCreateWallet} disabled={saving}>
                   <div className="xenarch-wallet-opt-title">Create for me</div>
-                  <div className="xenarch-wallet-opt-desc">Powered by Coinbase</div>
+                  <div className="xenarch-wallet-opt-desc">Cash out to your bank</div>
                 </button>
               )}
               {isChanging && walletType === 'manual' ? (
@@ -178,7 +178,7 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
               ) : (
                 <button className="xenarch-wallet-opt" onClick={() => setPhase('manual')}>
                   <div className="xenarch-wallet-opt-title">Enter manually</div>
-                  <div className="xenarch-wallet-opt-desc">Paste an address</div>
+                  <div className="xenarch-wallet-opt-desc">Base or Solana address</div>
                 </button>
               )}
             </div>

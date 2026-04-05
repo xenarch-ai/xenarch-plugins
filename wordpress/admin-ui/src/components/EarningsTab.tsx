@@ -23,7 +23,7 @@ const PERIODS = [
 const STATUS_FILTERS = [
   { value: 'all', label: 'All' },
   { value: 'paid', label: 'Earned' },
-  { value: 'blocked', label: 'Cashed out' },
+  { value: 'blocked', label: 'Cashed' },
 ]
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -336,7 +336,7 @@ export function EarningsTab({ settings }: Props) {
               let pillLabel = 'earn'
               if (isWithdraw) {
                 pillClass = ' xenarch-earnings-tx-type--withdraw'
-                pillLabel = 'withdraw'
+                pillLabel = 'cash'
               } else if (isBlocked) {
                 pillClass = ' xenarch-earnings-tx-type--blocked'
                 pillLabel = 'gated'

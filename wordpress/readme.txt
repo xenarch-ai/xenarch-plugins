@@ -166,7 +166,7 @@ Xenarch complements Cloudflare's x402 pay-per-crawl tooling. Both use the same x
 1. Settings — Gate section with master toggle and 6 bot category rows (dark and light theme).
 2. Manage bots modal with category filter pills and per-bot allow/charge controls.
 3. Pricing section with default price and URL-based pricing rules (dark and light theme).
-4. Onboarding — wallet setup with Connect, Create (Powered by Coinbase), and Enter options.
+4. Onboarding — wallet setup with Connect, Create (Cash out to your bank), and Enter manually options.
 5. Earnings dashboard with stats cards, category breakdown, and transaction history.
 6. Status tab with connection diagnostics, bot signature count, and discovery URLs.
 7. Terminal showing HTTP 402 response with x-payment headers and JSON gate payload.
