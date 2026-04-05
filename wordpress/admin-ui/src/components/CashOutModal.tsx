@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import type { SellOptions, SellQuote, SellConfigCountry } from '../types'
 import * as api from '../api'
+import { CustomSelect } from './CustomSelect'
 
 interface Props {
   balance: string
@@ -296,18 +297,12 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
                 {!optionsLoading && (
                   <div className="xenarch-cashout-meta-row">
                     <span>Country</span>
-                    <select
-                      className="xenarch-cashout-country-select"
+                    <CustomSelect
                       value={country}
-                      onChange={(e) => handleCountrySelect(e.target.value)}
-                    >
-                      <option value="" disabled>Select country</option>
-                      {countries.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {getCountryName(c.id)}
-                        </option>
-                      ))}
-                    </select>
+                      options={countries.map((c) => ({ value: c.id, label: getCountryName(c.id) }))}
+                      placeholder="Select country"
+                      onChange={handleCountrySelect}
+                    />
                   </div>
                 )}
                 {!country && (
@@ -320,20 +315,14 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
                     <div className="xenarch-cashout-meta-row">
                       <span>Destination</span>
                       {hasMultipleDestinations ? (
-                        <select
-                          className="xenarch-cashout-country-select"
+                        <CustomSelect
                           value={destination}
-                          onChange={(e) => handleDestinationSelect(e.target.value)}
-                        >
-                          <option value="" disabled>Select destination</option>
-                          {availableMethods.map((m) => (
-                            <option key={m} value={m}>
-                              {DESTINATION_LABELS[m] || m}
-                            </option>
-                          ))}
-                        </select>
+                          options={availableMethods.map((m) => ({ value: m, label: DESTINATION_LABELS[m] || m }))}
+                          placeholder="Select destination"
+                          onChange={handleDestinationSelect}
+                        />
                       ) : (
-                        <span className="xenarch-cashout-country-select" style={{ cursor: 'default' }}>
+                        <span className="xenarch-network-select-trigger" style={{ cursor: 'default' }}>
                           {DESTINATION_LABELS[destination] || destination}
                         </span>
                       )}
