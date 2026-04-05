@@ -1,9 +1,9 @@
 # Xenarch — WordPress Plugin Listing Copy
 
-SEO keyword targets (from Google Ads Keyword Planner, March 2026):
-- Tier 1: `http 402` (880), `ai web scraping` (720), `ai bot checker` (480), `x402 protocol` (390), `402 status code` (390), `micropayments` (390), `ai scraping` (390)
-- Tier 2: `cloudflare pay per crawl` (260), `ai bot detector` (260), `stablecoin payments` (260), `api monetization` (210), `ai data scraping` (170), `pay per crawl` (110)
-- Tier 3: `wordpress paywall plugin` (70), `ai agent payments` (70), `content paywall` (50), `block ai bots` (30), `block ai crawlers` (20), `wordpress bot protection` (10)
+SEO keyword targets (from Google Ads Keyword Planner, April 2026):
+- Tier 1: `http 402` (880), `ai web scraping` (720), `ai chat detector` (720), `ai bot checker` (480), `402 payment required` (480), `x402 protocol` (390), `402 status code` (390), `micropayments` (390), `ai scraping` (390), `ai crawlers` (390), `gptbot` (390)
+- Tier 2: `cloudflare pay per crawl` (260), `ai bot detector` (260), `stablecoin payments` (260), `api monetization` (210), `chatbot detector` (210), `ai data scraping` (170)
+- Tier 3: `pay per crawl` (110), `wordpress paywall plugin` (70), `ai agent payments` (70), `monetize wordpress site` (70), `content paywall` (50), `block ai bots` (30), `ai bot detection` (20), `wordpress bot protection` (10)
 - Zero-volume trending: `monetize ai traffic`, `charge ai bots`, `bot paywall`, `x402 wordpress`, `ai scraping protection`
 
 ---
@@ -25,17 +25,17 @@ Stop giving your content to AI for free. Xenarch detects 120+ AI bots, sorts the
 
 AI web scraping is eating your content. Every day, AI crawlers — GPTBot, ClaudeBot, Google-Extended, and 120+ others — scrape your site for free. You get nothing.
 
-Xenarch flips the script: instead of blocking AI bots, **charge them**. When an AI agent hits your site, Xenarch returns an HTTP 402 (Payment Required) with pricing via the x402 protocol. The agent pays a micropayment in USDC. Settlement in under 2 seconds. No accounts, no invoices — just pay-per-crawl.
+Xenarch flips the script: instead of blocking AI bots, **charge them**. When an AI crawler hits your site, Xenarch returns an HTTP 402 Payment Required response with pricing via the x402 protocol. The agent pays a micropayment in USDC. Settlement in under 2 seconds. No accounts, no invoices — just pay-per-crawl.
 
 This is not a paywall for humans. This is a **payment gate for AI agents**.
 
 == How It Works ==
 
-1. **AI Bot Detection** — Xenarch identifies 120+ AI crawlers, training bots, scraping tools, and AI agents. Detection runs at the server level — no JavaScript required.
+1. **AI Bot Detection** — Xenarch identifies 120+ AI crawlers, training bots, scraping tools, and AI agents — including GPTBot, ClaudeBot, PerplexityBot, and more. Detection runs at the server level — no JavaScript required.
 
 2. **6 Smart Categories** — Not all bots are equal. Xenarch sorts them into AI Search, AI Assistants, AI Agents, AI Training, Scrapers, and General AI. You choose which categories to charge and which to let through free.
 
-3. **HTTP 402 Response** — Gated bots receive a `402 Payment Required` status code with pricing via the x402 protocol. Human visitors are never affected.
+3. **402 Payment Required** — Gated bots receive an HTTP 402 status code with pricing via the x402 protocol. Human visitors are never affected.
 
 4. **Instant Micropayment** — The AI agent pays in USDC on Base L2 and retries. Settlement in under 2 seconds.
 
@@ -46,7 +46,7 @@ This is not a paywall for humans. This is a **payment gate for AI agents**.
 No registration forms. No email. No API keys to copy.
 
 1. Install the plugin.
-2. Connect your wallet, create one, or paste an address.
+2. Connect your wallet, create one with Google or Apple sign-in, or paste an address.
 3. Done. Default pricing and bot categories are pre-configured.
 
 Everything is ready in under 60 seconds.
@@ -55,11 +55,12 @@ Everything is ready in under 60 seconds.
 
 * **Non-custodial** — Payments go directly to your wallet via smart contract on Base. Xenarch never holds your funds.
 * **0% platform fee** — What the agent pays is what you receive. The contract is immutable.
+* **Cash out to your bank** — Created a wallet with Xenarch? Cash out USDC to your bank account anytime via Coinbase Offramp. See fees before you confirm.
 * **x402 Protocol** — Built on the open x402 standard (HTTP 402 + USDC on Base), backed by Coinbase, Cloudflare, Google, and Visa via the x402 Foundation.
 * **Pay-per-crawl pricing** — Set your price per page. Micropayments from $0.001 per request. No subscriptions, no minimums.
 * **6 bot categories** — AI Search bots that bring you referral traffic? Let them through free. Training crawlers extracting your content? Charge them.
 * **120+ bot signatures** — OpenAI, Anthropic, Google, Meta, Perplexity, Amazon, ByteDance, and dozens more. Updated regularly.
-* **Auto-detection of new bots** — Unknown bots are automatically categorized and logged. You see them instantly in the dashboard.
+* **Auto-detection of new bots** — Unknown AI crawlers are automatically categorized and logged. You see them instantly in the dashboard.
 * **Human visitors unaffected** — Search engines (Google, Bing) and social previews (Twitter, LinkedIn) always pass through free.
 * **Works with any theme** — Operates at the HTTP level, before your theme loads. Zero frontend impact.
 
@@ -80,7 +81,7 @@ Plus: HTTP client libraries (python-requests, curl, etc.) are always gated. Sear
 
 * **Publishers** whose content is being scraped by AI companies for free
 * **API providers** looking for API monetization without billing infrastructure
-* **WordPress site owners** who want to monetize website traffic from AI bots
+* **WordPress site owners** who want to monetize website traffic from AI crawlers
 * **Anyone tired of AI web scraping** who wants to get paid instead of playing whack-a-mole with robots.txt
 
 == The x402 Standard ==
@@ -131,11 +132,15 @@ The plugin auto-registers your site when you connect a wallet. No data is sent b
 
 = What is HTTP 402 and x402? =
 
-HTTP 402 "Payment Required" has existed in the HTTP spec since 1997 but was never widely used — until now. The x402 protocol turns 402 into a machine-readable payment rail. Your server returns 402 with pricing info. AI agents read the price, pay in USDC stablecoin, and access your content automatically. No API keys, no accounts — just HTTP and crypto.
+HTTP 402 "Payment Required" has existed in the HTTP spec since 1997 but was never widely used — until now. The x402 protocol turns the 402 status code into a machine-readable payment rail. Your server returns 402 Payment Required with pricing info. AI agents read the price, pay in USDC stablecoin, and access your content automatically. No API keys, no accounts — just HTTP and crypto.
 
 = Do I need a crypto wallet? =
 
-Yes, you need a USDC wallet on the Base network. Base is an Ethereum L2 with sub-cent fees. Use Coinbase Wallet, MetaMask, or any EVM wallet. Payments arrive as USDC — a stablecoin pegged 1:1 to USD. The plugin can also create a wallet for you.
+Yes, you need a USDC wallet on the Base network. Base is an Ethereum L2 with sub-cent fees. Use Coinbase Wallet, MetaMask, or any EVM wallet. Payments arrive as USDC — a stablecoin pegged 1:1 to USD. The plugin can also create a wallet for you with Google or Apple sign-in — no crypto experience required.
+
+= Can I cash out to my bank account? =
+
+Yes. If you created a wallet through the plugin, go to the Earnings tab and click Cash out. Xenarch uses Coinbase Offramp to send USDC directly to your bank account. You see fees and the exact amount you'll receive before confirming. Available in supported countries.
 
 = Will this affect my human visitors? =
 
@@ -143,7 +148,7 @@ No. Only AI bots and automated agents see the payment gate. Human visitors, sear
 
 = Which AI bots does Xenarch detect? =
 
-120+ signatures across 6 categories: AI Search (OAI-SearchBot, PerplexityBot), AI Assistants (ChatGPT-User, Claude-User), AI Agents (ChatGPT Agent, Devin), AI Training (Google-Extended, CCBot), Scrapers (Puppeteer, Ahrefs), and General AI (GPTBot, ClaudeBot). New bots are auto-detected and categorized.
+120+ signatures across 6 categories: AI Search (OAI-SearchBot, PerplexityBot), AI Assistants (ChatGPT-User, Claude-User), AI Agents (ChatGPT Agent, Devin), AI Training (Google-Extended, CCBot), Scrapers (Puppeteer, Ahrefs), and General AI (GPTBot, ClaudeBot). New AI crawlers are auto-detected and categorized.
 
 = Can I choose which bots to charge? =
 
@@ -151,7 +156,7 @@ Yes. Each of the 6 categories has its own toggle. AI Search bots default to free
 
 = What if an AI bot doesn't support x402 payments? =
 
-It receives the 402 response and cannot access your content — effectively blocked. Xenarch works as both a payment gate (for x402-capable agents) and a blocker (for everything else).
+It receives the 402 Payment Required response and cannot access your content — effectively blocked. Xenarch works as both a payment gate (for x402-capable AI agents) and a blocker (for everything else).
 
 = How much should I charge? =
 
@@ -167,7 +172,7 @@ Zero. 0%. The smart contract sends 100% to you.
 
 = Does this work with robots.txt? =
 
-Yes, and it's better. robots.txt asks bots to voluntarily stay away (many ignore it). Xenarch enforces access control at HTTP level. Bots that ignore robots.txt still hit the 402 gate.
+Yes, and it's better. robots.txt asks bots to voluntarily stay away (many ignore it). Xenarch enforces access control at HTTP level. AI crawlers that ignore robots.txt still hit the 402 gate.
 
 = How does this help my SEO? =
 
@@ -175,7 +180,7 @@ Search engine crawlers are never gated. AI Search bots (that help recommend your
 
 = What about Cloudflare's pay-per-crawl? =
 
-Xenarch complements Cloudflare's x402 tooling. Both use the same x402 protocol. Xenarch adds WordPress-native integration with a full admin dashboard, 6 bot categories, per-bot control, and one-click wallet setup.
+Xenarch complements Cloudflare's x402 pay-per-crawl tooling. Both use the same x402 protocol. Xenarch adds WordPress-native integration with a full admin dashboard, 6 bot categories, per-bot control, and one-click wallet setup.
 ```
 
 ---
@@ -185,17 +190,21 @@ Xenarch complements Cloudflare's x402 tooling. Both use the same x402 protocol. 
 ```
 == Changelog ==
 
-= 2.0.0 =
+= 1.0.0 =
 * 6-category bot classification: AI Search, Assistants, Agents, Training, Scrapers, General AI
-* Per-bot override controls
-* Wallet-based onboarding (no email/password required)
+* Per-bot override controls within each category
+* Wallet-based onboarding — no email, no password, no API keys
+* Wallet creation with Google or Apple sign-in via Coinbase
+* Cash out to fiat via Coinbase Offramp — withdraw USDC to your bank account
 * Redesigned admin UI with 3 tabs: Earnings, Settings, Status
-* 120+ bot signatures with auto-detection of new bots
+* Earnings dashboard with category breakdown and transaction history
+* 120+ bot signatures with auto-detection of new AI crawlers
 * Database-backed bot detection logging
 * Auto-save settings with toggle snap-back on failure
-* Path autocomplete for pricing rules
+* Path-based pricing rules with WordPress autocomplete
+* Dark and light theme support
 
-= 1.0.0 =
+= 0.1.0 =
 * Initial release
 * AI bot detection for major LLM crawlers
 * HTTP 402 payment gate with x402 protocol support
@@ -211,34 +220,34 @@ Xenarch complements Cloudflare's x402 tooling. Both use the same x402 protocol. 
 ```
 === Xenarch — Charge AI Bots for Content Access ===
 Contributors: xenarch
-Tags: ai bot detection, ai scraping, paywall, micropayments, bot protection
+Tags: ai bot detection, ai scraping, ai crawlers, paywall, micropayments
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.0.0
+Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 ```
 
 Note: WP.org allows 5 tags. Selected for maximum coverage:
-- `ai bot detection` (480 vol cluster)
-- `ai scraping` (720 vol cluster)
-- `paywall` (covers content paywall + paywall plugin searches)
-- `micropayments` (covers crypto micropayments + stablecoin payments)
-- `bot protection` (covers wordpress bot protection cluster)
+- `ai bot detection` (480 vol cluster — ai bot checker, ai bot detector)
+- `ai scraping` (720 vol cluster — ai web scraping, ai data scraping)
+- `ai crawlers` (390 vol — direct match, low competition, unique to our niche)
+- `paywall` (covers content paywall + wordpress paywall plugin searches)
+- `micropayments` (390 vol — covers crypto micropayments + stablecoin payments)
+
+Changed: replaced `bot protection` (10 vol, dominated by security plugins like Wordfence) with `ai crawlers` (390 vol, we rank #1).
 
 ---
 
-## Screenshots (need retaking)
+## Screenshots
 
-All screenshots need to be retaken from the new UI. Required:
+Current screenshots (retaken April 5 2026):
 
-1. **Settings — Gate section** — Master toggle ON, AI Search OFF (allowed), rest gated with green counts
-2. **Settings — Bot modal** — Manage bots modal with category pills, per-bot allow/charge controls
-3. **Settings — Pricing** — Default price + URL rules with /docs/ and /api/ paths
-4. **Settings — Wallet configured** — "your wallet" badge with address
-5. **Earnings — Zero state** — $0 stats, "No paid requests yet" message
-6. **Earnings — With data** — Stats cards, category breakdown, transaction table
-7. **Status — Connected** — All green dots, pay.json and xenarch.md URLs
-8. **Onboarding** — Wallet setup with 3 option cards
-9. **Terminal — 402 response** — curl showing HTTP 402 with JSON gate payload (reuse existing screenshot-3 if still accurate)
+1. **Settings — Gate section** — Master toggle ON, AI Search OFF (allowed), rest gated with green counts. Dark + light side by side.
+2. **Settings — Bot modal** — Manage bots modal with category pills, per-bot allow/charge controls, search bar, bulk actions.
+3. **Settings — Pricing** — Default price $0.003 + URL rules for /docs/ and /public/ (FREE). Dark + light side by side.
+4. **Onboarding — Wallet setup** — "Where do you want to receive payments?" with 3 wallet option cards (Connect wallet, Create for me / Powered by Coinbase, Enter manually). Dark + light side by side. *(Retaken April 5 — old screenshot had stale subtitle.)*
+5. **Earnings — With data** — Wallet bar with balance and Cash out button, stats cards (Today/Month/All time), category breakdown grid, transaction table. Dark + light side by side.
+6. **Status — Connected** — Diagnostic card with connection status, site token, server-side/l.js status, pay.json and xenarch.md URLs. Dark + light side by side.
+7. **Terminal — 402 response** — curl command with GPTBot UA showing HTTP/2 402 response, x-payment headers, and JSON gate payload.
