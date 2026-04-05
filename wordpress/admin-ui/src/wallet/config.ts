@@ -83,6 +83,97 @@ export function initAppKit(projectId: string): AppKit {
   return appKitInstance
 }
 
+/**
+ * Inject custom CSS into AppKit's shadow DOM to align with Xenarch design system.
+ * Watches for the <w3m-modal> element to appear, then pierces shadow roots.
+ */
+function injectAppKitStyles() {
+  const XENARCH_STYLE_ID = 'xenarch-appkit-overrides'
+
+  const CSS = `
+    /* Force Inter font on all text */
+    * { font-family: Inter, system-ui, sans-serif !important; }
+
+    /* Override the blue loading indicator color to our green */
+    wui-loading-spinner, .wui-loading-spinner {
+      --local-color: var(--wui-color-accent-100, #4ade80) !important;
+    }
+
+    /* Buttons: tighter border radius matching our DS */
+    wui-button button {
+      border-radius: 6px !important;
+    }
+    wui-button button:hover:enabled {
+      border-radius: 6px !important;
+    }
+    wui-button button:focus-visible:enabled {
+      border-radius: 6px !important;
+    }
+
+    /* "Get" link: use our accent, remove excess padding */
+    wui-icon-link button {
+      border-radius: 4px !important;
+    }
+
+    /* Tag badges (INSTALLED, QR CODE): tighter radius */
+    wui-tag {
+      border-radius: 4px !important;
+    }
+
+    /* Wallet list items: subtle hover */
+    wui-list-wallet:hover {
+      background: var(--wui-color-gray-glass-002) !important;
+    }
+
+    /* Footer text: match our muted style */
+    .wui-text[data-variant="small-400"] {
+      opacity: 0.6;
+    }
+  `
+
+  function inject(shadowRoot: ShadowRoot) {
+    if (shadowRoot.getElementById(XENARCH_STYLE_ID)) return
+    const style = document.createElement('style')
+    style.id = XENARCH_STYLE_ID
+    style.textContent = CSS
+    shadowRoot.appendChild(style)
+  }
+
+  // Recursively inject into all shadow roots within a node
+  function walk(node: Element) {
+    if (node.shadowRoot) {
+      inject(node.shadowRoot)
+      node.shadowRoot.querySelectorAll('*').forEach(walk)
+    }
+  }
+
+  // Watch for w3m-modal to appear and inject styles
+  const bodyObserver = new MutationObserver(() => {
+    const modal = document.querySelector('w3m-modal')
+    if (!modal) return
+
+    // Wait for shadow root to be ready
+    const checkShadow = () => {
+      if (modal.shadowRoot) {
+        inject(modal.shadowRoot)
+        walk(modal)
+
+        // Watch for internal changes (view transitions)
+        const innerObserver = new MutationObserver(() => walk(modal))
+        innerObserver.observe(modal.shadowRoot, { childList: true, subtree: true })
+      } else {
+        requestAnimationFrame(checkShadow)
+      }
+    }
+    checkShadow()
+  })
+
+  bodyObserver.observe(document.body, { childList: true, subtree: true })
+}
+
 export function getAppKit(): AppKit | null {
   return appKitInstance
 }
+
+// Auto-run style injection on module load — doesn't depend on initAppKit
+injectAppKitStyles()
