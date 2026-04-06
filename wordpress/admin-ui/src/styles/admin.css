@@ -41,7 +41,9 @@ w3m-account-button {
   --xn-table-header-bg: #0e0e0e; --xn-table-row-border: #191919;
   /* Misc */
   --xn-skeleton-from: #191919; --xn-skeleton-via: #252525;
-  --xn-toggle-bg: #444; --xn-link: #999; --xn-link-hover: #ccc;
+  --xn-toggle-bg: #444; --xn-toggle-dot: white;
+  --xn-badge-external: #5a9fd4; --xn-badge-external-bg: rgba(90,159,212,0.1);
+  --xn-link: #999; --xn-link-hover: #ccc;
   --xn-code-bg: #191919; --xn-empty-text: #666;
   --xn-notice-success-bg: rgba(74,222,128,0.08); --xn-notice-success-border: #4ade80; --xn-notice-success-text: #4ade80;
   --xn-notice-error-bg: rgba(248,113,113,0.08); --xn-notice-error-border: #f87171; --xn-notice-error-text: #f87171;
@@ -62,7 +64,9 @@ w3m-account-button {
   --xn-pill-blocked-bg: rgba(220,38,38,0.08); --xn-pill-blocked-text: #dc2626;
   --xn-table-header-bg: #ece8e3; --xn-table-row-border: #ece8e3;
   --xn-skeleton-from: #ece8e3; --xn-skeleton-via: #d0ccc7;
-  --xn-toggle-bg: #d0ccc7; --xn-link: #555; --xn-link-hover: #1a1a1a;
+  --xn-toggle-bg: #d0ccc7; --xn-toggle-dot: white;
+  --xn-badge-external: #2a7ab5; --xn-badge-external-bg: rgba(42,122,181,0.1);
+  --xn-link: #555; --xn-link-hover: #1a1a1a;
   --xn-code-bg: #ece8e3; --xn-empty-text: #888;
   --xn-notice-success-bg: rgba(22,163,74,0.08); --xn-notice-success-border: #16a34a; --xn-notice-success-text: #16a34a;
   --xn-notice-error-bg: rgba(220,38,38,0.08); --xn-notice-error-border: #dc2626; --xn-notice-error-text: #dc2626;
@@ -526,7 +530,7 @@ w3m-account-button {
   width: 18px;
   left: 3px;
   bottom: 3px;
-  background: white;
+  background: var(--xn-toggle-dot);
   border-radius: 50%;
   transition: transform 0.2s;
 }
@@ -1069,7 +1073,7 @@ w3m-account-button {
   width: 14px;
   left: 3px;
   bottom: 3px;
-  background: white;
+  background: var(--xn-toggle-dot);
   border-radius: 50%;
   transition: transform 0.2s;
 }
@@ -1450,7 +1454,7 @@ w3m-account-button {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 14px;
   font-weight: 500;
-  color: var(--xn-text-fg);
+  color: var(--xn-text);
   margin-bottom: 4px;
 }
 
@@ -1528,7 +1532,7 @@ w3m-account-button {
   padding: 10px;
   margin-top: 12px;
   background: var(--xn-dot-green);
-  color: #0a0a0a;
+  color: var(--xn-btn-primary-text);
   border: none;
   border-radius: 6px;
   font-family: 'Inter', sans-serif;
@@ -1720,7 +1724,7 @@ w3m-account-button {
 }
 
 #xenarch-admin .xenarch-network-select-trigger svg {
-  color: var(--xn-muted);
+  color: var(--xn-text-muted);
   flex-shrink: 0;
 }
 
@@ -1755,7 +1759,7 @@ w3m-account-button {
 }
 
 #xenarch-admin .xenarch-network-select-option--active {
-  color: var(--xn-success);
+  color: var(--xn-dot-green);
 }
 
 #xenarch-admin .xenarch-wallet-icon-btn {
@@ -1817,8 +1821,8 @@ w3m-account-button {
 }
 
 #xenarch-admin .xenarch-wallet-badge--external {
-  color: #5a9fd4;
-  background: rgba(90,159,212,0.1);
+  color: var(--xn-badge-external);
+  background: var(--xn-badge-external-bg);
 }
 
 #xenarch-admin .xenarch-wallet-note {
@@ -1919,9 +1923,9 @@ w3m-account-button {
 }
 
 #xenarch-admin .xenarch-earnings-badge--own {
-  color: #5a9fd4;
-  background: rgba(90,159,212,0.1);
-  border: 1px solid rgba(90,159,212,0.2);
+  color: var(--xn-badge-external);
+  background: var(--xn-badge-external-bg);
+  border: 1px solid var(--xn-badge-external-bg);
 }
 
 #xenarch-admin .xenarch-earnings-wallet-bal {
@@ -2561,7 +2565,7 @@ w3m-account-button {
 }
 
 #xenarch-admin .xenarch-cashout-balance strong {
-  color: var(--xn-success);
+  color: var(--xn-dot-green);
   font-family: 'JetBrains Mono', monospace;
 }
 
@@ -2579,7 +2583,7 @@ w3m-account-button {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   font-weight: 500;
-  color: var(--xn-success);
+  color: var(--xn-dot-green);
   background: transparent;
   border: 1px solid var(--xn-surface-border);
   border-radius: 4px;
@@ -2589,7 +2593,7 @@ w3m-account-button {
 }
 
 #xenarch-admin .xenarch-cashout-btn-max:hover {
-  border-color: var(--xn-success);
+  border-color: var(--xn-dot-green);
 }
 
 #xenarch-admin .xenarch-cashout-meta {
@@ -2633,7 +2637,7 @@ w3m-account-button {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--xn-success);
+  background: var(--xn-dot-green);
   margin: 0 auto 16px;
   animation: xenarch-cashout-pulse 1.5s ease-in-out infinite;
 }

@@ -328,13 +328,6 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
                       )}
                     </div>
                     {destination && (
-                      <div className="xenarch-cashout-meta-row xenarch-wallet-modal-info" style={{ fontSize: '11px' }}>
-                        {destination === 'ACH_BANK_ACCOUNT'
-                          ? 'Funds will be sent directly to your linked bank account.'
-                          : 'Funds will be added to your Coinbase balance. To withdraw to your bank, log in to coinbase.com with the same email or social login used to create your Xenarch wallet.'}
-                      </div>
-                    )}
-                    {destination && (
                       <div className="xenarch-cashout-meta-row xenarch-wallet-modal-info">
                         Min ${minAmount} &middot; Max ${maxAmount}
                       </div>
@@ -378,10 +371,6 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
                   <span>Fees</span>
                   <span>${quote.fee_amount}</span>
                 </div>
-              </div>
-
-              <div className="xenarch-wallet-modal-info">
-                Funds will be converted and added to your Coinbase balance. To withdraw to your bank, log in to coinbase.com with the same email or social login used to create your Xenarch wallet.
               </div>
 
               <button className="xenarch-wallet-modal-btn" onClick={handleContinue}>

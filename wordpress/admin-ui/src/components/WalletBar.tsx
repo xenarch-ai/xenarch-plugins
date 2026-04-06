@@ -31,11 +31,7 @@ export function WalletBar({ settings }: Props) {
     }
   }
 
-  // Wallet type labels:
-  //   "External Wallet" = pasted address
-  //   "WalletConnect"   = connected via WalletConnect
-  //   "Xenarch Wallet"  = platform-generated custodial (v2)
-  const walletLabel = settings.wallet_type === 'walletconnect' ? 'WalletConnect' : 'External Wallet'
+  const walletLabel = settings.wallet_type === 'connected' ? 'WalletConnect' : 'External Wallet'
 
   return (
     <div className="xenarch-wallet-bar">

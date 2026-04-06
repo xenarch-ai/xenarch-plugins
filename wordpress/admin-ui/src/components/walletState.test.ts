@@ -44,7 +44,7 @@ describe('walletState', () => {
         {
           ...baseSettings,
           payout_wallet: '0x1234567890123456789012345678901234567890',
-          wallet_type: 'walletconnect',
+          wallet_type: 'connected',
         },
         { isConnected: true, address: '0x1234567890123456789012345678901234567890' },
         true
@@ -67,7 +67,7 @@ describe('walletState', () => {
         settings: {
           ...baseSettings,
           payout_wallet: '0x1234567890123456789012345678901234567890',
-          wallet_type: 'walletconnect',
+          wallet_type: 'connected',
         },
         account: { isConnected: true, address: '0x1234567890123456789012345678901234567890' },
         savedAddress: '0x1234567890123456789012345678901234567890',
@@ -92,14 +92,14 @@ describe('walletState', () => {
       applyWalletConnection(baseSettings, '0x1234567890123456789012345678901234567890')
     ).toMatchObject({
       payout_wallet: '0x1234567890123456789012345678901234567890',
-      wallet_type: 'walletconnect',
+      wallet_type: 'connected',
     })
 
     expect(
       applyWalletDisconnect({
         ...baseSettings,
         payout_wallet: '0x1234567890123456789012345678901234567890',
-        wallet_type: 'walletconnect',
+        wallet_type: 'connected',
       })
     ).toMatchObject({
       payout_wallet: '',

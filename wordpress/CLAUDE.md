@@ -220,8 +220,8 @@ Three option cards in a horizontal row, each with title + subtitle:
 | Option | Title | Subtitle | On click |
 |---|---|---|---|
 | Connect wallet | Connect wallet | MetaMask, Coinbase, etc. | Opens WalletConnect modal |
-| Create for me | Create for me | Powered by Coinbase | Shows confirmation + creates Xenarch-managed wallet |
-| Enter manually | Enter manually | Paste an address | Shows address input + network dropdown |
+| Create for me | Create for me | Cash out to your bank | Shows confirmation + creates Xenarch-managed wallet |
+| Enter manually | Enter manually | Base or Solana address | Shows address input + network dropdown |
 
 Card click behavior — no intermediate steps:
 
@@ -267,7 +267,7 @@ The header sits above the React card, rendered by `class-xenarch-admin.php`. Sam
 
 ```
 /xenarch  v1.2.0                          [theme toggle]
-AI bots pay to access your content. Set your price, connect your wallet, done.
+Charge the bots that take. Let through the ones that help.
 ```
 
 - `/xenarch` — Space Grotesk 20px 300
@@ -325,10 +325,10 @@ Two sets of filter pills side by side:
 
 | Filter group | Pills | Visibility |
 |---|---|---|
-| Type filter | `All` · `Earned` · `Cashed out` | **Only shown for Xenarch wallets with at least one cash out in the selected period** (own/connected wallets have no withdrawals to filter) |
+| Type filter | `All` · `Earned` · `Cashed` | **Only shown for Xenarch wallets with at least one cash out in the selected period** (own/connected wallets have no withdrawals to filter) |
 | Period filter | `24h` · `7d` · `30d` · `All` | Always shown |
 
-Table columns: Type (earn/cash out pill), Page (mono 12px), Agent (mono 12px), Amount (mono, right-aligned, `--success` for earn, `--error` for cash out), Time (12px `--muted`, right-aligned).
+Table columns: Type (earn/cash pill), Page (mono 12px), Agent (mono 12px), Amount (mono, right-aligned, `--success` for earn, `--error` for cash), Time (12px `--muted`, right-aligned).
 
 "Load more" ghost button at the bottom.
 

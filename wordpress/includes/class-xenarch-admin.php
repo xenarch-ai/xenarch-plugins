@@ -174,7 +174,7 @@ class Xenarch_Admin {
 		echo '<svg class="xn-icon-moon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.2 9.5a5.5 5.5 0 01-7-7 5.5 5.5 0 106.7 6.7z"/></svg>';
 		echo '</button>';
 		echo '</div>';
-		echo '<p class="xenarch-page-subtitle">AI bots pay to access your content. Set your price, connect your wallet, done.</p>';
+		echo '<p class="xenarch-page-subtitle">Charge the bots that take. Let through the ones that help.</p>';
 		echo '<script>window.xenarchAdmin = ' . wp_json_encode( $config ) . ';';
 		echo 'function xenarchToggleTheme(){';
 		echo 'var el=document.getElementById("xenarch-admin");if(!el)return;';

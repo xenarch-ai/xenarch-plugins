@@ -9,7 +9,7 @@ export function applyWalletConnection(settings: Settings, address: string): Sett
   return {
     ...settings,
     payout_wallet: address,
-    wallet_type: 'walletconnect',
+    wallet_type: 'connected',
   }
 }
 
@@ -36,7 +36,7 @@ export function isWalletSectionConnected(
     return false
   }
 
-  return hasLiveWalletConnection(account) || settings.wallet_type === 'walletconnect'
+  return hasLiveWalletConnection(account) || settings.wallet_type === 'connected'
 }
 
 interface ShouldCaptureConnectedWalletArgs {
@@ -56,5 +56,5 @@ export function shouldCaptureConnectedWallet({
     return false
   }
 
-  return account.address !== savedAddress || settings.wallet_type !== 'walletconnect'
+  return account.address !== savedAddress || settings.wallet_type !== 'connected'
 }
