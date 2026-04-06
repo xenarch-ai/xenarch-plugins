@@ -2606,38 +2606,6 @@ w3m-account-button {
   padding: 4px 0;
 }
 
-#xenarch-admin .xenarch-cashout-country-select {
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  color: var(--xn-text);
-  background: var(--xn-input-bg);
-  border: 1px solid var(--xn-input-border);
-  border-radius: 6px;
-  padding: 8px 32px 8px 12px;
-  height: 38px;
-  box-sizing: border-box;
-  cursor: pointer;
-  max-width: 200px;
-  appearance: none;
-  -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23999' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-}
-
-#xenarch-admin .xenarch-cashout-country-select:focus {
-  border-color: var(--xn-dim);
-  outline: none;
-}
-
-#xenarch-admin .xenarch-cashout-country-select:disabled {
-  color: var(--xn-text-secondary);
-  -webkit-text-fill-color: var(--xn-text-secondary);
-  opacity: 1;
-  cursor: not-allowed;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
 
 #xenarch-admin .xenarch-cashout-quote-card {
   background: var(--xn-surface);

@@ -152,7 +152,8 @@ function injectAppKitStyles() {
     const modal = document.querySelector('w3m-modal')
     if (!modal) return
 
-    // Wait for shadow root to be ready
+    // Wait for shadow root to be ready (bail after ~1s)
+    let attempts = 0
     const checkShadow = () => {
       if (modal.shadowRoot) {
         inject(modal.shadowRoot)
@@ -161,7 +162,7 @@ function injectAppKitStyles() {
         // Watch for internal changes (view transitions)
         const innerObserver = new MutationObserver(() => walk(modal))
         innerObserver.observe(modal.shadowRoot, { childList: true, subtree: true })
-      } else {
+      } else if (++attempts < 60) {
         requestAnimationFrame(checkShadow)
       }
     }
