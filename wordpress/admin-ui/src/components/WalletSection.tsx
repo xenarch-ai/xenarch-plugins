@@ -3,6 +3,7 @@ import type { Settings } from '../types'
 import * as api from '../api'
 import { WalletConnectButton } from '../wallet/WalletConnectButton'
 import { getAppKit } from '../wallet/config'
+import { NetworkSelect } from './NetworkSelect'
 import { CreateWalletModal } from './CreateWalletModal'
 
 interface Props {
@@ -136,6 +137,7 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
         const appKitConnected = appKit?.getIsConnectedState?.() ?? false
         const needsDisconnect = appKitConnected || settings.wallet_type === 'coinbase'
         const disconnectLabel = settings.wallet_type === 'coinbase' ? 'Coinbase' : 'WalletConnect'
+        const isChanging = hasWallet && phase === 'setup'
         return (
           <>
             <div className="xenarch-section-desc">Where do you want to receive payments?</div>
@@ -145,23 +147,42 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
               </div>
             )}
             <div className="xenarch-wallet-options">
-              {needsDisconnect ? (
+              {isChanging && walletType === 'connected' ? (
+                <button className="xenarch-wallet-opt" onClick={() => setPhase('configured')}>
+                  <div className="xenarch-wallet-opt-title">Current</div>
+                  <div className="xenarch-wallet-opt-desc">{truncateAddress(settings.payout_wallet)}</div>
+                </button>
+              ) : needsDisconnect ? (
                 <button className="xenarch-wallet-opt xenarch-wallet-opt--disconnect" onClick={handleDisconnect} disabled={disconnecting}>
                   <div className="xenarch-wallet-opt-title">{disconnecting ? 'Disconnecting...' : 'Disconnect wallet'}</div>
                 </button>
               ) : (
                 <WalletConnectButton onConnect={(address) => handleWalletConnect(address)} />
               )}
-              <button className="xenarch-wallet-opt" onClick={handleCreateWallet} disabled={saving}>
-                <div className="xenarch-wallet-opt-title">Create for me</div>
-                <div className="xenarch-wallet-opt-desc">Easiest setup</div>
-              </button>
-              <button className="xenarch-wallet-opt" onClick={() => setPhase('manual')}>
-                <div className="xenarch-wallet-opt-title">Enter manually</div>
-                <div className="xenarch-wallet-opt-desc">Paste an address</div>
-              </button>
+              {isChanging && isXenarchWallet ? (
+                <button className="xenarch-wallet-opt" onClick={() => setPhase('configured')}>
+                  <div className="xenarch-wallet-opt-title">Current</div>
+                  <div className="xenarch-wallet-opt-desc">{truncateAddress(settings.payout_wallet)}</div>
+                </button>
+              ) : (
+                <button className="xenarch-wallet-opt" onClick={handleCreateWallet} disabled={saving}>
+                  <div className="xenarch-wallet-opt-title">Create for me</div>
+                  <div className="xenarch-wallet-opt-desc">Powered by Coinbase</div>
+                </button>
+              )}
+              {isChanging && walletType === 'manual' ? (
+                <button className="xenarch-wallet-opt" onClick={() => setPhase('configured')}>
+                  <div className="xenarch-wallet-opt-title">Current</div>
+                  <div className="xenarch-wallet-opt-desc">{truncateAddress(settings.payout_wallet)}</div>
+                </button>
+              ) : (
+                <button className="xenarch-wallet-opt" onClick={() => setPhase('manual')}>
+                  <div className="xenarch-wallet-opt-title">Enter manually</div>
+                  <div className="xenarch-wallet-opt-desc">Paste an address</div>
+                </button>
+              )}
             </div>
-            {error && <div className="xenarch-onboarding-error">{error}</div>}
+            {error && <div className="xenarch-onboarding-error">Something went wrong. Try again.</div>}
           </>
         )
       })()}
@@ -178,14 +199,7 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
             placeholder="0x..."
             autoFocus
           />
-          <select
-            className="xenarch-wallet-network-select"
-            value={manualNetwork}
-            onChange={(e) => setManualNetwork(e.target.value)}
-          >
-            <option value="base">Base</option>
-            <option value="solana">Solana</option>
-          </select>
+          <NetworkSelect value={manualNetwork} onChange={setManualNetwork} />
           <button
             className="xenarch-wallet-icon-btn xenarch-wallet-icon-btn--confirm"
             onClick={handleManualSave}

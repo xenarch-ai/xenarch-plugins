@@ -31,7 +31,7 @@
     --surface: #ece8e3; --surface-border: #d0ccc7;
     --input-bg: #fff; --input-border: #d0ccc7; --input-focus: #999;
     --fg: #1a1a1a; --secondary: #555; --muted: #888; --dim: #bbb;
-    --success: #16a34a; --success-hover: #15803d; --success-bg: rgba(22,163,74,0.1); --success-border: rgba(22,163,74,0.2);
+    --success: #16a34a; --success-hover: #15803d; --success-bg: rgba(22,163,74,0.08); --success-border: rgba(22,163,74,0.2);
     --error: #dc2626; --error-bg: rgba(220,38,38,0.1);
     --btn-primary-fg: #f0f0f0;
     --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23666' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
@@ -130,21 +130,12 @@
     <span class="wallet-addr">0x7a3f...c291</span>
     <span class="badge badge-xenarch">xenarch wallet</span>
     <span class="wallet-bal">$891.05 USDC</span>
-    <button class="btn-withdraw" onclick="toggleWithdraw()">Withdraw</button>
+    <button class="btn-withdraw">Cash out</button>
   </div>
   <div class="stats">
     <div class="stat"><div class="stat-label">Today</div><div class="stat-value">$4.72</div><div class="stat-sub">1,573 paid requests</div></div>
     <div class="stat"><div class="stat-label">This month</div><div class="stat-value">$127.40</div><div class="stat-sub">42,467 paid requests</div></div>
     <div class="stat"><div class="stat-label">All time</div><div class="stat-value">$891.05</div><div class="stat-sub">297,017 paid requests</div></div>
-  </div>
-  <div class="withdraw-panel" id="withdrawPanel">
-    <div class="withdraw-title">Withdraw USDC</div>
-    <div class="withdraw-desc">Send to any wallet or exchange address</div>
-    <div class="withdraw-row"><label>To address</label><input type="text" placeholder="0x... or paste exchange deposit address"></div>
-    <div class="withdraw-row"><label>Network</label><select><option>Base</option><option>Ethereum</option><option>Solana</option><option>TRON</option></select></div>
-    <div class="withdraw-row"><label>Amount</label><input type="text" placeholder="0.00" style="width:140px;flex:none;"><span class="unit">USDC</span><button class="btn-max">MAX</button></div>
-    <div class="withdraw-hint">Network fee: ~$0.001 (Base). Arrives in ~2 seconds.</div>
-    <div class="withdraw-actions"><button class="btn-send">Send</button><button class="btn-cancel" onclick="toggleWithdraw()">Cancel</button></div>
   </div>
   <div class="breakdown">
     <div class="bd-item"><span class="bd-name">General AI</span><span class="bd-amount">$312.40</span></div>
@@ -154,7 +145,7 @@
     <div class="bd-item"><span class="bd-name">Scrapers</span><span class="bd-amount">$62.10</span></div>
     <div class="bd-item"><span class="bd-name">AI Search</span><span class="bd-amount">$7.20</span></div>
   </div>
-  <div class="period-row"><span class="period-title">Transactions</span><div style="display:flex;gap:8px;"><div class="period-pills"><button class="pill active">All</button><button class="pill">Earned</button><button class="pill">Withdrew</button></div><div class="period-pills"><button class="pill">24h</button><button class="pill active">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div></div>
+  <div class="period-row"><span class="period-title">Transactions</span><div style="display:flex;gap:8px;"><div class="period-pills"><button class="pill active">All</button><button class="pill">Earned</button><button class="pill">Cashed out</button></div><div class="period-pills"><button class="pill">24h</button><button class="pill active">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div></div>
   <table>
     <thead><tr><th>Type</th><th>Page</th><th>Agent</th><th style="text-align:right;">Amount</th><th style="text-align:right;">Time</th></tr></thead>
     <tbody>
@@ -163,7 +154,7 @@
       <tr><td><span class="tx-type earn">earn</span></td><td class="path">/blog/ai-payments-2026</td><td class="agent">PerplexityBot</td><td class="amount">+$0.003</td><td class="time">7 min ago</td></tr>
       <tr><td><span class="tx-type earn">earn</span></td><td class="path">/api/v2/endpoints</td><td class="agent">GPTBot</td><td class="amount">+$0.05</td><td class="time">12 min ago</td></tr>
       <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/authentication</td><td class="agent">Google-Extended</td><td class="amount">+$0.01</td><td class="time">15 min ago</td></tr>
-      <tr><td><span class="tx-type withdraw">withdraw</span></td><td class="path" style="color:var(--error);">&rarr; 0x9b2e...f104</td><td class="agent">Base</td><td class="amount" style="color:var(--error);">-$250.00</td><td class="time">Mar 20</td></tr>
+      <tr><td><span class="tx-type withdraw">cash out</span></td><td class="path" style="color:var(--error);">&rarr; 0x9b2e...f104</td><td class="agent">Base</td><td class="amount" style="color:var(--error);">-$250.00</td><td class="time">Mar 20</td></tr>
       <tr><td><span class="tx-type earn">earn</span></td><td class="path">/blog/micropayments-guide</td><td class="agent">ClaudeBot</td><td class="amount">+$0.003</td><td class="time">Mar 20</td></tr>
       <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/webhooks</td><td class="agent">xn_agent_7kf2m</td><td class="amount">+$0.01</td><td class="time">Mar 20</td></tr>
       <tr><td><span class="tx-type earn">earn</span></td><td class="path">/api/v2/search</td><td class="agent">GPTBot</td><td class="amount">+$0.05</td><td class="time">Mar 19</td></tr>
@@ -175,7 +166,6 @@
 </div>
 <script>
 function toggleTheme() { var h = document.documentElement; h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
-function toggleWithdraw() { document.getElementById('withdrawPanel').classList.toggle('open'); }
 </script>
 </body>
 </html>

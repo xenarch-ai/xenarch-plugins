@@ -31,7 +31,7 @@
     --surface: #ece8e3; --surface-border: #d0ccc7;
     --input-bg: #fff; --input-border: #d0ccc7; --input-focus: #999;
     --fg: #1a1a1a; --secondary: #555; --muted: #888; --dim: #bbb;
-    --success: #16a34a; --success-hover: #15803d; --success-bg: rgba(22,163,74,0.1); --success-border: rgba(22,163,74,0.2);
+    --success: #16a34a; --success-hover: #15803d; --success-bg: rgba(22,163,74,0.08); --success-border: rgba(22,163,74,0.2);
     --error: #dc2626; --error-bg: rgba(220,38,38,0.1);
     --btn-primary-fg: #f0f0f0;
     --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23666' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
@@ -170,7 +170,7 @@
       <span class="wallet-addr">0x7a3f...c291</span>
       <span class="badge badge-xenarch">xenarch wallet</span>
       <span class="wallet-bal">$0.00 USDC</span>
-      <button class="btn-withdraw">Withdraw</button>
+      <button class="btn-withdraw">Cash out</button>
     </div>
     <div class="stats">
       <div class="stat"><div class="stat-label">Today</div><div class="stat-value">$0.00</div><div class="stat-sub">0 paid requests</div></div>
@@ -178,7 +178,7 @@
       <div class="stat"><div class="stat-label">All time</div><div class="stat-value">$0.00</div><div class="stat-sub">0 paid requests</div></div>
     </div>
     <!-- No category breakdown when all zeros -->
-    <div class="period-row"><span class="period-title">Transactions</span><div style="display:flex;gap:8px;"><div class="period-pills"><button class="pill active">All</button><button class="pill">Earned</button><button class="pill">Withdrew</button></div><div class="period-pills"><button class="pill">24h</button><button class="pill active">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div></div>
+    <div class="period-row"><span class="period-title">Transactions</span><div style="display:flex;gap:8px;"><div class="period-pills"><button class="pill active">All</button><button class="pill">Earned</button><button class="pill">Cashed out</button></div><div class="period-pills"><button class="pill">24h</button><button class="pill active">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div></div>
     <div class="empty-state">
       <div class="empty-state-title">No paid requests yet</div>
       <div class="empty-state-desc">When AI bots pay to access your content, transactions will appear here.</div>
@@ -200,14 +200,14 @@
       <span class="wallet-addr">0x7a3f...c291</span>
       <span class="badge badge-xenarch">xenarch wallet</span>
       <span class="wallet-bal">$891.05 USDC</span>
-      <button class="btn-withdraw">Withdraw</button>
+      <button class="btn-withdraw">Cash out</button>
     </div>
     <div class="stats">
       <div class="skeleton-stat"><div class="skeleton skeleton-line" style="width:50%;"></div><div class="skeleton skeleton-line-lg" style="width:70%;"></div><div class="skeleton skeleton-line-sm"></div></div>
       <div class="skeleton-stat"><div class="skeleton skeleton-line" style="width:60%;"></div><div class="skeleton skeleton-line-lg" style="width:65%;"></div><div class="skeleton skeleton-line-sm"></div></div>
       <div class="skeleton-stat"><div class="skeleton skeleton-line" style="width:45%;"></div><div class="skeleton skeleton-line-lg" style="width:55%;"></div><div class="skeleton skeleton-line-sm"></div></div>
     </div>
-    <div class="period-row"><span class="period-title">Transactions</span><div style="display:flex;gap:8px;"><div class="period-pills"><button class="pill active">All</button><button class="pill">Earned</button><button class="pill">Withdrew</button></div><div class="period-pills"><button class="pill">24h</button><button class="pill active">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div></div>
+    <div class="period-row"><span class="period-title">Transactions</span><div style="display:flex;gap:8px;"><div class="period-pills"><button class="pill active">All</button><button class="pill">Earned</button><button class="pill">Cashed out</button></div><div class="period-pills"><button class="pill">24h</button><button class="pill active">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div></div>
     <div class="skeleton-row"><div class="skeleton skeleton-pill"></div><div class="skeleton skeleton-text" style="width:160px;"></div><div class="skeleton skeleton-text" style="width:80px;"></div><div class="skeleton skeleton-text" style="width:60px;margin-left:auto;"></div><div class="skeleton skeleton-text" style="width:50px;"></div></div>
     <div class="skeleton-row"><div class="skeleton skeleton-pill"></div><div class="skeleton skeleton-text" style="width:140px;"></div><div class="skeleton skeleton-text" style="width:90px;"></div><div class="skeleton skeleton-text" style="width:55px;margin-left:auto;"></div><div class="skeleton skeleton-text" style="width:50px;"></div></div>
     <div class="skeleton-row"><div class="skeleton skeleton-pill"></div><div class="skeleton skeleton-text" style="width:180px;"></div><div class="skeleton skeleton-text" style="width:70px;"></div><div class="skeleton skeleton-text" style="width:50px;margin-left:auto;"></div><div class="skeleton skeleton-text" style="width:50px;"></div></div>
@@ -230,7 +230,7 @@
       <span class="wallet-addr">0x7a3f...c291</span>
       <span class="badge badge-xenarch">xenarch wallet</span>
       <span class="wallet-bal">$891.05 USDC</span>
-      <button class="btn-withdraw">Withdraw</button>
+      <button class="btn-withdraw">Cash out</button>
     </div>
     <div class="stats">
       <div class="stat"><div class="stat-label">Today</div><div class="stat-value">$4.72</div><div class="stat-sub">1,573 paid requests</div></div>
@@ -245,7 +245,7 @@
       <div class="bd-item"><span class="bd-name">Scrapers</span><span class="bd-amount">$62.10</span></div>
       <div class="bd-item"><span class="bd-name">AI Search</span><span class="bd-amount">$7.20</span></div>
     </div>
-    <div class="period-row"><span class="period-title">Transactions</span><div style="display:flex;gap:8px;"><div class="period-pills"><button class="pill active">All</button><button class="pill">Earned</button><button class="pill">Withdrew</button></div><div class="period-pills"><button class="pill">24h</button><button class="pill active">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div></div>
+    <div class="period-row"><span class="period-title">Transactions</span><div style="display:flex;gap:8px;"><div class="period-pills"><button class="pill active">All</button><button class="pill">Earned</button><button class="pill">Cashed out</button></div><div class="period-pills"><button class="pill">24h</button><button class="pill active">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div></div>
     <table>
       <thead><tr><th>Type</th><th>Page</th><th>Agent</th><th style="text-align:right;">Amount</th><th style="text-align:right;">Time</th></tr></thead>
       <tbody>
@@ -254,7 +254,7 @@
         <tr><td><span class="tx-type earn">earn</span></td><td class="path">/blog/ai-payments-2026</td><td class="agent">PerplexityBot</td><td class="amount">+$0.003</td><td class="time">7 min ago</td></tr>
         <tr><td><span class="tx-type earn">earn</span></td><td class="path">/api/v2/endpoints</td><td class="agent">GPTBot</td><td class="amount">+$0.05</td><td class="time">12 min ago</td></tr>
         <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/authentication</td><td class="agent">Google-Extended</td><td class="amount">+$0.01</td><td class="time">15 min ago</td></tr>
-        <tr><td><span class="tx-type withdraw">withdraw</span></td><td class="path" style="color:var(--error);">&rarr; 0x9b2e...f104</td><td class="agent">Base</td><td class="amount" style="color:var(--error);">-$250.00</td><td class="time">Mar 20</td></tr>
+        <tr><td><span class="tx-type withdraw">cash out</span></td><td class="path" style="color:var(--error);">&rarr; 0x9b2e...f104</td><td class="agent">Base</td><td class="amount" style="color:var(--error);">-$250.00</td><td class="time">Mar 20</td></tr>
         <tr><td><span class="tx-type earn">earn</span></td><td class="path">/blog/micropayments-guide</td><td class="agent">ClaudeBot</td><td class="amount">+$0.003</td><td class="time">Mar 20</td></tr>
         <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/webhooks</td><td class="agent">xn_agent_7kf2m</td><td class="amount">+$0.01</td><td class="time">Mar 20</td></tr>
         <tr><td><span class="tx-type earn">earn</span></td><td class="path">/api/v2/search</td><td class="agent">GPTBot</td><td class="amount">+$0.05</td><td class="time">Mar 19</td></tr>
@@ -279,7 +279,7 @@
       <span class="wallet-addr">0x7a3f...c291</span>
       <span class="badge badge-xenarch">xenarch wallet</span>
       <span class="wallet-bal">$891.05 USDC</span>
-      <button class="btn-withdraw">Withdraw</button>
+      <button class="btn-withdraw">Cash out</button>
     </div>
     <div class="stats">
       <div class="stat"><div class="stat-label">Today</div><div class="stat-value">$0.00</div><div class="stat-sub">0 paid requests</div></div>
@@ -294,7 +294,7 @@
       <div class="bd-item"><span class="bd-name">Scrapers</span><span class="bd-amount">$62.10</span></div>
       <div class="bd-item"><span class="bd-name">AI Search</span><span class="bd-amount">$7.20</span></div>
     </div>
-    <div class="period-row"><span class="period-title">Transactions</span><div style="display:flex;gap:8px;"><div class="period-pills"><button class="pill active">All</button><button class="pill">Earned</button><button class="pill">Withdrew</button></div><div class="period-pills"><button class="pill active">24h</button><button class="pill">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div></div>
+    <div class="period-row"><span class="period-title">Transactions</span><div style="display:flex;gap:8px;"><div class="period-pills"><button class="pill active">All</button><button class="pill">Earned</button><button class="pill">Cashed out</button></div><div class="period-pills"><button class="pill active">24h</button><button class="pill">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div></div>
     <div class="empty-state">
       <div class="empty-state-desc">No transactions for this period</div>
     </div>
@@ -315,7 +315,7 @@
       <span class="wallet-addr">0x7a3f...c291</span>
       <span class="badge badge-xenarch">xenarch wallet</span>
       <span class="wallet-bal">$891.05 USDC</span>
-      <button class="btn-withdraw">Withdraw</button>
+      <button class="btn-withdraw">Cash out</button>
     </div>
     <div class="empty-state" style="padding: 64px 24px;">
       <div class="empty-state-title">Couldn't load earnings data</div>
@@ -324,73 +324,22 @@
   </div>
 
   <!-- ============================================================ -->
-  <!-- STATE 6: Withdraw panel open -->
+  <!-- STATE 6: Cash out success -->
   <!-- ============================================================ -->
-  <div class="state-label">State 6 — Withdraw panel open</div>
+  <div class="state-label">State 6 — Cash out success</div>
   <div class="card">
     <div class="tabs">
       <div class="tab active">Earnings</div>
       <div class="tab">Settings</div>
       <div class="tab">Status</div>
     </div>
-    <div class="wallet-row">
-      <span class="wallet-dot"></span>
-      <span class="wallet-addr">0x7a3f...c291</span>
-      <span class="badge badge-xenarch">xenarch wallet</span>
-      <span class="wallet-bal">$891.05 USDC</span>
-      <button class="btn-withdraw" style="background:var(--dim);">Withdraw</button>
-    </div>
-    <div class="stats">
-      <div class="stat"><div class="stat-label">Today</div><div class="stat-value">$4.72</div><div class="stat-sub">1,573 paid requests</div></div>
-      <div class="stat"><div class="stat-label">This month</div><div class="stat-value">$127.40</div><div class="stat-sub">42,467 paid requests</div></div>
-      <div class="stat"><div class="stat-label">All time</div><div class="stat-value">$891.05</div><div class="stat-sub">297,017 paid requests</div></div>
-    </div>
-    <div class="withdraw-panel">
-      <div class="withdraw-title">Withdraw USDC</div>
-      <div class="withdraw-desc">Send to any wallet or exchange address</div>
-      <div class="withdraw-row"><label>To address</label><input type="text" placeholder="0x... or paste exchange deposit address"></div>
-      <div class="withdraw-row"><label>Network</label><select><option>Base</option><option>Ethereum</option><option>Solana</option><option>TRON</option></select></div>
-      <div class="withdraw-row"><label>Amount</label><input type="text" placeholder="0.00" style="width:140px;flex:none;"><span class="unit">USDC</span><button class="btn-max">MAX</button></div>
-      <div class="withdraw-hint">Network fee: ~$0.001 (Base). Arrives in ~2 seconds.</div>
-      <div class="withdraw-actions"><button class="btn-send">Send</button><button class="btn-cancel">Cancel</button></div>
-    </div>
-    <div class="breakdown">
-      <div class="bd-item"><span class="bd-name">General AI</span><span class="bd-amount">$312.40</span></div>
-      <div class="bd-item"><span class="bd-name">AI Assistants</span><span class="bd-amount">$241.15</span></div>
-      <div class="bd-item"><span class="bd-name">AI Training</span><span class="bd-amount">$178.90</span></div>
-      <div class="bd-item"><span class="bd-name">AI Agents</span><span class="bd-amount">$89.30</span></div>
-      <div class="bd-item"><span class="bd-name">Scrapers</span><span class="bd-amount">$62.10</span></div>
-      <div class="bd-item"><span class="bd-name">AI Search</span><span class="bd-amount">$7.20</span></div>
-    </div>
-    <div class="period-row"><span class="period-title">Transactions</span><div style="display:flex;gap:8px;"><div class="period-pills"><button class="pill active">All</button><button class="pill">Earned</button><button class="pill">Withdrew</button></div><div class="period-pills"><button class="pill">24h</button><button class="pill active">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div></div>
-    <table>
-      <thead><tr><th>Type</th><th>Page</th><th>Agent</th><th style="text-align:right;">Amount</th><th style="text-align:right;">Time</th></tr></thead>
-      <tbody>
-        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/api-reference</td><td class="agent">GPTBot</td><td class="amount">+$0.01</td><td class="time">2 min ago</td></tr>
-        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/getting-started</td><td class="agent">ClaudeBot</td><td class="amount">+$0.01</td><td class="time">4 min ago</td></tr>
-        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/blog/ai-payments-2026</td><td class="agent">PerplexityBot</td><td class="amount">+$0.003</td><td class="time">7 min ago</td></tr>
-      </tbody>
-    </table>
-    <div class="more-row"><button class="btn-more">Load more</button></div>
-  </div>
-
-  <!-- ============================================================ -->
-  <!-- STATE 7: Withdraw success -->
-  <!-- ============================================================ -->
-  <div class="state-label">State 7 — Withdraw success</div>
-  <div class="card">
-    <div class="tabs">
-      <div class="tab active">Earnings</div>
-      <div class="tab">Settings</div>
-      <div class="tab">Status</div>
-    </div>
-    <div class="save-status success">&#x2713; withdrawal sent — arriving in ~2 seconds</div>
+    <div class="save-status success">&#x2713; cash out initiated — processing via Coinbase</div>
     <div class="wallet-row">
       <span class="wallet-dot"></span>
       <span class="wallet-addr">0x7a3f...c291</span>
       <span class="badge badge-xenarch">xenarch wallet</span>
       <span class="wallet-bal">$641.05 USDC</span>
-      <button class="btn-withdraw">Withdraw</button>
+      <button class="btn-withdraw">Cash out</button>
     </div>
     <div class="stats">
       <div class="stat"><div class="stat-label">Today</div><div class="stat-value">$4.72</div><div class="stat-sub">1,573 paid requests</div></div>
@@ -405,11 +354,11 @@
       <div class="bd-item"><span class="bd-name">Scrapers</span><span class="bd-amount">$62.10</span></div>
       <div class="bd-item"><span class="bd-name">AI Search</span><span class="bd-amount">$7.20</span></div>
     </div>
-    <div class="period-row"><span class="period-title">Transactions</span><div style="display:flex;gap:8px;"><div class="period-pills"><button class="pill active">All</button><button class="pill">Earned</button><button class="pill">Withdrew</button></div><div class="period-pills"><button class="pill">24h</button><button class="pill active">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div></div>
+    <div class="period-row"><span class="period-title">Transactions</span><div style="display:flex;gap:8px;"><div class="period-pills"><button class="pill active">All</button><button class="pill">Earned</button><button class="pill">Cashed out</button></div><div class="period-pills"><button class="pill">24h</button><button class="pill active">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div></div>
     <table>
       <thead><tr><th>Type</th><th>Page</th><th>Agent</th><th style="text-align:right;">Amount</th><th style="text-align:right;">Time</th></tr></thead>
       <tbody>
-        <tr><td><span class="tx-type withdraw">withdraw</span></td><td class="path" style="color:var(--error);">&rarr; 0x9b2e...f104</td><td class="agent">Base</td><td class="amount" style="color:var(--error);">-$250.00</td><td class="time">Just now</td></tr>
+        <tr><td><span class="tx-type withdraw">cash out</span></td><td class="path" style="color:var(--error);">&rarr; 0x9b2e...f104</td><td class="agent">Base</td><td class="amount" style="color:var(--error);">-$250.00</td><td class="time">Just now</td></tr>
         <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/api-reference</td><td class="agent">GPTBot</td><td class="amount">+$0.01</td><td class="time">2 min ago</td></tr>
         <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/getting-started</td><td class="agent">ClaudeBot</td><td class="amount">+$0.01</td><td class="time">4 min ago</td></tr>
         <tr><td><span class="tx-type earn">earn</span></td><td class="path">/blog/ai-payments-2026</td><td class="agent">PerplexityBot</td><td class="amount">+$0.003</td><td class="time">7 min ago</td></tr>
@@ -420,9 +369,9 @@
   </div>
 
   <!-- ============================================================ -->
-  <!-- STATE 8: Own wallet (no withdraw) -->
+  <!-- STATE 7: Own wallet (no cash out) -->
   <!-- ============================================================ -->
-  <div class="state-label">State 8 — Own wallet (no withdraw)</div>
+  <div class="state-label">State 7 — Own wallet (no cash out)</div>
   <div class="card">
     <div class="tabs">
       <div class="tab active">Earnings</div>

@@ -20,7 +20,7 @@
     /* Text */
     --fg: #f0f0f0; --secondary: #999; --muted: #666; --dim: #444;
     /* Status */
-    --success: #4ade80; --success-bg: rgba(74,222,128,0.08); --error: #f87171;
+    --success: #4ade80; --success-hover: #5cef92; --success-bg: rgba(74,222,128,0.08); --success-border: rgba(74,222,128,0.15); --error: #f87171;
     /* Buttons */
     --btn-primary-bg: #f0f0f0; --btn-primary-fg: #0a0a0a; --btn-primary-hover: #fff;
     --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23999' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
@@ -32,7 +32,7 @@
     --surface: #ece8e3; --surface-border: #d0ccc7;
     --input-bg: #fff; --input-border: #d0ccc7; --input-focus: #999;
     --fg: #1a1a1a; --secondary: #555; --muted: #888; --dim: #bbb;
-    --success: #16a34a; --success-bg: rgba(22,163,74,0.08); --error: #dc2626;
+    --success: #16a34a; --success-hover: #15803d; --success-bg: rgba(22,163,74,0.08); --success-border: rgba(22,163,74,0.2); --error: #dc2626;
     --btn-primary-bg: #1a1a1a; --btn-primary-fg: #f0f0f0; --btn-primary-hover: #333;
     --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23666' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
     --overlay: rgba(0,0,0,0.35);
@@ -125,7 +125,7 @@
   .wallet-address-display { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--fg); }
   .wallet-badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-left: 8px; }
   .wallet-badge.own { color: #5a9fd4; background: rgba(90,159,212,0.1); border: 1px solid rgba(90,159,212,0.2); }
-  .wallet-badge.xenarch { color: var(--success); background: var(--success-bg); border: 1px solid rgba(74,222,128,0.2); }
+  .wallet-badge.xenarch { color: var(--success); background: var(--success-bg); border: 1px solid var(--success-border); }
   .wallet-badge.connected { color: #5a9fd4; background: rgba(90,159,212,0.1); border: 1px solid rgba(90,159,212,0.2); }
   .wallet-note { font-size: 11px; color: var(--muted); margin-top: 4px; }
   .wallet-change { font-size: 12px; color: var(--secondary); background: none; border: none; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
@@ -293,7 +293,7 @@
         </div>
         <div class="wallet-opt" onclick="confirmWallet('xenarch')">
           <div class="wallet-opt-title">Create for me</div>
-          <div class="wallet-opt-desc">Easiest setup</div>
+          <div class="wallet-opt-desc">Powered by Coinbase</div>
         </div>
         <div class="wallet-opt" onclick="showManualEntry()">
           <div class="wallet-opt-title">Enter manually</div>
@@ -490,7 +490,7 @@ function confirmWallet(type) {
     addr = '0x7a3f...c291';
     badge = 'xenarch wallet';
     badgeClass = 'xenarch';
-    note = 'Your wallet. Withdraw anytime from the Earnings tab.';
+    note = 'Your wallet. Cash out to fiat anytime from the Earnings tab.';
   } else {
     var input = document.getElementById('manualAddress').value || '0x9b2e...f104';
     addr = input.length > 12 ? input.slice(0,6) + '...' + input.slice(-4) : input;

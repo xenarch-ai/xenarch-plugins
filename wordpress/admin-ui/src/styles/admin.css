@@ -918,18 +918,6 @@ w3m-account-button {
   font-size: 11px;
   color: var(--xn-dot-red);
   margin-top: 16px;
-  text-align: center;
-}
-
-#xenarch-admin .xenarch-onboarding-retry {
-  color: var(--xn-text-secondary);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
-}
-
-#xenarch-admin .xenarch-onboarding-retry:hover {
-  color: var(--xn-text);
 }
 
 #xenarch-admin .xenarch-onboarding-footer {
@@ -1703,7 +1691,16 @@ w3m-account-button {
   font-family: 'JetBrains Mono', monospace;
 }
 
-#xenarch-admin .xenarch-wallet-network-select {
+/* Custom network select dropdown */
+#xenarch-admin .xenarch-network-select {
+  position: relative;
+  flex-shrink: 0;
+}
+
+#xenarch-admin .xenarch-network-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   background: var(--xn-input-bg);
   border: 1px solid var(--xn-input-border);
   border-radius: 6px;
@@ -1711,7 +1708,52 @@ w3m-account-button {
   font-family: 'Inter', sans-serif;
   font-size: 13px;
   padding: 8px 12px;
+  height: 38px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+#xenarch-admin .xenarch-network-select-trigger:hover {
+  border-color: var(--xn-dim);
+}
+
+#xenarch-admin .xenarch-network-select-trigger svg {
+  color: var(--xn-muted);
   flex-shrink: 0;
+}
+
+#xenarch-admin .xenarch-network-select-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 100%;
+  background: var(--xn-surface);
+  border: 1px solid var(--xn-surface-border);
+  border-radius: 6px;
+  padding: 4px;
+  z-index: 10;
+}
+
+#xenarch-admin .xenarch-network-select-option {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--xn-text);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  padding: 6px 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+#xenarch-admin .xenarch-network-select-option:hover {
+  background: var(--xn-dim);
+}
+
+#xenarch-admin .xenarch-network-select-option--active {
+  color: var(--xn-success);
 }
 
 #xenarch-admin .xenarch-wallet-icon-btn {

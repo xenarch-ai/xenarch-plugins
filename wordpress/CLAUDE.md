@@ -32,7 +32,7 @@ When a user clicks "Change" on a configured wallet:
 
 - **Own wallet / Connected wallet**: goes back to wallet selection immediately. No constraints.
 - **Xenarch wallet with balance = 0**: goes back to wallet selection. Old wallet is discarded.
-- **Xenarch wallet with balance > 0**: "Change" is disabled. Show tooltip/note: "Withdraw your balance before changing wallet." User must go to Earnings → Withdraw → then change.
+- **Xenarch wallet with balance > 0**: "Change" is disabled. Show tooltip/note: "Cash out your balance before changing wallet." User must go to Earnings → Cash out → then change.
 
 Disconnecting/changing wallet does NOT delete settings (gate toggles, pricing rules, bot overrides). Only the wallet identity changes.
 
@@ -220,7 +220,7 @@ Three option cards in a horizontal row, each with title + subtitle:
 | Option | Title | Subtitle | On click |
 |---|---|---|---|
 | Connect wallet | Connect wallet | MetaMask, Coinbase, etc. | Opens WalletConnect modal |
-| Create for me | Create for me | Easiest setup | Shows confirmation + creates Xenarch-managed wallet |
+| Create for me | Create for me | Powered by Coinbase | Shows confirmation + creates Xenarch-managed wallet |
 | Enter manually | Enter manually | Paste an address | Shows address input + network dropdown |
 
 Card click behavior — no intermediate steps:
@@ -238,7 +238,7 @@ Setup phase hides, replaced by a compact card showing:
   - `your wallet` — blue, for manually entered addresses
   - `connected via MetaMask` — blue, for WalletConnect (same blue as "own wallet")
 - Note below address:
-  - Xenarch wallet: "Your wallet. Withdraw anytime from the Earnings tab."
+  - Xenarch wallet: "Your wallet. Cash out to fiat anytime from the Earnings tab."
   - Own/connected: "Settled on-chain via splitter contract. No funds held by Xenarch."
 - "Change" link (right side) — reopens Phase 1
 
@@ -299,18 +299,18 @@ Layout order top to bottom:
 
 Compact single-line bar at the top — the first thing the publisher sees. Displays based on wallet type:
 
-- **Xenarch wallet**: `● 0x7a3f...c291  [xenarch wallet]  $891.05 USDC  [Withdraw]`
-  - Green dot, address (mono 13px), badge (green), balance (mono 13px, `--success`, pushed right via `margin-left: auto`), Withdraw button
+- **Xenarch wallet**: `● 0x7a3f...c291  [xenarch wallet]  $891.05 USDC  [Cash out]`
+  - Green dot, address (mono 13px), badge (green), balance (mono 13px, `--success`, pushed right via `margin-left: auto`), Cash out button
 - **Own wallet / WalletConnect**: `● 0x9b2e...f104  [your wallet]`
-  - Green dot, address, badge (blue). No balance, no withdraw.
+  - Green dot, address, badge (blue). No balance, no cash out.
 
 ### Stats Cards
 
 Three cards in a row: **Today**, **This month**, **All time**. Each shows dollar amount (mono 24px) and "N paid requests" (11px `--muted`).
 
-### Withdraw Panel
+### Cash Out Panel
 
-Expandable panel below stats (hidden by default, opens on Withdraw click). Contains:
+Expandable panel below stats (hidden by default, opens on Cash out click). Contains:
 - To address input, Network select, Amount input + MAX button
 - Network fee hint
 - Send + Cancel buttons
@@ -325,10 +325,10 @@ Two sets of filter pills side by side:
 
 | Filter group | Pills | Visibility |
 |---|---|---|
-| Type filter | `All` · `Earned` · `Withdrew` | **Only shown for Xenarch wallets** (own/connected wallets have no withdrawals to filter) |
+| Type filter | `All` · `Earned` · `Cashed out` | **Only shown for Xenarch wallets with at least one cash out in the selected period** (own/connected wallets have no withdrawals to filter) |
 | Period filter | `24h` · `7d` · `30d` · `All` | Always shown |
 
-Table columns: Type (earn/withdraw pill), Page (mono 12px), Agent (mono 12px), Amount (mono, right-aligned, `--success` for earn, `--error` for withdraw), Time (12px `--muted`, right-aligned).
+Table columns: Type (earn/cash out pill), Page (mono 12px), Agent (mono 12px), Amount (mono, right-aligned, `--success` for earn, `--error` for cash out), Time (12px `--muted`, right-aligned).
 
 "Load more" ghost button at the bottom.
 
