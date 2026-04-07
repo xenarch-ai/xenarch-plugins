@@ -132,6 +132,14 @@ export function createSellQuote(amountUsd: string, country: string, paymentMetho
   })
 }
 
+// Record a completed cash-out
+export function recordCashOut(amountUsd: string): Promise<{ id: string; amount_usd: string; created_at: string }> {
+  return apiFetch('/cash-outs', {
+    method: 'POST',
+    body: JSON.stringify({ amount_usd: amountUsd }),
+  })
+}
+
 // Transactions (proxied from platform)
 export function fetchTransactions(
   period: string = 'all',

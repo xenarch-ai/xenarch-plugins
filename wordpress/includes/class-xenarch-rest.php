@@ -238,6 +238,17 @@ class Xenarch_Rest {
 			)
 		);
 
+		// Cash-out recording (called by frontend after successful offramp).
+		register_rest_route(
+			$this->namespace,
+			'/cash-outs',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'handle_record_cash_out' ),
+				'permission_callback' => array( $this, 'check_admin' ),
+			)
+		);
+
 	}
 
 	/**
@@ -525,7 +536,7 @@ class Xenarch_Rest {
 		}
 
 		$status = $request->get_param( 'status' );
-		if ( ! empty( $status ) && in_array( $status, array( 'paid', 'blocked', 'all' ), true ) ) {
+		if ( ! empty( $status ) && in_array( $status, array( 'paid', 'blocked', 'withdraw', 'all' ), true ) ) {
 			$params['status'] = $status;
 		}
 
@@ -844,6 +855,37 @@ class Xenarch_Rest {
 		}
 
 		return new WP_REST_Response( $result, 200 );
+	}
+
+	/**
+	 * POST /cash-outs — record a completed cash-out.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response
+	 */
+	public function handle_record_cash_out( $request ) {
+		$params     = $request->get_json_params();
+		$amount_usd = isset( $params['amount_usd'] ) ? sanitize_text_field( $params['amount_usd'] ) : '';
+
+		if ( empty( $amount_usd ) ) {
+			return new WP_REST_Response( array( 'error' => 'Amount is required.' ), 400 );
+		}
+
+		$site_id = get_option( 'xenarch_site_id', '' );
+		if ( empty( $site_id ) ) {
+			return new WP_REST_Response( array( 'error' => 'Site not configured.' ), 400 );
+		}
+
+		$result = $this->api->record_cash_out( $site_id, $amount_usd );
+
+		if ( is_wp_error( $result ) ) {
+			return new WP_REST_Response(
+				array( 'error' => $result->get_error_message() ),
+				502
+			);
+		}
+
+		return new WP_REST_Response( $result, 201 );
 	}
 
 	// ------------------------------------------------------------------

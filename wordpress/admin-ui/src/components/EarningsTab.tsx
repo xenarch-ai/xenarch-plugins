@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import type {
   Settings,
   StatsResponse,
@@ -20,7 +20,7 @@ const PERIODS = [
   { value: 'all', label: 'All' },
 ]
 
-const STATUS_FILTERS = [
+const BASE_STATUS_FILTERS = [
   { value: 'all', label: 'All' },
   { value: 'paid', label: 'Earned' },
   { value: 'blocked', label: 'Gated' },
@@ -76,6 +76,13 @@ export function EarningsTab({ settings }: Props) {
 
   const isXenarch = settings.wallet_type === 'xenarch' || settings.wallet_type === 'coinbase'
   const wallet = settings.payout_wallet
+
+  const statusFilters = useMemo(() => {
+    if (isXenarch) {
+      return [...BASE_STATUS_FILTERS, { value: 'withdraw', label: 'Cashed' }]
+    }
+    return BASE_STATUS_FILTERS
+  }, [isXenarch])
 
   // ---- Data loading ----
 
@@ -260,7 +267,7 @@ export function EarningsTab({ settings }: Props) {
         <span className="xenarch-earnings-period-title">Transactions</span>
         <div style={{ display: 'flex', gap: 8 }}>
           <div className="xenarch-earnings-pills">
-            {STATUS_FILTERS.map((f) => (
+            {statusFilters.map((f) => (
               <button
                 key={f.value}
                 className={`xenarch-earnings-pill${statusFilter === f.value ? ' xenarch-earnings-pill--active' : ''}`}

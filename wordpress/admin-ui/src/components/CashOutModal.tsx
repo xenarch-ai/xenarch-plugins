@@ -175,6 +175,9 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
     }
   }, [loadSellOptions])
 
+  // Track whether we already recorded this cash-out to prevent duplicates
+  const recorded = useRef(false)
+
   // Listen for tab visibility changes in redirected phase
   useEffect(() => {
     if (phase !== 'redirected') return
@@ -184,6 +187,11 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
         // Poll balance to see if it decreased
         api.fetchBalance().then((data) => {
           if (parseFloat(data.balance_usd) < parseFloat(initialBalance.current)) {
+            if (!recorded.current) {
+              recorded.current = true
+              const cashOutAmount = quote?.sell_amount || amount
+              api.recordCashOut(cashOutAmount).catch(() => {})
+            }
             onComplete()
           }
         }).catch(() => {})
@@ -192,7 +200,7 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
 
     document.addEventListener('visibilitychange', handleVisibility)
     return () => document.removeEventListener('visibilitychange', handleVisibility)
-  }, [phase, onComplete])
+  }, [phase, onComplete, quote, amount])
 
   const handleGetQuote = useCallback(async () => {
     if (!amount || parseFloat(amount) <= 0 || !country || !destination || !options) return
@@ -225,9 +233,22 @@ export function CashOutModal({ balance, onComplete, onClose }: Props) {
     setPhase('redirected')
   }, [quote])
 
-  const handleDone = useCallback(() => {
+  const handleDone = useCallback(async () => {
+    // Only record if balance actually decreased (user completed on Coinbase)
+    if (!recorded.current) {
+      try {
+        const data = await api.fetchBalance()
+        if (parseFloat(data.balance_usd) < parseFloat(initialBalance.current)) {
+          recorded.current = true
+          const cashOutAmount = quote?.sell_amount || amount
+          api.recordCashOut(cashOutAmount).catch(() => {})
+        }
+      } catch {
+        // Balance check failed, skip recording
+      }
+    }
     onComplete()
-  }, [onComplete])
+  }, [onComplete, quote, amount])
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) onClose()
