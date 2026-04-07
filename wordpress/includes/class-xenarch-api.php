@@ -274,6 +274,21 @@ class Xenarch_Api {
 		return $this->get( $endpoint, $this->auth_headers() );
 	}
 
+	/**
+	 * Record a completed cash-out.
+	 *
+	 * @param string $site_id    Site UUID.
+	 * @param string $amount_usd Amount cashed out.
+	 * @return array|WP_Error
+	 */
+	public function record_cash_out( $site_id, $amount_usd ) {
+		return $this->post(
+			'/v1/sites/' . urlencode( $site_id ) . '/cash-outs',
+			array( 'amount_usd' => $amount_usd ),
+			$this->auth_headers()
+		);
+	}
+
 	// ------------------------------------------------------------------
 	// Internal helpers
 	// ------------------------------------------------------------------

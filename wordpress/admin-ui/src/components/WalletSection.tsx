@@ -51,7 +51,12 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
     setSaving(false)
   }, [onSettingsChange])
 
-  const handleWalletConnect = useCallback((address: string) => {
+  const handleWalletConnect = useCallback(async (address: string) => {
+    // Disconnect existing connection before saving the new one.
+    const appKit = getAppKit()
+    if (appKit?.getIsConnectedState?.()) {
+      try { await appKit.disconnect() } catch {}
+    }
     saveWallet(address, 'connected', 'base')
   }, [saveWallet])
 
@@ -73,25 +78,6 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
     saveWallet(manualAddress.trim(), 'manual', manualNetwork)
   }, [manualAddress, manualNetwork, saveWallet])
 
-  const [disconnecting, setDisconnecting] = useState(false)
-
-  const handleDisconnect = useCallback(async () => {
-    setDisconnecting(true)
-    const appKit = getAppKit()
-    if (appKit) {
-      try { await appKit.disconnect() } catch {}
-    }
-    try {
-      const updated = await api.updateSettings({
-        xenarch_payout_wallet: '',
-        xenarch_wallet_type: '',
-        xenarch_wallet_network: '',
-      })
-      onSettingsChange(updated)
-    } catch {}
-    setDisconnecting(false)
-    setPhase('setup')
-  }, [onSettingsChange])
 
   const handleChange = () => {
     // Xenarch wallet with balance > 0: block change.
@@ -133,17 +119,13 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
 
       {/* Phase 1: Setup -- 3 option cards */}
       {phase === 'setup' && (() => {
-        const appKit = getAppKit()
-        const appKitConnected = appKit?.getIsConnectedState?.() ?? false
-        const needsDisconnect = appKitConnected || settings.wallet_type === 'coinbase'
-        const disconnectLabel = settings.wallet_type === 'coinbase' ? 'Coinbase' : 'WalletConnect'
         const isChanging = hasWallet && phase === 'setup'
         return (
           <>
             <div className="xenarch-section-desc">Where do you want to receive payments?</div>
-            {needsDisconnect && (
+            {isChanging && (
               <div className="xenarch-wallet-disconnect-notice">
-                Connected via {disconnectLabel}. Disconnect to connect a different wallet.
+                Connecting a new wallet will replace your current one.
               </div>
             )}
             <div className="xenarch-wallet-options">
@@ -151,10 +133,6 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
                 <button className="xenarch-wallet-opt" onClick={() => setPhase('configured')}>
                   <div className="xenarch-wallet-opt-title">Current</div>
                   <div className="xenarch-wallet-opt-desc">{truncateAddress(settings.payout_wallet)}</div>
-                </button>
-              ) : needsDisconnect ? (
-                <button className="xenarch-wallet-opt xenarch-wallet-opt--disconnect" onClick={handleDisconnect} disabled={disconnecting}>
-                  <div className="xenarch-wallet-opt-title">{disconnecting ? 'Disconnecting...' : 'Disconnect wallet'}</div>
                 </button>
               ) : (
                 <WalletConnectButton onConnect={(address) => handleWalletConnect(address)} />
