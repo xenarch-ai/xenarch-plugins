@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="package" method="upgrade">
+    <name>Xenarch</name>
+    <packagename>xenarch</packagename>
+    <version>1.0.0</version>
+    <creationDate>2026-04</creationDate>
+    <author>Xenarch</author>
+    <authorUrl>https://xenarch.com</authorUrl>
+    <license>GPL-2.0-or-later</license>
+    <description>Monetize AI bot traffic on your Joomla site. Xenarch detects AI agents and charges micropayments for content access via the x402 protocol.</description>
+    <files>
+        <file type="component" id="com_xenarch">packages/com_xenarch.zip</file>
+        <file type="plugin" group="system" id="xenarch">packages/plg_system_xenarch.zip</file>
+        <file type="plugin" group="webservices" id="xenarch">packages/plg_webservices_xenarch.zip</file>
+    </files>
+</extension>

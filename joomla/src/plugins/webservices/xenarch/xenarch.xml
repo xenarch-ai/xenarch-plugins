@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" group="webservices" method="upgrade">
+    <name>Web Services - Xenarch</name>
+    <version>1.0.0</version>
+    <creationDate>2026-04</creationDate>
+    <author>Xenarch</author>
+    <authorUrl>https://xenarch.com</authorUrl>
+    <license>GPL-2.0-or-later</license>
+    <description>REST API routes for the Xenarch admin panel.</description>
+
+    <namespace path="src">Xenarch\Plugin\WebServices\Xenarch</namespace>
+
+    <files>
+        <folder>services</folder>
+        <folder>src</folder>
+    </files>
+</extension>

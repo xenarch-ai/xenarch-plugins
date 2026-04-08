@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Screenshot 1 — Settings Gate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&family=Space+Grotesk:wght@300;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { display: flex; justify-content: center; align-items: center; padding: 0; }
+  .frame { min-height: 900px; width: 1544px; display: flex; }
+  .panel { flex: 1; display: flex; justify-content: center; align-items: center; padding: 48px 40px; }
+  .panel.dark { background: #0a0a0a; }
+  .panel.light { background: #E8E4DF; }
+  .page { max-width: 640px; width: 100%; font-family: 'Inter', system-ui, sans-serif; font-size: 14px; line-height: 1.5; color: var(--fg); }
+
+  .dark {
+    --bg: #0a0a0a; --card: #111; --card-border: #1a1a1a;
+    --surface: #191919; --surface-border: #252525;
+    --input-bg: #111; --input-border: #252525;
+    --fg: #f0f0f0; --secondary: #999; --muted: #666; --dim: #444;
+    --success: #4ade80; --success-bg: rgba(74,222,128,0.08);
+  }
+  .light {
+    --bg: #E8E4DF; --card: #f5f2ee; --card-border: #d5d0ca;
+    --surface: #ece8e3; --surface-border: #d0ccc7;
+    --input-bg: #fff; --input-border: #d0ccc7;
+    --fg: #1a1a1a; --secondary: #555; --muted: #888; --dim: #bbb;
+    --success: #16a34a; --success-bg: rgba(22,163,74,0.08);
+  }
+
+  .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 24px; }
+  .header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .logo { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 300; line-height: 1.2; color: var(--fg); }
+  .version { font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1; color: var(--muted); background: var(--surface); padding: 5px 8px; border-radius: 4px; border: 1px solid var(--surface-border); }
+  .theme-icon { margin-left: auto; color: var(--muted); display: flex; align-items: center; }
+  .subtitle { font-size: 13px; color: var(--secondary); margin-bottom: 24px; }
+  .tabs { display: flex; margin-bottom: 24px; border-bottom: 1px solid var(--card-border); }
+  .tab { font-size: 13px; color: var(--secondary); padding: 8px 16px; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab.active { color: var(--fg); border-bottom-color: var(--fg); }
+
+  .section { padding-top: 24px; margin-bottom: 24px; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .toggle-label { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; line-height: 1.2; color: var(--fg); }
+  .toggle-desc { font-size: 13px; color: var(--secondary); margin-top: 4px; }
+  .toggle { width: 44px; height: 24px; background: var(--success); border-radius: 12px; position: relative; flex-shrink: 0; }
+  .toggle .dot { width: 18px; height: 18px; background: white; border-radius: 50%; position: absolute; top: 3px; left: 23px; }
+
+  .bot-type { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 8px; margin-bottom: 6px; }
+  .cat-toggle { width: 36px; height: 20px; border-radius: 10px; position: relative; flex-shrink: 0; }
+  .cat-toggle.on { background: var(--success); }
+  .cat-toggle.off { background: var(--dim); }
+  .cat-toggle .cat-dot { width: 14px; height: 14px; background: white; border-radius: 50%; position: absolute; top: 3px; }
+  .cat-toggle.on .cat-dot { left: 19px; }
+  .cat-toggle.off .cat-dot { left: 3px; }
+  .cat-info { flex: 1; min-width: 0; }
+  .cat-name { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 500; line-height: 1.3; color: var(--fg); }
+  .cat-desc { font-size: 12px; color: var(--secondary); line-height: 1.3; }
+  .cat-stat { font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; white-space: nowrap; }
+  .cat-stat.off { color: var(--muted); }
+  .cat-stat.on { color: var(--success); }
+  .cat-chevron { font-size: 16px; color: var(--dim); flex-shrink: 0; }
+  .always-note { font-size: 11px; color: var(--muted); margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <!-- Dark panel -->
+  <div class="panel dark"><div class="page">
+    <div class="header">
+      <span class="logo">/xenarch</span>
+      <span class="version">v1.2</span>
+      <span class="theme-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.2 9.5a5.5 5.5 0 01-7-7 5.5 5.5 0 106.7 6.7z"/></svg></span>
+    </div>
+    <p class="subtitle">Charge the bots that take. Let through the ones that help.</p>
+    <div class="tabs">
+      <div class="tab">Earnings</div>
+      <div class="tab active">Settings</div>
+      <div class="tab">Status</div>
+    </div>
+    <div class="card">
+      <div class="section" style="padding-top:0;">
+        <div class="toggle-row">
+          <div><div class="toggle-label">Gate AI bots</div><div class="toggle-desc">All non-human traffic must pay unless allowed below</div></div>
+          <div class="toggle"><div class="dot"></div></div>
+        </div>
+        <div class="bot-type">
+          <div class="cat-toggle off"><div class="cat-dot"></div></div>
+          <div class="cat-info"><div class="cat-name">AI Search</div><div class="cat-desc">Index your site so AI can recommend it</div></div>
+          <span class="cat-stat off">16 allowed</span>
+          <span class="cat-chevron">&rsaquo;</span>
+        </div>
+        <div class="bot-type">
+          <div class="cat-toggle on"><div class="cat-dot"></div></div>
+          <div class="cat-info"><div class="cat-name">AI Assistants</div><div class="cat-desc">Users asking AI about your content</div></div>
+          <span class="cat-stat on">10 gated</span>
+          <span class="cat-chevron">&rsaquo;</span>
+        </div>
+        <div class="bot-type">
+          <div class="cat-toggle on"><div class="cat-dot"></div></div>
+          <div class="cat-info"><div class="cat-name">AI Agents</div><div class="cat-desc">Autonomous AI performing tasks on your site</div></div>
+          <span class="cat-stat on">9 gated</span>
+          <span class="cat-chevron">&rsaquo;</span>
+        </div>
+        <div class="bot-type">
+          <div class="cat-toggle on"><div class="cat-dot"></div></div>
+          <div class="cat-info"><div class="cat-name">AI Training</div><div class="cat-desc">Crawlers collecting data for model training</div></div>
+          <span class="cat-stat on">13 gated</span>
+          <span class="cat-chevron">&rsaquo;</span>
+        </div>
+        <div class="bot-type">
+          <div class="cat-toggle on"><div class="cat-dot"></div></div>
+          <div class="cat-info"><div class="cat-name">Scrapers</div><div class="cat-desc">Automated data extraction tools</div></div>
+          <span class="cat-stat on">44 gated</span>
+          <span class="cat-chevron">&rsaquo;</span>
+        </div>
+        <div class="bot-type">
+          <div class="cat-toggle on"><div class="cat-dot"></div></div>
+          <div class="cat-info"><div class="cat-name">General AI</div><div class="cat-desc">Other AI crawlers with mixed or unclear intent</div></div>
+          <span class="cat-stat on">32 gated</span>
+          <span class="cat-chevron">&rsaquo;</span>
+        </div>
+        <p class="always-note">Search engines (Google, Bing) and social previews (Twitter, LinkedIn) always pass through free.</p>
+      </div>
+    </div>
+  </div></div>
+
+  <!-- Light panel -->
+  <div class="panel light"><div class="page">
+    <div class="header">
+      <span class="logo">/xenarch</span>
+      <span class="version">v1.2</span>
+      <span class="theme-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.5M8 13v1.5M2.75 2.75l1.06 1.06M12.19 12.19l1.06 1.06M1.5 8H3M13 8h1.5M2.75 13.25l1.06-1.06M12.19 3.81l1.06-1.06"/></svg></span>
+    </div>
+    <p class="subtitle">Charge the bots that take. Let through the ones that help.</p>
+    <div class="tabs">
+      <div class="tab">Earnings</div>
+      <div class="tab active">Settings</div>
+      <div class="tab">Status</div>
+    </div>
+    <div class="card">
+      <div class="section" style="padding-top:0;">
+        <div class="toggle-row">
+          <div><div class="toggle-label">Gate AI bots</div><div class="toggle-desc">All non-human traffic must pay unless allowed below</div></div>
+          <div class="toggle"><div class="dot"></div></div>
+        </div>
+        <div class="bot-type">
+          <div class="cat-toggle off"><div class="cat-dot"></div></div>
+          <div class="cat-info"><div class="cat-name">AI Search</div><div class="cat-desc">Index your site so AI can recommend it</div></div>
+          <span class="cat-stat off">16 allowed</span>
+          <span class="cat-chevron">&rsaquo;</span>
+        </div>
+        <div class="bot-type">
+          <div class="cat-toggle on"><div class="cat-dot"></div></div>
+          <div class="cat-info"><div class="cat-name">AI Assistants</div><div class="cat-desc">Users asking AI about your content</div></div>
+          <span class="cat-stat on">10 gated</span>
+          <span class="cat-chevron">&rsaquo;</span>
+        </div>
+        <div class="bot-type">
+          <div class="cat-toggle on"><div class="cat-dot"></div></div>
+          <div class="cat-info"><div class="cat-name">AI Agents</div><div class="cat-desc">Autonomous AI performing tasks on your site</div></div>
+          <span class="cat-stat on">9 gated</span>
+          <span class="cat-chevron">&rsaquo;</span>
+        </div>
+        <div class="bot-type">
+          <div class="cat-toggle on"><div class="cat-dot"></div></div>
+          <div class="cat-info"><div class="cat-name">AI Training</div><div class="cat-desc">Crawlers collecting data for model training</div></div>
+          <span class="cat-stat on">13 gated</span>
+          <span class="cat-chevron">&rsaquo;</span>
+        </div>
+        <div class="bot-type">
+          <div class="cat-toggle on"><div class="cat-dot"></div></div>
+          <div class="cat-info"><div class="cat-name">Scrapers</div><div class="cat-desc">Automated data extraction tools</div></div>
+          <span class="cat-stat on">44 gated</span>
+          <span class="cat-chevron">&rsaquo;</span>
+        </div>
+        <div class="bot-type">
+          <div class="cat-toggle on"><div class="cat-dot"></div></div>
+          <div class="cat-info"><div class="cat-name">General AI</div><div class="cat-desc">Other AI crawlers with mixed or unclear intent</div></div>
+          <span class="cat-stat on">32 gated</span>
+          <span class="cat-chevron">&rsaquo;</span>
+        </div>
+        <p class="always-note">Search engines (Google, Bing) and social previews (Twitter, LinkedIn) always pass through free.</p>
+      </div>
+    </div>
+  </div></div>
+
+</div>
+</body>
+</html>

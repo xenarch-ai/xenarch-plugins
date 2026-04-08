@@ -18,3 +18,7 @@ Thumbs.db
 # IDE
 .idea/
 .vscode/
+
+# Release artifacts
+build/
+*.zip

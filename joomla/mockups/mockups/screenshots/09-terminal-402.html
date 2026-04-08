@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Screenshot 9 — Terminal 402 Response</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&family=Space+Grotesk:wght@300;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { display: flex; justify-content: center; align-items: center; padding: 0; background: #0a0a0a; }
+  .frame { min-height: 900px; width: 1544px; display: flex; justify-content: center; align-items: center; padding: 48px 40px; }
+
+  .content { max-width: 900px; width: 100%; }
+  .caption { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 500; color: #999; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .terminal { background: #111; border: 1px solid #1a1a1a; border-radius: 12px; overflow: hidden; }
+  .terminal-bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: #0e0e0e; border-bottom: 1px solid #1a1a1a; }
+  .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .terminal-dot.red { background: #f87171; }
+  .terminal-dot.yellow { background: #facc15; }
+  .terminal-dot.green { background: #4ade80; }
+  .terminal-title { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #666; margin-left: 8px; }
+
+  .terminal-body { padding: 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7; color: #f0f0f0; overflow-x: auto; }
+  .terminal-body pre { white-space: pre; }
+  .prompt { color: #4ade80; }
+  .cmd { color: #f0f0f0; }
+  .flag { color: #facc15; }
+  .string { color: #5a9fd4; }
+  .comment { color: #666; }
+  .status-line { color: #f0f0f0; }
+  .status-code { color: #facc15; font-weight: bold; }
+  .header-key { color: #999; }
+  .header-val { color: #f0f0f0; }
+  .json-key { color: #5a9fd4; }
+  .json-val { color: #f0f0f0; }
+  .json-str { color: #4ade80; }
+  .json-num { color: #facc15; }
+  .json-brace { color: #999; }
+  .blank-line { height: 1.7em; }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="content">
+    <div class="caption">What bots see when gated</div>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot red"></span>
+        <span class="terminal-dot yellow"></span>
+        <span class="terminal-dot green"></span>
+        <span class="terminal-title">Terminal</span>
+      </div>
+      <div class="terminal-body"><pre><span class="prompt">$</span> <span class="cmd">curl</span> <span class="flag">-sI</span> <span class="flag">-A</span> <span class="string">"Mozilla/5.0 AppleWebKit/537.36 (compatible; GPTBot/1.0)"</span> \
+  <span class="string">https://yoursite.com/blog/ai-payments-2026</span>
+
+<span class="status-line">HTTP/2 <span class="status-code">402</span> Payment Required</span>
+<span class="header-key">x-payment:</span> <span class="header-val">required</span>
+<span class="header-key">x-payment-network:</span> <span class="header-val">base</span>
+<span class="header-key">x-payment-asset:</span> <span class="header-val">USDC</span>
+<span class="header-key">x-payment-amount:</span> <span class="header-val">0.003</span>
+<span class="header-key">x-payment-address:</span> <span class="header-val">0x4f9e...a7c3</span>
+<span class="header-key">x-payment-verify:</span> <span class="header-val">https://api.xenarch.com/v1/verify</span>
+<span class="header-key">content-type:</span> <span class="header-val">application/json</span>
+
+<span class="json-brace">{</span>
+  <span class="json-key">"gate_id"</span>: <span class="json-str">"g_8f2a1c9e"</span>,
+  <span class="json-key">"price_usd"</span>: <span class="json-num">0.003</span>,
+  <span class="json-key">"network"</span>: <span class="json-str">"base"</span>,
+  <span class="json-key">"asset"</span>: <span class="json-str">"USDC"</span>,
+  <span class="json-key">"splitter"</span>: <span class="json-str">"0x4f9e...a7c3"</span>,
+  <span class="json-key">"verify"</span>: <span class="json-str">"https://api.xenarch.com/v1/verify"</span>
+<span class="json-brace">}</span></pre>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

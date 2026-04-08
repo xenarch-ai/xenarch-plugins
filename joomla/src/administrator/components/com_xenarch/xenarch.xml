@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="component" method="upgrade">
+    <name>Xenarch</name>
+    <version>1.0.0</version>
+    <creationDate>2026-04</creationDate>
+    <author>Xenarch</author>
+    <authorUrl>https://xenarch.com</authorUrl>
+    <license>GPL-2.0-or-later</license>
+    <description>Monetize AI bot traffic on your Joomla site via x402 micropayments.</description>
+
+    <namespace path="src">Xenarch\Component\Xenarch</namespace>
+
+    <install>
+        <sql><file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file></sql>
+    </install>
+    <uninstall>
+        <sql><file driver="mysql" charset="utf8">sql/uninstall.mysql.utf8.sql</file></sql>
+    </uninstall>
+
+    <scriptfile>script.php</scriptfile>
+
+    <files folder="src">
+        <folder>Extension</folder>
+        <folder>Controller</folder>
+        <folder>View</folder>
+        <folder>Helper</folder>
+    </files>
+
+    <media destination="com_xenarch" folder="../../../media/com_xenarch">
+        <file>joomla.asset.json</file>
+        <folder>js</folder>
+        <folder>css</folder>
+    </media>
+
+    <administration>
+        <files folder=".">
+            <filename>xenarch.xml</filename>
+            <filename>config.xml</filename>
+            <filename>access.xml</filename>
+            <filename>script.php</filename>
+            <folder>services</folder>
+            <folder>src</folder>
+            <folder>sql</folder>
+            <folder>tmpl</folder>
+        </files>
+        <menu>Xenarch</menu>
+    </administration>
+
+    <api>
+        <files folder="../../../api/components/com_xenarch">
+            <folder>src</folder>
+        </files>
+    </api>
+</extension>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+    <fieldset name="xenarch" label="Xenarch Settings">
+        <field name="api_key" type="text" label="API Key" default="" />
+        <field name="site_id" type="text" label="Site ID" default="" />
+        <field name="site_token" type="text" label="Site Token" default="" />
+        <field name="default_price" type="text" label="Default Price (USD)" default="0.003" />
+        <field name="payout_wallet" type="text" label="Payout Wallet" default="" />
+        <field name="gate_unknown_traffic" type="list" label="Gate Unknown Traffic" default="1">
+            <option value="1">Yes</option>
+            <option value="0">No</option>
+        </field>
+        <field name="gate_enabled" type="list" label="Gate Enabled" default="1">
+            <option value="1">Yes</option>
+            <option value="0">No</option>
+        </field>
+        <field name="bot_categories" type="textarea" label="Bot Categories (JSON)" default="{}" />
+        <field name="bot_overrides" type="textarea" label="Bot Overrides (JSON)" default="{}" />
+        <field name="pricing_rules" type="textarea" label="Pricing Rules (JSON)" default="[]" />
+        <field name="wallet_type" type="text" label="Wallet Type" default="" />
+        <field name="wallet_network" type="text" label="Wallet Network" default="base" />
+        <field name="browser_proof_secret" type="text" label="Browser Proof Secret" default="" />
+        <field name="email" type="text" label="Publisher Email" default="" />
+    </fieldset>
+</config>

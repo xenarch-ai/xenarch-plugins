@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xenarch WP Plugin — Earnings States</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&family=Space+Grotesk:wght@300;500;600&display=swap" rel="stylesheet">
+<style>
+  :root, [data-theme="dark"] {
+    /* Layer 0: page bg */
+    --bg: #0a0a0a;
+    /* Layer 1: main card */
+    --card: #111; --card-border: #1a1a1a;
+    /* Layer 2: inner elements */
+    --surface: #191919; --surface-border: #252525;
+    /* Inputs recessed into surfaces */
+    --input-bg: #111; --input-border: #252525; --input-focus: #444;
+    /* Text */
+    --fg: #f0f0f0; --secondary: #999; --muted: #666; --dim: #444;
+    /* Status */
+    --success: #4ade80; --success-hover: #5cef92; --success-bg: rgba(74,222,128,0.08); --success-border: rgba(74,222,128,0.15);
+    --error: #f87171; --error-bg: rgba(248,113,113,0.08);
+    --btn-primary-fg: #0a0a0a;
+    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23999' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  }
+  [data-theme="light"] {
+    --bg: #E8E4DF;
+    --card: #f5f2ee; --card-border: #d5d0ca;
+    --surface: #ece8e3; --surface-border: #d0ccc7;
+    --input-bg: #fff; --input-border: #d0ccc7; --input-focus: #999;
+    --fg: #1a1a1a; --secondary: #555; --muted: #888; --dim: #bbb;
+    --success: #16a34a; --success-hover: #15803d; --success-bg: rgba(22,163,74,0.08); --success-border: rgba(22,163,74,0.2);
+    --error: #dc2626; --error-bg: rgba(220,38,38,0.1);
+    --btn-primary-fg: #f0f0f0;
+    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23666' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: 'Inter', system-ui, sans-serif; font-size: 14px; line-height: 1.5; padding: 48px; display: flex; justify-content: center; }
+  .page { max-width: 760px; width: 100%; }
+  .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 24px; }
+  .header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .logo { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 300; line-height: 1.2; color: var(--fg); }
+  .version { font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1; color: var(--muted); background: var(--surface); padding: 5px 8px; border-radius: 4px; border: 1px solid var(--surface-border); }
+  .theme-toggle { margin-left: auto; background: none; border: none; padding: 4px; cursor: pointer; color: var(--muted); display: flex; align-items: center; justify-content: center; }
+  .theme-toggle:hover { color: var(--fg); }
+  [data-theme="dark"] .icon-moon, [data-theme="light"] .icon-sun { display: none; }
+  .subtitle { font-size: 13px; color: var(--secondary); margin-bottom: 24px; }
+  .tabs { display: flex; margin-bottom: 24px; border-bottom: 1px solid var(--card-border); }
+  .tab { font-size: 13px; color: var(--secondary); padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab.active { color: var(--fg); border-bottom-color: var(--fg); }
+  .tab:hover { color: var(--fg); }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 24px; }
+  .stat { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 10px; padding: 16px; }
+  .stat-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 400; line-height: 1.2; color: var(--fg); }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .wallet-row { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 10px; padding: 12px 20px; margin-bottom: 24px; }
+  .wallet-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+  .wallet-addr { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--fg); }
+  .wallet-bal { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--success); margin-left: auto; }
+  .badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-left: 8px; }
+  .badge-xenarch { color: var(--success); background: var(--success-bg); border: 1px solid var(--success-border); }
+  .badge-own { color: #5a9fd4; background: rgba(90,159,212,0.1); border: 1px solid rgba(90,159,212,0.2); }
+  .badge-connected { color: #5a9fd4; background: rgba(90,159,212,0.1); border: 1px solid rgba(90,159,212,0.2); }
+  .btn-withdraw { font-size: 13px; font-weight: 500; color: var(--fg); background: var(--surface-border); border: 1px solid var(--dim); border-radius: 6px; padding: 8px 16px; cursor: pointer; }
+  .btn-withdraw:hover { background: var(--dim); }
+  .withdraw-panel { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 10px; padding: 24px; margin-bottom: 24px; }
+  .withdraw-title { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; line-height: 1.2; color: var(--fg); margin-bottom: 4px; }
+  .withdraw-desc { font-size: 13px; color: var(--secondary); margin-bottom: 16px; }
+  .withdraw-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .withdraw-row label { font-size: 13px; color: var(--secondary); min-width: 80px; }
+  .withdraw-row input, .withdraw-row select { background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 6px; color: var(--fg); font-size: 13px; line-height: 1.4; padding: 8px 12px; }
+  .withdraw-row input:focus { outline: none; border-color: var(--input-focus); }
+  .withdraw-row input { flex: 1; font-family: 'JetBrains Mono', monospace; }
+  .withdraw-row select { min-width: 100px; font-family: 'Inter', sans-serif; appearance: none; -webkit-appearance: none; background-image: var(--select-arrow); background-repeat: no-repeat; background-position: right 10px center; padding-right: 32px; cursor: pointer; }
+  .withdraw-row .unit { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); }
+  .withdraw-actions { display: flex; gap: 8px; margin-top: 16px; }
+  .btn-send { font-size: 13px; font-weight: 500; background: var(--success); color: var(--btn-primary-fg); border: none; border-radius: 6px; padding: 8px 20px; cursor: pointer; }
+  .btn-send:hover { background: var(--success-hover); }
+  .btn-cancel { font-size: 13px; color: var(--secondary); background: none; border: 1px solid var(--surface-border); border-radius: 6px; padding: 8px 16px; cursor: pointer; }
+  .btn-cancel:hover { border-color: var(--dim); }
+  .withdraw-hint { font-size: 11px; color: var(--muted); margin-top: 8px; }
+  .btn-max { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success); background: none; border: 1px solid var(--success-border); border-radius: 4px; padding: 4px 8px; cursor: pointer; }
+  .breakdown { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 24px; }
+  .bd-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 8px; }
+  .bd-name { font-size: 12px; color: var(--secondary); }
+  .bd-amount { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--fg); }
+  .period-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .period-title { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; line-height: 1.2; color: var(--fg); }
+  .period-pills { display: flex; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 6px; overflow: hidden; }
+  .pill { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--secondary); padding: 4px 12px; cursor: pointer; border: none; background: none; }
+  .pill.active { background: var(--surface-border); color: var(--fg); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 400; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; padding: 8px 0; border-bottom: 1px solid var(--surface-border); }
+  td { padding: 8px 0; border-bottom: 1px solid var(--surface); color: var(--fg); }
+  td.path { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--secondary); max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  td.amount { font-family: 'JetBrains Mono', monospace; text-align: right; color: var(--success); }
+  td.agent { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--secondary); }
+  td.time { font-size: 12px; color: var(--muted); text-align: right; }
+  .tx-type { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight: 400; }
+  .tx-type.earn { background: var(--success-bg); color: var(--success); }
+  .tx-type.withdraw { background: var(--error-bg); color: var(--error); }
+  .more-row { text-align: center; padding: 16px 0; }
+  .btn-more { font-size: 13px; color: var(--secondary); background: none; border: 1px solid var(--surface-border); border-radius: 6px; padding: 8px 16px; cursor: pointer; }
+  .btn-more:hover { border-color: var(--dim); color: var(--fg); }
+
+  /* Cash out modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; }
+  .modal-static { position: relative; margin: 32px auto; }
+  .modal { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; width: 380px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 24px 24px 0; }
+  .modal-title { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; color: var(--fg); }
+  .modal-close { font-size: 18px; color: var(--muted); background: none; border: none; cursor: pointer; }
+  .modal-close:hover { color: var(--error); }
+  .modal-body { padding: 20px 24px; }
+  .modal-footer { color: var(--muted); font-size: 11px; text-align: center; padding: 12px 24px 16px; border-top: 1px solid var(--surface-border); }
+  .co-balance { font-size: 13px; color: var(--secondary); margin-bottom: 16px; }
+  .co-balance strong { color: var(--success); font-family: 'JetBrains Mono', monospace; }
+  .co-label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .co-amount-row { display: flex; gap: 8px; align-items: center; }
+  .co-input { flex: 1; padding: 10px 12px; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 6px; color: var(--fg); font-family: 'JetBrains Mono', monospace; font-size: 14px; outline: none; }
+  .co-input:focus { border-color: var(--input-focus); }
+  .co-btn-max { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; color: var(--success); background: transparent; border: 1px solid var(--surface-border); border-radius: 4px; padding: 6px 10px; cursor: pointer; }
+  .co-btn-max:hover { border-color: var(--success); }
+  .co-meta { margin: 16px 0; }
+  .co-meta-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--secondary); padding: 4px 0; }
+  .co-select { display: inline-flex; align-items: center; gap: 8px; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--fg); background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 6px; padding: 8px 12px; height: 38px; box-sizing: border-box; cursor: pointer; }
+  .co-select:hover { border-color: var(--dim); }
+  .co-select svg { color: var(--muted); flex-shrink: 0; }
+  .co-quote-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+  .co-quote-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--secondary); padding: 4px 0; }
+  .co-quote-row strong { font-family: 'JetBrains Mono', monospace; color: var(--fg); }
+  .co-btn { width: 100%; padding: 10px; margin-top: 12px; background: var(--success); color: var(--btn-primary-fg); border: none; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; }
+  .co-btn:hover { opacity: 0.85; }
+  .co-btn:disabled { background: var(--dim); color: var(--muted); cursor: not-allowed; opacity: 1; }
+  .co-btn--secondary { background: transparent; color: var(--secondary); border: 1px solid var(--surface-border); margin-top: 8px; }
+  .co-btn--secondary:hover { border-color: var(--dim); color: var(--fg); opacity: 1; }
+  .co-info { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 12px; }
+  .co-error { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--error); margin-top: 8px; }
+  .co-waiting-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--success); margin: 0 auto 16px; animation: co-pulse 1.5s ease-in-out infinite; }
+  @keyframes co-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
+  .co-center { text-align: center; padding: 24px 0; }
+  .co-success-title { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; margin-bottom: 8px; }
+
+  /* State labels */
+  .state-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; margin: 32px 0 16px; padding-top: 32px; border-top: 1px dashed var(--surface-border); }
+  .state-label:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+
+  /* Empty / message states */
+  .empty-state { text-align: center; padding: 48px 24px; }
+  .empty-state-title { font-size: 14px; color: var(--secondary); margin-bottom: 4px; }
+  .empty-state-desc { font-size: 13px; color: var(--muted); }
+
+  /* Skeleton loading */
+  @keyframes shimmer {
+    0% { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+  }
+  .skeleton {
+    background: linear-gradient(90deg, var(--surface) 25%, var(--surface-border) 50%, var(--surface) 75%);
+    background-size: 800px 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: 4px;
+  }
+  .skeleton-stat { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 10px; padding: 16px; }
+  .skeleton-line { height: 12px; margin-bottom: 8px; }
+  .skeleton-line-lg { height: 28px; margin-bottom: 8px; }
+  .skeleton-line-sm { height: 10px; width: 60%; }
+  .skeleton-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--surface); }
+  .skeleton-pill { width: 48px; height: 22px; border-radius: 4px; }
+  .skeleton-text { height: 12px; border-radius: 4px; }
+
+  /* Inline save status */
+  .save-status { font-family: 'JetBrains Mono', monospace; font-size: 11px; margin-bottom: 24px; }
+  .save-status.success { color: var(--success); }
+
+  /* Error state link */
+  .error-link { color: var(--secondary); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  .error-link:hover { color: var(--fg); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <span class="logo">/xenarch</span>
+    <span class="version">v1.0</span>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+      <svg class="icon-sun" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.5M8 13v1.5M2.75 2.75l1.06 1.06M12.19 12.19l1.06 1.06M1.5 8H3M13 8h1.5M2.75 13.25l1.06-1.06M12.19 3.81l1.06-1.06"/></svg>
+      <svg class="icon-moon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.2 9.5a5.5 5.5 0 01-7-7 5.5 5.5 0 106.7 6.7z"/></svg>
+    </button>
+  </div>
+  <p class="subtitle">Earnings tab — all possible states</p>
+
+  <!-- ============================================================ -->
+  <!-- STATE 1: Zero earnings -->
+  <!-- ============================================================ -->
+  <div class="state-label">State 1 — Zero earnings (just signed up)</div>
+  <div class="card">
+    <div class="tabs">
+      <div class="tab active">Earnings</div>
+      <div class="tab">Settings</div>
+      <div class="tab">Status</div>
+    </div>
+    <div class="wallet-row">
+      <span class="wallet-dot"></span>
+      <span class="wallet-addr">0x7a3f...c291</span>
+      <span class="badge badge-xenarch">xenarch wallet</span>
+      <span class="wallet-bal">$0.00 USDC</span>
+      <button class="btn-withdraw">Cash out</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Today</div><div class="stat-value">$0.00</div><div class="stat-sub">0 paid requests</div></div>
+      <div class="stat"><div class="stat-label">This month</div><div class="stat-value">$0.00</div><div class="stat-sub">0 paid requests</div></div>
+      <div class="stat"><div class="stat-label">All time</div><div class="stat-value">$0.00</div><div class="stat-sub">0 paid requests</div></div>
+    </div>
+    <!-- No category breakdown when all zeros -->
+    <div class="period-row"><span class="period-title">Transactions</span><div style="display:flex;gap:8px;"><div class="period-pills"><button class="pill active">All</button><button class="pill">Earned</button><button class="pill">Cashed</button></div><div class="period-pills"><button class="pill">24h</button><button class="pill active">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div></div>
+    <div class="empty-state">
+      <div class="empty-state-title">No paid requests yet</div>
+      <div class="empty-state-desc">When AI bots pay to access your content, transactions will appear here.</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- STATE 2: Loading -->
+  <!-- ============================================================ -->
+  <div class="state-label">State 2 — Loading</div>
+  <div class="card">
+    <div class="tabs">
+      <div class="tab active">Earnings</div>
+      <div class="tab">Settings</div>
+      <div class="tab">Status</div>
+    </div>
+    <div class="wallet-row">
+      <span class="wallet-dot"></span>
+      <span class="wallet-addr">0x7a3f...c291</span>
+      <span class="badge badge-xenarch">xenarch wallet</span>
+      <span class="wallet-bal">$891.05 USDC</span>
+      <button class="btn-withdraw">Cash out</button>
+    </div>
+    <div class="stats">
+      <div class="skeleton-stat"><div class="skeleton skeleton-line" style="width:50%;"></div><div class="skeleton skeleton-line-lg" style="width:70%;"></div><div class="skeleton skeleton-line-sm"></div></div>
+      <div class="skeleton-stat"><div class="skeleton skeleton-line" style="width:60%;"></div><div class="skeleton skeleton-line-lg" style="width:65%;"></div><div class="skeleton skeleton-line-sm"></div></div>
+      <div class="skeleton-stat"><div class="skeleton skeleton-line" style="width:45%;"></div><div class="skeleton skeleton-line-lg" style="width:55%;"></div><div class="skeleton skeleton-line-sm"></div></div>
+    </div>
+    <div class="period-row"><span class="period-title">Transactions</span><div style="display:flex;gap:8px;"><div class="period-pills"><button class="pill active">All</button><button class="pill">Earned</button><button class="pill">Cashed</button></div><div class="period-pills"><button class="pill">24h</button><button class="pill active">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div></div>
+    <div class="skeleton-row"><div class="skeleton skeleton-pill"></div><div class="skeleton skeleton-text" style="width:160px;"></div><div class="skeleton skeleton-text" style="width:80px;"></div><div class="skeleton skeleton-text" style="width:60px;margin-left:auto;"></div><div class="skeleton skeleton-text" style="width:50px;"></div></div>
+    <div class="skeleton-row"><div class="skeleton skeleton-pill"></div><div class="skeleton skeleton-text" style="width:140px;"></div><div class="skeleton skeleton-text" style="width:90px;"></div><div class="skeleton skeleton-text" style="width:55px;margin-left:auto;"></div><div class="skeleton skeleton-text" style="width:50px;"></div></div>
+    <div class="skeleton-row"><div class="skeleton skeleton-pill"></div><div class="skeleton skeleton-text" style="width:180px;"></div><div class="skeleton skeleton-text" style="width:70px;"></div><div class="skeleton skeleton-text" style="width:50px;margin-left:auto;"></div><div class="skeleton skeleton-text" style="width:50px;"></div></div>
+    <div class="skeleton-row"><div class="skeleton skeleton-pill"></div><div class="skeleton skeleton-text" style="width:120px;"></div><div class="skeleton skeleton-text" style="width:100px;"></div><div class="skeleton skeleton-text" style="width:65px;margin-left:auto;"></div><div class="skeleton skeleton-text" style="width:50px;"></div></div>
+    <div class="skeleton-row"><div class="skeleton skeleton-pill"></div><div class="skeleton skeleton-text" style="width:150px;"></div><div class="skeleton skeleton-text" style="width:85px;"></div><div class="skeleton skeleton-text" style="width:45px;margin-left:auto;"></div><div class="skeleton skeleton-text" style="width:50px;"></div></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- STATE 3: With data (normal) -->
+  <!-- ============================================================ -->
+  <div class="state-label">State 3 — With data (normal state)</div>
+  <div class="card">
+    <div class="tabs">
+      <div class="tab active">Earnings</div>
+      <div class="tab">Settings</div>
+      <div class="tab">Status</div>
+    </div>
+    <div class="wallet-row">
+      <span class="wallet-dot"></span>
+      <span class="wallet-addr">0x7a3f...c291</span>
+      <span class="badge badge-xenarch">xenarch wallet</span>
+      <span class="wallet-bal">$891.05 USDC</span>
+      <button class="btn-withdraw">Cash out</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Today</div><div class="stat-value">$4.72</div><div class="stat-sub">1,573 paid requests</div></div>
+      <div class="stat"><div class="stat-label">This month</div><div class="stat-value">$127.40</div><div class="stat-sub">42,467 paid requests</div></div>
+      <div class="stat"><div class="stat-label">All time</div><div class="stat-value">$891.05</div><div class="stat-sub">297,017 paid requests</div></div>
+    </div>
+    <div class="breakdown">
+      <div class="bd-item"><span class="bd-name">General AI</span><span class="bd-amount">$312.40</span></div>
+      <div class="bd-item"><span class="bd-name">AI Assistants</span><span class="bd-amount">$241.15</span></div>
+      <div class="bd-item"><span class="bd-name">AI Training</span><span class="bd-amount">$178.90</span></div>
+      <div class="bd-item"><span class="bd-name">AI Agents</span><span class="bd-amount">$89.30</span></div>
+      <div class="bd-item"><span class="bd-name">Scrapers</span><span class="bd-amount">$62.10</span></div>
+      <div class="bd-item"><span class="bd-name">AI Search</span><span class="bd-amount">$7.20</span></div>
+    </div>
+    <div class="period-row"><span class="period-title">Transactions</span><div style="display:flex;gap:8px;"><div class="period-pills"><button class="pill active">All</button><button class="pill">Earned</button><button class="pill">Cashed</button></div><div class="period-pills"><button class="pill">24h</button><button class="pill active">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div></div>
+    <table>
+      <thead><tr><th>Type</th><th>Page</th><th>Agent</th><th style="text-align:right;">Amount</th><th style="text-align:right;">Time</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/api-reference</td><td class="agent">GPTBot</td><td class="amount">+$0.01</td><td class="time">2 min ago</td></tr>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/getting-started</td><td class="agent">ClaudeBot</td><td class="amount">+$0.01</td><td class="time">4 min ago</td></tr>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/blog/ai-payments-2026</td><td class="agent">PerplexityBot</td><td class="amount">+$0.003</td><td class="time">7 min ago</td></tr>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/api/v2/endpoints</td><td class="agent">GPTBot</td><td class="amount">+$0.05</td><td class="time">12 min ago</td></tr>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/authentication</td><td class="agent">Google-Extended</td><td class="amount">+$0.01</td><td class="time">15 min ago</td></tr>
+        <tr><td><span class="tx-type withdraw">cash</span></td><td class="path" style="color:var(--error);">&rarr; 0x9b2e...f104</td><td class="agent">Base</td><td class="amount" style="color:var(--error);">-$250.00</td><td class="time">Mar 20</td></tr>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/blog/micropayments-guide</td><td class="agent">ClaudeBot</td><td class="amount">+$0.003</td><td class="time">Mar 20</td></tr>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/webhooks</td><td class="agent">xn_agent_7kf2m</td><td class="amount">+$0.01</td><td class="time">Mar 20</td></tr>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/api/v2/search</td><td class="agent">GPTBot</td><td class="amount">+$0.05</td><td class="time">Mar 19</td></tr>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/pricing</td><td class="agent">PerplexityBot</td><td class="amount">+$0.01</td><td class="time">Mar 19</td></tr>
+      </tbody>
+    </table>
+    <div class="more-row"><button class="btn-more">Load more</button></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- STATE 4: Transactions empty for selected period -->
+  <!-- ============================================================ -->
+  <div class="state-label">State 4 — Transactions empty for selected period</div>
+  <div class="card">
+    <div class="tabs">
+      <div class="tab active">Earnings</div>
+      <div class="tab">Settings</div>
+      <div class="tab">Status</div>
+    </div>
+    <div class="wallet-row">
+      <span class="wallet-dot"></span>
+      <span class="wallet-addr">0x7a3f...c291</span>
+      <span class="badge badge-xenarch">xenarch wallet</span>
+      <span class="wallet-bal">$891.05 USDC</span>
+      <button class="btn-withdraw">Cash out</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Today</div><div class="stat-value">$0.00</div><div class="stat-sub">0 paid requests</div></div>
+      <div class="stat"><div class="stat-label">This month</div><div class="stat-value">$127.40</div><div class="stat-sub">42,467 paid requests</div></div>
+      <div class="stat"><div class="stat-label">All time</div><div class="stat-value">$891.05</div><div class="stat-sub">297,017 paid requests</div></div>
+    </div>
+    <div class="breakdown">
+      <div class="bd-item"><span class="bd-name">General AI</span><span class="bd-amount">$312.40</span></div>
+      <div class="bd-item"><span class="bd-name">AI Assistants</span><span class="bd-amount">$241.15</span></div>
+      <div class="bd-item"><span class="bd-name">AI Training</span><span class="bd-amount">$178.90</span></div>
+      <div class="bd-item"><span class="bd-name">AI Agents</span><span class="bd-amount">$89.30</span></div>
+      <div class="bd-item"><span class="bd-name">Scrapers</span><span class="bd-amount">$62.10</span></div>
+      <div class="bd-item"><span class="bd-name">AI Search</span><span class="bd-amount">$7.20</span></div>
+    </div>
+    <div class="period-row"><span class="period-title">Transactions</span><div style="display:flex;gap:8px;"><div class="period-pills"><button class="pill active">All</button><button class="pill">Earned</button><button class="pill">Cashed</button></div><div class="period-pills"><button class="pill active">24h</button><button class="pill">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div></div>
+    <div class="empty-state">
+      <div class="empty-state-desc">No transactions for this period</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- STATE 5: API error -->
+  <!-- ============================================================ -->
+  <div class="state-label">State 5 — API error</div>
+  <div class="card">
+    <div class="tabs">
+      <div class="tab active">Earnings</div>
+      <div class="tab">Settings</div>
+      <div class="tab">Status</div>
+    </div>
+    <div class="wallet-row">
+      <span class="wallet-dot"></span>
+      <span class="wallet-addr">0x7a3f...c291</span>
+      <span class="badge badge-xenarch">xenarch wallet</span>
+      <span class="wallet-bal">$891.05 USDC</span>
+      <button class="btn-withdraw">Cash out</button>
+    </div>
+    <div class="empty-state" style="padding: 64px 24px;">
+      <div class="empty-state-title">Couldn't load earnings data</div>
+      <div class="empty-state-desc">Check your connection and <a class="error-link">try again</a>.</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- STATE 6: Cash out success -->
+  <!-- ============================================================ -->
+  <div class="state-label">State 6 — Cash out success</div>
+  <div class="card">
+    <div class="tabs">
+      <div class="tab active">Earnings</div>
+      <div class="tab">Settings</div>
+      <div class="tab">Status</div>
+    </div>
+    <div class="save-status success">&#x2713; cash out initiated — processing via Coinbase</div>
+    <div class="wallet-row">
+      <span class="wallet-dot"></span>
+      <span class="wallet-addr">0x7a3f...c291</span>
+      <span class="badge badge-xenarch">xenarch wallet</span>
+      <span class="wallet-bal">$641.05 USDC</span>
+      <button class="btn-withdraw">Cash out</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Today</div><div class="stat-value">$4.72</div><div class="stat-sub">1,573 paid requests</div></div>
+      <div class="stat"><div class="stat-label">This month</div><div class="stat-value">$127.40</div><div class="stat-sub">42,467 paid requests</div></div>
+      <div class="stat"><div class="stat-label">All time</div><div class="stat-value">$891.05</div><div class="stat-sub">297,017 paid requests</div></div>
+    </div>
+    <div class="breakdown">
+      <div class="bd-item"><span class="bd-name">General AI</span><span class="bd-amount">$312.40</span></div>
+      <div class="bd-item"><span class="bd-name">AI Assistants</span><span class="bd-amount">$241.15</span></div>
+      <div class="bd-item"><span class="bd-name">AI Training</span><span class="bd-amount">$178.90</span></div>
+      <div class="bd-item"><span class="bd-name">AI Agents</span><span class="bd-amount">$89.30</span></div>
+      <div class="bd-item"><span class="bd-name">Scrapers</span><span class="bd-amount">$62.10</span></div>
+      <div class="bd-item"><span class="bd-name">AI Search</span><span class="bd-amount">$7.20</span></div>
+    </div>
+    <div class="period-row"><span class="period-title">Transactions</span><div style="display:flex;gap:8px;"><div class="period-pills"><button class="pill active">All</button><button class="pill">Earned</button><button class="pill">Cashed</button></div><div class="period-pills"><button class="pill">24h</button><button class="pill active">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div></div>
+    <table>
+      <thead><tr><th>Type</th><th>Page</th><th>Agent</th><th style="text-align:right;">Amount</th><th style="text-align:right;">Time</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tx-type withdraw">cash</span></td><td class="path" style="color:var(--error);">&rarr; 0x9b2e...f104</td><td class="agent">Base</td><td class="amount" style="color:var(--error);">-$250.00</td><td class="time">Just now</td></tr>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/api-reference</td><td class="agent">GPTBot</td><td class="amount">+$0.01</td><td class="time">2 min ago</td></tr>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/getting-started</td><td class="agent">ClaudeBot</td><td class="amount">+$0.01</td><td class="time">4 min ago</td></tr>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/blog/ai-payments-2026</td><td class="agent">PerplexityBot</td><td class="amount">+$0.003</td><td class="time">7 min ago</td></tr>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/api/v2/endpoints</td><td class="agent">GPTBot</td><td class="amount">+$0.05</td><td class="time">12 min ago</td></tr>
+      </tbody>
+    </table>
+    <div class="more-row"><button class="btn-more">Load more</button></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- STATE 7: Own wallet (no cash out) -->
+  <!-- ============================================================ -->
+  <div class="state-label">State 7 — Own wallet (no cash out)</div>
+  <div class="card">
+    <div class="tabs">
+      <div class="tab active">Earnings</div>
+      <div class="tab">Settings</div>
+      <div class="tab">Status</div>
+    </div>
+    <div class="wallet-row">
+      <span class="wallet-dot"></span>
+      <span class="wallet-addr">0x9b2e...f104</span>
+      <span class="badge badge-own">your wallet</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Today</div><div class="stat-value">$4.72</div><div class="stat-sub">1,573 paid requests</div></div>
+      <div class="stat"><div class="stat-label">This month</div><div class="stat-value">$127.40</div><div class="stat-sub">42,467 paid requests</div></div>
+      <div class="stat"><div class="stat-label">All time</div><div class="stat-value">$891.05</div><div class="stat-sub">297,017 paid requests</div></div>
+    </div>
+    <div class="breakdown">
+      <div class="bd-item"><span class="bd-name">General AI</span><span class="bd-amount">$312.40</span></div>
+      <div class="bd-item"><span class="bd-name">AI Assistants</span><span class="bd-amount">$241.15</span></div>
+      <div class="bd-item"><span class="bd-name">AI Training</span><span class="bd-amount">$178.90</span></div>
+      <div class="bd-item"><span class="bd-name">AI Agents</span><span class="bd-amount">$89.30</span></div>
+      <div class="bd-item"><span class="bd-name">Scrapers</span><span class="bd-amount">$62.10</span></div>
+      <div class="bd-item"><span class="bd-name">AI Search</span><span class="bd-amount">$7.20</span></div>
+    </div>
+    <div class="period-row"><span class="period-title">Transactions</span><div style="display:flex;gap:8px;"><div class="period-pills"><button class="pill">24h</button><button class="pill active">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div></div>
+    <table>
+      <thead><tr><th>Type</th><th>Page</th><th>Agent</th><th style="text-align:right;">Amount</th><th style="text-align:right;">Time</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/api-reference</td><td class="agent">GPTBot</td><td class="amount">+$0.01</td><td class="time">2 min ago</td></tr>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/getting-started</td><td class="agent">ClaudeBot</td><td class="amount">+$0.01</td><td class="time">4 min ago</td></tr>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/blog/ai-payments-2026</td><td class="agent">PerplexityBot</td><td class="amount">+$0.003</td><td class="time">7 min ago</td></tr>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/api/v2/endpoints</td><td class="agent">GPTBot</td><td class="amount">+$0.05</td><td class="time">12 min ago</td></tr>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/authentication</td><td class="agent">Google-Extended</td><td class="amount">+$0.01</td><td class="time">15 min ago</td></tr>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/blog/micropayments-guide</td><td class="agent">ClaudeBot</td><td class="amount">+$0.003</td><td class="time">Mar 20</td></tr>
+        <tr><td><span class="tx-type earn">earn</span></td><td class="path">/docs/webhooks</td><td class="agent">xn_agent_7kf2m</td><td class="amount">+$0.01</td><td class="time">Mar 20</td></tr>
+      </tbody>
+    </table>
+    <div class="more-row"><button class="btn-more">Load more</button></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- CASH OUT MODAL STATES -->
+  <!-- ============================================================ -->
+
+  <div class="state-label">Cash out modal — Form</div>
+  <div class="modal-static">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Cash out</div>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="co-balance">Balance: <strong>$891.05 USDC</strong></div>
+        <label class="co-label">Amount (USDC)</label>
+        <div class="co-amount-row">
+          <input type="text" class="co-input" value="250">
+          <button class="co-btn-max">MAX</button>
+        </div>
+        <div class="co-meta">
+          <div class="co-meta-row">
+            <span>Country</span>
+            <div class="co-select">Czechia <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 5l3 3 3-3"/></svg></div>
+          </div>
+          <div class="co-meta-row">
+            <span>Destination</span>
+            <div class="co-select">Coinbase balance <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 5l3 3 3-3"/></svg></div>
+          </div>
+          <div class="co-meta-row co-info">Min $2 &middot; Max $1000000</div>
+        </div>
+        <button class="co-btn">Get quote</button>
+      </div>
+      <div class="modal-footer">Secured by Coinbase</div>
+    </div>
+  </div>
+
+  <div class="state-label">Cash out modal — Quote</div>
+  <div class="modal-static">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Cash out</div>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="co-quote-card">
+          <div class="co-quote-row"><span>You sell</span><strong>250 USDC</strong></div>
+          <div class="co-quote-row"><span>You receive</span><strong>$248.75 USD</strong></div>
+          <div class="co-quote-row"><span>Fees</span><span>$1.25</span></div>
+        </div>
+        <button class="co-btn">Continue to Coinbase</button>
+        <button class="co-btn co-btn--secondary">Back</button>
+      </div>
+      <div class="modal-footer">Secured by Coinbase</div>
+    </div>
+  </div>
+
+  <div class="state-label">Cash out modal — Redirected (waiting)</div>
+  <div class="modal-static">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Cash out</div>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="co-center">
+          <div class="co-waiting-dot"></div>
+          <div class="co-success-title">Complete your cash out on Coinbase</div>
+          <div class="co-info">This page will update when done. If you've already finished:</div>
+          <button class="co-btn">I'm done</button>
+        </div>
+      </div>
+      <div class="modal-footer">Secured by Coinbase</div>
+    </div>
+  </div>
+
+  <div class="state-label">Cash out modal — Error</div>
+  <div class="modal-static">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Cash out</div>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="co-center">
+          <div class="co-error">Cash out is temporarily unavailable. Please try again later.</div>
+          <button class="co-btn co-btn--secondary">Try again</button>
+          <button class="co-btn co-btn--secondary">Close</button>
+        </div>
+      </div>
+      <div class="modal-footer">Secured by Coinbase</div>
+    </div>
+  </div>
+
+</div>
+<script>
+function toggleTheme() { var h = document.documentElement; h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
+</script>
+</body>
+</html>

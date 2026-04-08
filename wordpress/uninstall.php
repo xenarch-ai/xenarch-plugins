@@ -9,7 +9,12 @@
  * @package Xenarch
  */
 
-// Prevent direct file access and ensure this is a legitimate uninstall.
+// Prevent direct file access.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+// Ensure this is a legitimate uninstall.
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
