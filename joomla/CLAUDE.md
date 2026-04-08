@@ -68,7 +68,7 @@ Deploy: Copy `admin-ui/dist/` to `src/media/com_xenarch/js/` and `css/`
 
 - Docker: `docker compose up -d` (MySQL 8 + Joomla 5.4)
 - Domain: `joomla-gate.xenarch.dev`
-- Same Hetzner VPS as WordPress test server (5.78.183.39)
+- Same Hetzner VPS as WordPress test server (see secrets.md for IP)
 - Port: 8889 (nginx reverse proxy)
 
 ## Build Package
