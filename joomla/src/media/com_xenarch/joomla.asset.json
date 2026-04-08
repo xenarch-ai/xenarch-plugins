@@ -1,0 +1,22 @@
+{
+    "$schema": "https://developer.joomla.org/schemas/json-schema/web_assets.json",
+    "name": "com_xenarch",
+    "version": "1.0.0",
+    "description": "Xenarch admin assets",
+    "license": "GPL-2.0-or-later",
+    "assets": [
+        {
+            "name": "com_xenarch.admin",
+            "type": "script",
+            "uri": "com_xenarch/js/xenarch-admin.js",
+            "attributes": {
+                "type": "module"
+            }
+        },
+        {
+            "name": "com_xenarch.admin",
+            "type": "style",
+            "uri": "com_xenarch/css/xenarch-admin.css"
+        }
+    ]
+}

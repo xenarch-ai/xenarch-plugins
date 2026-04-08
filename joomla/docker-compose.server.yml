@@ -1,0 +1,40 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: a7f2c91d8e4b3f6a0523d
+      MYSQL_DATABASE: joomla
+      MYSQL_USER: joomla
+      MYSQL_PASSWORD: b8e3d4f5a6c71290e83d
+    volumes:
+      - db_data:/var/lib/mysql
+
+  joomla:
+    image: joomla:5.2-php8.3-apache
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      JOOMLA_DB_HOST: db
+      JOOMLA_DB_USER: joomla
+      JOOMLA_DB_PASSWORD: b8e3d4f5a6c71290e83d
+      JOOMLA_DB_NAME: joomla
+    volumes:
+      - joomla_data:/var/www/html
+      - ./src/administrator/components/com_xenarch:/var/www/html/administrator/components/com_xenarch
+      - ./src/api/components/com_xenarch:/var/www/html/api/components/com_xenarch
+      - ./src/media/com_xenarch:/var/www/html/media/com_xenarch
+      - ./src/plugins/system/xenarch:/var/www/html/plugins/system/xenarch
+      - ./src/plugins/webservices/xenarch:/var/www/html/plugins/webservices/xenarch
+    networks:
+      - default
+      - kamal
+
+volumes:
+  db_data:
+  joomla_data:
+
+networks:
+  kamal:
+    external: true

@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xenarch WP Plugin — Settings States</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&family=Space+Grotesk:wght@300;500;600&display=swap" rel="stylesheet">
+<style>
+  :root, [data-theme="dark"] {
+    /* Layer 0: page bg */
+    --bg: #0a0a0a;
+    /* Layer 1: main card */
+    --card: #111; --card-border: #1a1a1a;
+    /* Layer 2: inner elements (category rows, wallet cards, pricing rules) */
+    --surface: #191919; --surface-border: #252525;
+    /* Inputs recessed into surfaces */
+    --input-bg: #111; --input-border: #252525; --input-focus: #444;
+    /* Text */
+    --fg: #f0f0f0; --secondary: #999; --muted: #666; --dim: #444;
+    /* Status */
+    --success: #4ade80; --success-hover: #5cef92; --success-bg: rgba(74,222,128,0.08); --success-border: rgba(74,222,128,0.15); --error: #f87171;
+    /* Buttons */
+    --btn-primary-bg: #f0f0f0; --btn-primary-fg: #0a0a0a; --btn-primary-hover: #fff;
+    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23999' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    --overlay: rgba(0,0,0,0.6);
+  }
+  [data-theme="light"] {
+    --bg: #E8E4DF;
+    --card: #f5f2ee; --card-border: #d5d0ca;
+    --surface: #ece8e3; --surface-border: #d0ccc7;
+    --input-bg: #fff; --input-border: #d0ccc7; --input-focus: #999;
+    --fg: #1a1a1a; --secondary: #555; --muted: #888; --dim: #bbb;
+    --success: #16a34a; --success-hover: #15803d; --success-bg: rgba(22,163,74,0.08); --success-border: rgba(22,163,74,0.2); --error: #dc2626;
+    --btn-primary-bg: #1a1a1a; --btn-primary-fg: #f0f0f0; --btn-primary-hover: #333;
+    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23666' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    --overlay: rgba(0,0,0,0.35);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: 'Inter', system-ui, sans-serif; font-size: 14px; line-height: 1.5; padding: 48px; display: flex; justify-content: center; }
+  .page { max-width: 760px; width: 100%; }
+  .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 24px; }
+  .header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .theme-toggle { margin-left: auto; background: none; border: none; padding: 4px; cursor: pointer; color: var(--muted); display: flex; align-items: center; justify-content: center; }
+  .theme-toggle:hover { color: var(--fg); }
+  [data-theme="dark"] .icon-moon, [data-theme="light"] .icon-sun { display: none; }
+  .logo { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 300; line-height: 1.2; color: var(--fg); }
+  .version { font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1; color: var(--muted); background: var(--surface); padding: 5px 8px; border-radius: 4px; border: 1px solid var(--surface-border); }
+  .subtitle { font-size: 13px; color: var(--secondary); margin-bottom: 24px; }
+  .tabs { display: flex; margin-bottom: 24px; border-bottom: 1px solid var(--card-border); }
+  .tab { font-size: 13px; color: var(--secondary); padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab.active { color: var(--fg); border-bottom-color: var(--fg); }
+  .tab:hover { color: var(--fg); }
+  .section { padding-top: 24px; margin-bottom: 24px; }
+  .section + .section { border-top: 1px solid var(--card-border); }
+  .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; line-height: 1.2; color: var(--fg); margin-bottom: 4px; }
+  .section-desc { font-size: 13px; color: var(--secondary); margin-bottom: 16px; }
+  .row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .row label { font-size: 13px; color: var(--secondary); min-width: 100px; }
+  .symbol { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--secondary); }
+  .unit { font-size: 11px; color: var(--muted); }
+  .hint { font-size: 11px; color: var(--muted); margin: 4px 0 0 112px; }
+  input[type="text"] { background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 6px; color: var(--fg); font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.4; padding: 8px 12px; height: 38px; box-sizing: border-box; }
+  input[type="text"]:focus { outline: none; border-color: var(--input-focus); }
+  input[type="text"]::placeholder { color: var(--muted); }
+  select { background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 6px; color: var(--fg); font-family: 'Inter', sans-serif; font-size: 13px; padding: 8px 32px 8px 12px; height: 38px; box-sizing: border-box; appearance: none; -webkit-appearance: none; background-image: var(--select-arrow); background-repeat: no-repeat; background-position: right 10px center; cursor: pointer; }
+  input.price { width: 80px; text-align: right; }
+  input.path { flex: 1; }
+  input.wallet { flex: 1; }
+
+  /* Master toggle */
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .toggle-label { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; line-height: 1.2; color: var(--fg); }
+  .toggle-desc { font-size: 13px; color: var(--secondary); margin-top: 4px; }
+  .toggle { width: 44px; height: 24px; background: var(--success); border-radius: 12px; position: relative; cursor: pointer; flex-shrink: 0; }
+  .toggle .dot { width: 18px; height: 18px; background: white; border-radius: 50%; position: absolute; top: 3px; left: 23px; }
+  .toggle.off { background: var(--dim); }
+  .toggle.off .dot { left: 3px; }
+
+  /* Bot type rows */
+  .bot-type { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 8px; margin-bottom: 6px; cursor: pointer; transition: border-color 0.15s; }
+  .bot-type:hover { border-color: var(--dim); }
+  .bot-type.dimmed { opacity: 0.55; }
+  .bot-type.disabled { opacity: 0.4; pointer-events: none; }
+  .cat-toggle { width: 36px; height: 20px; border-radius: 10px; position: relative; flex-shrink: 0; }
+  .cat-toggle.on { background: var(--success); }
+  .cat-toggle.off { background: var(--dim); }
+  .cat-toggle .cat-dot { width: 14px; height: 14px; background: white; border-radius: 50%; position: absolute; top: 3px; }
+  .cat-toggle.on .cat-dot { left: 19px; }
+  .cat-toggle.off .cat-dot { left: 3px; }
+  .cat-info { flex: 1; min-width: 0; }
+  .cat-name { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 500; line-height: 1.3; color: var(--fg); }
+  .cat-desc { font-size: 12px; color: var(--secondary); line-height: 1.3; }
+  .cat-total { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); flex-shrink: 0; }
+  .cat-stat { font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; white-space: nowrap; }
+  .cat-stat.off { color: var(--muted); }
+  .cat-stat.on { color: var(--success); }
+  .cat-chevron { font-size: 16px; color: var(--dim); flex-shrink: 0; }
+  .always-note { font-size: 11px; color: var(--muted); margin-top: 10px; }
+
+  /* Pricing */
+  .rule { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 8px; margin-bottom: 8px; }
+  .rule .grip { font-size: 12px; color: var(--dim); cursor: grab; }
+  .rule .match { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--secondary); min-width: 65px; }
+  .rule .arrow { font-size: 12px; color: var(--dim); }
+  .rule .dollar { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--secondary); }
+  .rule .remove { font-size: 14px; color: var(--dim); border: none; background: none; cursor: pointer; padding: 4px 8px; }
+  .rule .remove:hover { color: var(--error); }
+  .btn-add { font-size: 13px; color: var(--secondary); background: none; border: 1px solid var(--surface-border); border-radius: 6px; padding: 8px 16px; cursor: pointer; margin-top: 8px; }
+  .btn-add:hover { border-color: var(--dim); color: var(--fg); }
+  .path-suggest { position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: var(--card); border: 1px solid var(--card-border); border-radius: 8px; overflow: hidden; z-index: 10; }
+  .suggest-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; }
+  .suggest-item:hover { background: var(--surface); }
+  .suggest-path { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--fg); }
+  .suggest-title { font-size: 12px; color: var(--muted); }
+
+  /* Wallet — configured phase */
+  .wallet-configured { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 10px; padding: 16px 20px; }
+  .wallet-address-display { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--fg); }
+  .wallet-badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-left: 8px; }
+  .wallet-badge.own { color: #5a9fd4; background: rgba(90,159,212,0.1); border: 1px solid rgba(90,159,212,0.2); }
+  .wallet-badge.xenarch { color: var(--success); background: var(--success-bg); border: 1px solid var(--success-border); }
+  .wallet-note { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .wallet-change { font-size: 12px; color: var(--secondary); background: none; border: none; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+  .wallet-change:hover { color: var(--fg); }
+  .wallet-change.disabled { color: var(--dim); cursor: not-allowed; pointer-events: none; text-decoration: none; }
+
+  /* Wallet options (setup / change phase) */
+  .wallet-options { display: flex; gap: 8px; margin-bottom: 16px; }
+  .wallet-opt { flex: 1; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 8px; padding: 14px 12px; cursor: pointer; text-align: center; transition: border-color 0.15s; }
+  .wallet-opt:hover { border-color: var(--dim); }
+  .wallet-opt-title { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 500; color: var(--fg); line-height: 1.3; }
+  .wallet-opt-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* Ghost text for empty pricing */
+  .ghost-text { font-size: 13px; color: var(--muted); font-style: italic; padding: 12px 0; }
+
+  /* Toast notifications */
+
+  /* Skeleton loading */
+  @keyframes shimmer {
+    0% { background-position: -200px 0; }
+    100% { background-position: 200px 0; }
+  }
+  .skeleton { background: linear-gradient(90deg, var(--surface) 25%, var(--surface-border) 50%, var(--surface) 75%); background-size: 400px 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+  .skeleton-toggle { width: 36px; height: 20px; border-radius: 10px; }
+  .skeleton-text { height: 13px; border-radius: 3px; }
+  .skeleton-text.w-100 { width: 100px; }
+  .skeleton-text.w-180 { width: 180px; }
+  .skeleton-text.w-60 { width: 60px; }
+  .skeleton-stat { width: 70px; height: 11px; border-radius: 3px; }
+
+  /* State labels */
+  .state-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; margin: 32px 0 16px; padding-top: 32px; border-top: 1px dashed var(--surface-border); }
+  .state-label:first-of-type { border-top: none; padding-top: 0; margin-top: 24px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <span class="logo">/xenarch</span>
+    <span class="version">v1.0</span>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+      <svg class="icon-sun" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.5M8 13v1.5M2.75 2.75l1.06 1.06M12.19 12.19l1.06 1.06M1.5 8H3M13 8h1.5M2.75 13.25l1.06-1.06M12.19 3.81l1.06-1.06"/></svg>
+      <svg class="icon-moon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.2 9.5a5.5 5.5 0 01-7-7 5.5 5.5 0 106.7 6.7z"/></svg>
+    </button>
+  </div>
+  <p class="subtitle">All possible settings states, stacked for review.</p>
+  <div class="tabs">
+    <div class="tab">Earnings</div>
+    <div class="tab active">Settings</div>
+    <div class="tab">Status</div>
+  </div>
+
+
+  <!-- ============================================================ -->
+  <div class="state-label">State 1 — Master ON, all defaults</div>
+  <!-- ============================================================ -->
+  <div class="card">
+
+    <!-- Gate -->
+    <div class="section">
+      <div class="toggle-row">
+        <div><div class="toggle-label">Gate AI bots</div><div class="toggle-desc">All non-human traffic must pay unless allowed below</div></div>
+        <div class="toggle"><div class="dot"></div></div>
+      </div>
+
+      <div class="bot-type">
+        <div class="cat-toggle off"><div class="cat-dot"></div></div>
+        <div class="cat-info"><div class="cat-name">AI Search</div><div class="cat-desc">Index your site so AI can recommend it</div></div>
+        <span class="cat-stat off">16 allowed</span>
+        <span class="cat-chevron">&rsaquo;</span>
+      </div>
+      <div class="bot-type">
+        <div class="cat-toggle on"><div class="cat-dot"></div></div>
+        <div class="cat-info"><div class="cat-name">AI Assistants</div><div class="cat-desc">Users asking AI about your content</div></div>
+        <span class="cat-stat on">10 gated</span>
+        <span class="cat-chevron">&rsaquo;</span>
+      </div>
+      <div class="bot-type">
+        <div class="cat-toggle on"><div class="cat-dot"></div></div>
+        <div class="cat-info"><div class="cat-name">AI Agents</div><div class="cat-desc">Autonomous AI performing tasks on your site</div></div>
+        <span class="cat-stat on">8 gated</span>
+        <span class="cat-chevron">&rsaquo;</span>
+      </div>
+      <div class="bot-type">
+        <div class="cat-toggle on"><div class="cat-dot"></div></div>
+        <div class="cat-info"><div class="cat-name">AI Training</div><div class="cat-desc">Crawlers collecting data for model training</div></div>
+        <span class="cat-stat on">13 gated</span>
+        <span class="cat-chevron">&rsaquo;</span>
+      </div>
+      <div class="bot-type">
+        <div class="cat-toggle on"><div class="cat-dot"></div></div>
+        <div class="cat-info"><div class="cat-name">Scrapers</div><div class="cat-desc">Automated data extraction tools</div></div>
+        <span class="cat-stat on">43 gated</span>
+        <span class="cat-chevron">&rsaquo;</span>
+      </div>
+      <div class="bot-type">
+        <div class="cat-toggle on"><div class="cat-dot"></div></div>
+        <div class="cat-info"><div class="cat-name">General AI</div><div class="cat-desc">Other AI crawlers with mixed or unclear intent</div></div>
+        <span class="cat-stat on">32 gated</span>
+        <span class="cat-chevron">&rsaquo;</span>
+      </div>
+
+      <p class="always-note">Search engines (Google, Bing) and social previews (Twitter, LinkedIn) always pass through free.</p>
+    </div>
+
+    <!-- Pricing -->
+    <div class="section">
+      <div class="section-title">Pricing</div>
+      <div class="section-desc">How much bots pay per page. Add rules for specific paths.</div>
+      <div class="row"><label>Default price</label><span class="symbol">$</span><input type="text" class="price" value="0.003"><span class="unit">per page</span></div>
+    </div>
+
+    <!-- Wallet -->
+    <div class="section">
+      <div class="section-title">Wallet</div>
+      <div class="wallet-configured">
+        <div>
+          <div><span class="wallet-address-display">0x9b2e...f104</span><span class="wallet-badge own">your wallet</span></div>
+          <div class="wallet-note">Settled on-chain via splitter contract. No funds held by Xenarch.</div>
+        </div>
+        <button class="wallet-change">Change</button>
+      </div>
+    </div>
+
+  </div><!-- /card -->
+
+
+  <!-- ============================================================ -->
+  <div class="state-label">State 2 — Master OFF</div>
+  <!-- ============================================================ -->
+  <div class="card">
+
+    <!-- Gate -->
+    <div class="section">
+      <div class="toggle-row">
+        <div><div class="toggle-label">Gate AI bots</div><div class="toggle-desc">All non-human traffic must pay unless allowed below</div></div>
+        <div class="toggle off"><div class="dot"></div></div>
+      </div>
+
+      <div class="bot-type disabled">
+        <div class="cat-toggle off"><div class="cat-dot"></div></div>
+        <div class="cat-info"><div class="cat-name">AI Search</div><div class="cat-desc">Index your site so AI can recommend it</div></div>
+        <span class="cat-stat off">16 allowed</span>
+        <span class="cat-chevron">&rsaquo;</span>
+      </div>
+      <div class="bot-type disabled">
+        <div class="cat-toggle off"><div class="cat-dot"></div></div>
+        <div class="cat-info"><div class="cat-name">AI Assistants</div><div class="cat-desc">Users asking AI about your content</div></div>
+        <span class="cat-stat off">10 allowed</span>
+        <span class="cat-chevron">&rsaquo;</span>
+      </div>
+      <div class="bot-type disabled">
+        <div class="cat-toggle off"><div class="cat-dot"></div></div>
+        <div class="cat-info"><div class="cat-name">AI Agents</div><div class="cat-desc">Autonomous AI performing tasks on your site</div></div>
+        <span class="cat-stat off">8 allowed</span>
+        <span class="cat-chevron">&rsaquo;</span>
+      </div>
+      <div class="bot-type disabled">
+        <div class="cat-toggle off"><div class="cat-dot"></div></div>
+        <div class="cat-info"><div class="cat-name">AI Training</div><div class="cat-desc">Crawlers collecting data for model training</div></div>
+        <span class="cat-stat off">13 allowed</span>
+        <span class="cat-chevron">&rsaquo;</span>
+      </div>
+      <div class="bot-type disabled">
+        <div class="cat-toggle off"><div class="cat-dot"></div></div>
+        <div class="cat-info"><div class="cat-name">Scrapers</div><div class="cat-desc">Automated data extraction tools</div></div>
+        <span class="cat-stat off">43 allowed</span>
+        <span class="cat-chevron">&rsaquo;</span>
+      </div>
+      <div class="bot-type disabled">
+        <div class="cat-toggle off"><div class="cat-dot"></div></div>
+        <div class="cat-info"><div class="cat-name">General AI</div><div class="cat-desc">Other AI crawlers with mixed or unclear intent</div></div>
+        <span class="cat-stat off">32 allowed</span>
+        <span class="cat-chevron">&rsaquo;</span>
+      </div>
+
+      <p class="always-note">Search engines (Google, Bing) and social previews (Twitter, LinkedIn) always pass through free.</p>
+    </div>
+
+    <!-- Pricing -->
+    <div class="section">
+      <div class="section-title">Pricing</div>
+      <div class="section-desc">How much bots pay per page. Add rules for specific paths.</div>
+      <div class="row"><label>Default price</label><span class="symbol">$</span><input type="text" class="price" value="0.003"><span class="unit">per page</span></div>
+    </div>
+
+    <!-- Wallet -->
+    <div class="section">
+      <div class="section-title">Wallet</div>
+      <div class="wallet-configured">
+        <div>
+          <div><span class="wallet-address-display">0x9b2e...f104</span><span class="wallet-badge own">your wallet</span></div>
+          <div class="wallet-note">Settled on-chain via splitter contract. No funds held by Xenarch.</div>
+        </div>
+        <button class="wallet-change">Change</button>
+      </div>
+    </div>
+
+  </div><!-- /card -->
+
+
+  <!-- ============================================================ -->
+  <div class="state-label">State 3 — Category with overrides</div>
+  <!-- ============================================================ -->
+  <div class="card">
+
+    <!-- Gate (only gate section shown for this state) -->
+    <div class="section">
+      <div class="toggle-row">
+        <div><div class="toggle-label">Gate AI bots</div><div class="toggle-desc">All non-human traffic must pay unless allowed below</div></div>
+        <div class="toggle"><div class="dot"></div></div>
+      </div>
+
+      <div class="bot-type">
+        <div class="cat-toggle off"><div class="cat-dot"></div></div>
+        <div class="cat-info"><div class="cat-name">AI Search</div><div class="cat-desc">Index your site so AI can recommend it</div></div>
+        <span class="cat-stat off">16 allowed</span>
+        <span class="cat-chevron">&rsaquo;</span>
+      </div>
+      <div class="bot-type">
+        <div class="cat-toggle on"><div class="cat-dot"></div></div>
+        <div class="cat-info"><div class="cat-name">AI Assistants</div><div class="cat-desc">Users asking AI about your content</div></div>
+        <span class="cat-total">10 bots</span>
+        <span class="cat-stat on">8 gated</span>
+        <span class="cat-chevron">&rsaquo;</span>
+      </div>
+      <div class="bot-type">
+        <div class="cat-toggle on"><div class="cat-dot"></div></div>
+        <div class="cat-info"><div class="cat-name">AI Agents</div><div class="cat-desc">Autonomous AI performing tasks on your site</div></div>
+        <span class="cat-stat on">8 gated</span>
+        <span class="cat-chevron">&rsaquo;</span>
+      </div>
+      <div class="bot-type">
+        <div class="cat-toggle on"><div class="cat-dot"></div></div>
+        <div class="cat-info"><div class="cat-name">AI Training</div><div class="cat-desc">Crawlers collecting data for model training</div></div>
+        <span class="cat-stat on">13 gated</span>
+        <span class="cat-chevron">&rsaquo;</span>
+      </div>
+      <div class="bot-type">
+        <div class="cat-toggle on"><div class="cat-dot"></div></div>
+        <div class="cat-info"><div class="cat-name">Scrapers</div><div class="cat-desc">Automated data extraction tools</div></div>
+        <span class="cat-stat on">43 gated</span>
+        <span class="cat-chevron">&rsaquo;</span>
+      </div>
+      <div class="bot-type">
+        <div class="cat-toggle on"><div class="cat-dot"></div></div>
+        <div class="cat-info"><div class="cat-name">General AI</div><div class="cat-desc">Other AI crawlers with mixed or unclear intent</div></div>
+        <span class="cat-stat on">32 gated</span>
+        <span class="cat-chevron">&rsaquo;</span>
+      </div>
+
+      <p class="always-note">Search engines (Google, Bing) and social previews (Twitter, LinkedIn) always pass through free.</p>
+    </div>
+
+  </div><!-- /card -->
+
+
+  <!-- ============================================================ -->
+  <div class="state-label">State 4 — Pricing, no rules</div>
+  <!-- ============================================================ -->
+  <div class="card">
+
+    <div class="section" style="border-top: none; padding-top: 0;">
+      <div class="section-title">Pricing</div>
+      <div class="section-desc">How much bots pay per page. Add rules for specific paths.</div>
+      <div class="row"><label>Default price</label><span class="symbol">$</span><input type="text" class="price" value="0.003"><span class="unit">per page</span></div>
+      <div style="margin-top: 16px;">
+        <button class="btn-add">+ add rule</button>
+      </div>
+    </div>
+
+  </div><!-- /card -->
+
+
+  <!-- ============================================================ -->
+  <div class="state-label">State 5 — Pricing, adding new rule (autocomplete visible)</div>
+  <!-- ============================================================ -->
+  <div class="card">
+
+    <div class="section" style="border-top: none; padding-top: 0;">
+      <div class="section-title">Pricing</div>
+      <div class="section-desc">How much bots pay per page. Add rules for specific paths.</div>
+      <div class="row"><label>Default price</label><span class="symbol">$</span><input type="text" class="price" value="0.003"><span class="unit">per page</span></div>
+      <div style="margin-top: 16px;">
+        <div class="rule"><span class="grip">&#x2807;</span><span class="match">URL contains</span><input type="text" class="path" value="/docs/"><span class="arrow">&rarr;</span><span class="dollar">$</span><input type="text" class="price" value="0.01"><button class="remove">&times;</button></div>
+        <div class="rule"><span class="grip">&#x2807;</span><span class="match">URL contains</span><input type="text" class="path" value="/api/"><span class="arrow">&rarr;</span><span class="dollar">$</span><input type="text" class="price" value="0.05"><button class="remove">&times;</button></div>
+        <div class="rule" style="position: relative;">
+          <span class="grip">&#x2807;</span>
+          <span class="match">URL contains</span>
+          <input type="text" class="path" value="/blog/" placeholder="/path/">
+          <span class="arrow">&rarr;</span>
+          <span class="dollar">$</span>
+          <input type="text" class="price" placeholder="0.00">
+          <button class="remove">&times;</button>
+          <div class="path-suggest" style="display: block;">
+            <div class="suggest-item"><span class="suggest-path">/blog/</span><span class="suggest-title">Blog Archive</span></div>
+            <div class="suggest-item"><span class="suggest-path">/blog/ai-payments-2026</span><span class="suggest-title">AI Payments in 2026</span></div>
+            <div class="suggest-item"><span class="suggest-path">/blog/micropayments-guide</span><span class="suggest-title">The Micropayments Guide</span></div>
+            <div class="suggest-item"><span class="suggest-path">/blog/x402-explained</span><span class="suggest-title">x402 Protocol Explained</span></div>
+          </div>
+        </div>
+        <button class="btn-add">+ add rule</button>
+      </div>
+    </div>
+
+  </div><!-- /card -->
+
+
+  <!-- ============================================================ -->
+  <div class="state-label">State 6 — Wallet, xenarch wallet configured</div>
+  <!-- ============================================================ -->
+  <div class="card">
+
+    <div class="section" style="border-top: none; padding-top: 0;">
+      <div class="section-title">Wallet</div>
+      <div class="wallet-configured">
+        <div>
+          <div><span class="wallet-address-display">0x7a3f...c291</span><span class="wallet-badge xenarch">xenarch wallet</span></div>
+          <div class="wallet-note">Your wallet. Cash out to fiat anytime from the Earnings tab.</div>
+        </div>
+        <button class="wallet-change">Change</button>
+      </div>
+    </div>
+
+  </div><!-- /card -->
+
+
+  <!-- ============================================================ -->
+  <div class="state-label">State 7 — Wallet, change blocked (balance > 0)</div>
+  <!-- ============================================================ -->
+  <div class="card">
+
+    <div class="section" style="border-top: none; padding-top: 0;">
+      <div class="section-title">Wallet</div>
+      <div class="wallet-configured">
+        <div>
+          <div><span class="wallet-address-display">0x7a3f...c291</span><span class="wallet-badge xenarch">xenarch wallet</span></div>
+          <div class="wallet-note">Your wallet. Cash out to fiat anytime from the Earnings tab.</div>
+        </div>
+        <div style="text-align: right;">
+          <span class="wallet-change disabled">Change</span>
+          <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Cash out your balance before changing wallet</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /card -->
+
+
+  <!-- ============================================================ -->
+  <div class="state-label">State 8a — Wallet change (from connected)</div>
+  <!-- ============================================================ -->
+  <div class="card">
+
+    <div class="section" style="border-top: none; padding-top: 0;">
+      <div class="section-title">Wallet</div>
+      <div class="section-desc">Where do you want to receive payments?</div>
+      <div class="wallet-options">
+        <div class="wallet-opt">
+          <div class="wallet-opt-title">Current</div>
+          <div class="wallet-opt-desc">0x9b2e...f104</div>
+        </div>
+        <div class="wallet-opt">
+          <div class="wallet-opt-title">Create for me</div>
+          <div class="wallet-opt-desc">Cash out to your bank</div>
+        </div>
+        <div class="wallet-opt">
+          <div class="wallet-opt-title">Enter manually</div>
+          <div class="wallet-opt-desc">Base or Solana address</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /card -->
+
+
+  <!-- ============================================================ -->
+  <div class="state-label">State 8b — Wallet change (from xenarch)</div>
+  <!-- ============================================================ -->
+  <div class="card">
+
+    <div class="section" style="border-top: none; padding-top: 0;">
+      <div class="section-title">Wallet</div>
+      <div class="section-desc">Where do you want to receive payments?</div>
+      <div class="wallet-options">
+        <div class="wallet-opt">
+          <div class="wallet-opt-title">Connect wallet</div>
+          <div class="wallet-opt-desc">MetaMask, Coinbase, etc.</div>
+        </div>
+        <div class="wallet-opt">
+          <div class="wallet-opt-title">Current</div>
+          <div class="wallet-opt-desc">0x7a3f...c291</div>
+        </div>
+        <div class="wallet-opt">
+          <div class="wallet-opt-title">Enter manually</div>
+          <div class="wallet-opt-desc">Base or Solana address</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /card -->
+
+
+  <!-- ============================================================ -->
+  <div class="state-label">State 8c — Wallet change (from manual)</div>
+  <!-- ============================================================ -->
+  <div class="card">
+
+    <div class="section" style="border-top: none; padding-top: 0;">
+      <div class="section-title">Wallet</div>
+      <div class="section-desc">Where do you want to receive payments?</div>
+      <div class="wallet-options">
+        <div class="wallet-opt">
+          <div class="wallet-opt-title">Connect wallet</div>
+          <div class="wallet-opt-desc">MetaMask, Coinbase, etc.</div>
+        </div>
+        <div class="wallet-opt">
+          <div class="wallet-opt-title">Create for me</div>
+          <div class="wallet-opt-desc">Cash out to your bank</div>
+        </div>
+        <div class="wallet-opt">
+          <div class="wallet-opt-title">Current</div>
+          <div class="wallet-opt-desc">0x4e1d...a823</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /card -->
+
+
+  <!-- ============================================================ -->
+  <div class="state-label">State 9 — Page loading</div>
+  <!-- ============================================================ -->
+  <div class="card">
+
+    <!-- Gate section skeleton -->
+    <div class="section" style="border-top:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <div>
+          <div class="skeleton skeleton-text" style="width:120px;height:16px;margin-bottom:6px;"></div>
+          <div class="skeleton skeleton-text" style="width:280px;height:12px;"></div>
+        </div>
+        <div class="skeleton" style="width:44px;height:24px;border-radius:12px;"></div>
+      </div>
+      <div class="bot-type" style="cursor:default;"><div class="skeleton skeleton-toggle"></div><div class="cat-info"><div class="skeleton skeleton-text w-100" style="margin-bottom:4px;"></div><div class="skeleton skeleton-text w-180"></div></div><div class="skeleton skeleton-stat"></div></div>
+      <div class="bot-type" style="cursor:default;"><div class="skeleton skeleton-toggle"></div><div class="cat-info"><div class="skeleton skeleton-text w-100" style="margin-bottom:4px;"></div><div class="skeleton skeleton-text w-180"></div></div><div class="skeleton skeleton-stat"></div></div>
+      <div class="bot-type" style="cursor:default;"><div class="skeleton skeleton-toggle"></div><div class="cat-info"><div class="skeleton skeleton-text w-100" style="margin-bottom:4px;"></div><div class="skeleton skeleton-text w-180"></div></div><div class="skeleton skeleton-stat"></div></div>
+    </div>
+
+    <!-- Pricing section skeleton -->
+    <div class="section">
+      <div class="skeleton skeleton-text" style="width:80px;height:16px;margin-bottom:6px;"></div>
+      <div class="skeleton skeleton-text" style="width:300px;height:12px;margin-bottom:16px;"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+        <div class="skeleton skeleton-text" style="width:90px;height:12px;"></div>
+        <div class="skeleton" style="width:80px;height:38px;border-radius:6px;"></div>
+        <div class="skeleton skeleton-text" style="width:50px;height:12px;"></div>
+      </div>
+      <div class="skeleton" style="width:100%;height:42px;border-radius:8px;margin-bottom:8px;"></div>
+      <div class="skeleton" style="width:100%;height:42px;border-radius:8px;"></div>
+    </div>
+
+    <!-- Wallet section skeleton -->
+    <div class="section">
+      <div class="skeleton skeleton-text" style="width:60px;height:16px;margin-bottom:6px;"></div>
+      <div class="skeleton skeleton-text" style="width:260px;height:12px;margin-bottom:16px;"></div>
+      <div style="display:flex;gap:8px;">
+        <div class="skeleton" style="flex:1;height:52px;border-radius:8px;"></div>
+        <div class="skeleton" style="flex:1;height:52px;border-radius:8px;"></div>
+        <div class="skeleton" style="flex:1;height:52px;border-radius:8px;"></div>
+      </div>
+    </div>
+
+  </div><!-- /card -->
+
+</div>
+
+<script>
+function toggleTheme() {
+  var html = document.documentElement;
+  html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+</script>
+</body>
+</html>

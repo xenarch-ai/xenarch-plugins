@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Screenshot 6 — Earnings Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&family=Space+Grotesk:wght@300;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { display: flex; justify-content: center; padding: 0; }
+  .frame { width: 1544px; display: flex; background: linear-gradient(to right, #0a0a0a 50%, #E8E4DF 50%); }
+  .panel { flex: 1; display: flex; justify-content: center; padding: 48px 24px; }
+  .plugin { max-width: 700px; width: 100%; font-family: 'Inter', system-ui, sans-serif; font-size: 14px; line-height: 1.5; color: var(--fg); }
+  .dark { --bg: #0a0a0a; --fg: #f0f0f0; --secondary: #888; --muted: #555; --dim: #333; --surface: #111; --border: #1a1a1a; --surface-alt: #151515; --success: #4ade80; --success-bg: rgba(74,222,128,0.08); --success-border: rgba(74,222,128,0.15); }
+  .light { --bg: #E8E4DF; --fg: #1a1a1a; --secondary: #555; --muted: #999; --dim: #c8c4bf; --surface: #ddd8d2; --border: #d0ccc7; --surface-alt: #d5d0ca; --success: #16a34a; --success-bg: rgba(22,163,74,0.1); --success-border: rgba(22,163,74,0.2); }
+  .header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .logo { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 300; line-height: 1.2; color: var(--fg); }
+  .version { font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1; color: var(--secondary); background: var(--surface-alt); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); }
+  .tabs { display: flex; margin: 16px 0 32px; border-bottom: 1px solid var(--border); }
+  .tab { font-size: 13px; color: var(--secondary); padding: 8px 16px; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab.active { color: var(--fg); border-bottom-color: var(--fg); }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 24px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .stat-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 400; line-height: 1.2; color: var(--fg); }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .balance-bar { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 24px; margin-bottom: 24px; }
+  .balance-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .balance-amount { font-family: 'JetBrains Mono', monospace; font-size: 28px; line-height: 1.2; color: var(--success); }
+  .balance-currency { font-size: 14px; color: var(--muted); }
+  .balance-address { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-left: 8px; color: var(--success); background: var(--success-bg); border: 1px solid var(--success-border); }
+  .btn-withdraw { font-size: 13px; font-weight: 500; color: var(--fg); background: var(--border); border: 1px solid var(--dim); border-radius: 6px; padding: 8px 16px; }
+  .period-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; line-height: 1.2; color: var(--fg); }
+  .period-pills { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .pill { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--secondary); padding: 4px 12px; border: none; background: none; }
+  .pill.active { background: var(--border); color: var(--fg); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 400; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  td { padding: 8px 0; border-bottom: 1px solid var(--surface); color: var(--fg); }
+  td.path { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--secondary); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  td.amount { font-family: 'JetBrains Mono', monospace; text-align: right; color: var(--success); }
+  td.agent { font-size: 13px; color: var(--secondary); }
+  td.time { font-size: 12px; color: var(--muted); text-align: right; }
+  .tx-type { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 8px; border-radius: 4px; background: var(--success-bg); color: var(--success); }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="panel dark"><div class="plugin">
+    <div class="header"><span class="logo">/xenarch</span><span class="version">v1.0</span></div>
+    <div class="tabs"><div class="tab">Settings</div><div class="tab active">Earnings</div></div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Today</div><div class="stat-value">$4.72</div><div class="stat-sub">1,573 requests</div></div>
+      <div class="stat"><div class="stat-label">This month</div><div class="stat-value">$127.40</div><div class="stat-sub">42,467 requests</div></div>
+      <div class="stat"><div class="stat-label">All time</div><div class="stat-value">$891.05</div><div class="stat-sub">297,017 requests</div></div>
+    </div>
+    <div class="balance-bar"><div><div class="balance-label">Wallet balance</div><div class="balance-amount">$891.05 <span class="balance-currency">USDC</span></div><div class="balance-address">0x7a3f...c291 <span class="badge">xenarch wallet</span></div></div><button class="btn-withdraw">Cash out</button></div>
+    <div class="period-row"><span class="section-title">Transactions</span><div class="period-pills"><button class="pill">24h</button><button class="pill active">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div>
+    <table><thead><tr><th>Type</th><th>Page</th><th>Agent</th><th style="text-align:right">Amount</th><th style="text-align:right">Time</th></tr></thead><tbody>
+      <tr><td><span class="tx-type">earn</span></td><td class="path">/docs/api-reference</td><td class="agent">GPTBot</td><td class="amount">+$0.01</td><td class="time">2 min ago</td></tr>
+      <tr><td><span class="tx-type">earn</span></td><td class="path">/docs/getting-started</td><td class="agent">ClaudeBot</td><td class="amount">+$0.01</td><td class="time">4 min ago</td></tr>
+      <tr><td><span class="tx-type">earn</span></td><td class="path">/blog/ai-payments-2026</td><td class="agent">PerplexityBot</td><td class="amount">+$0.003</td><td class="time">7 min ago</td></tr>
+      <tr><td><span class="tx-type">earn</span></td><td class="path">/api/v2/endpoints</td><td class="agent">GPTBot</td><td class="amount">+$0.05</td><td class="time">12 min ago</td></tr>
+      <tr><td><span class="tx-type">earn</span></td><td class="path">/docs/authentication</td><td class="agent">GoogleBot-AI</td><td class="amount">+$0.01</td><td class="time">15 min ago</td></tr>
+      <tr><td><span class="tx-type">earn</span></td><td class="path">/blog/micropayments</td><td class="agent">ClaudeBot</td><td class="amount">+$0.003</td><td class="time">22 min ago</td></tr>
+      <tr><td><span class="tx-type">earn</span></td><td class="path">/docs/webhooks</td><td class="agent">xn_agent_7kf2m</td><td class="amount">+$0.01</td><td class="time">28 min ago</td></tr>
+      <tr><td><span class="tx-type">earn</span></td><td class="path">/api/v2/search</td><td class="agent">GPTBot</td><td class="amount">+$0.05</td><td class="time">35 min ago</td></tr>
+    </tbody></table>
+  </div></div>
+  <div class="panel light"><div class="plugin">
+    <div class="header"><span class="logo">/xenarch</span><span class="version">v1.0</span></div>
+    <div class="tabs"><div class="tab">Settings</div><div class="tab active">Earnings</div></div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Today</div><div class="stat-value">$4.72</div><div class="stat-sub">1,573 requests</div></div>
+      <div class="stat"><div class="stat-label">This month</div><div class="stat-value">$127.40</div><div class="stat-sub">42,467 requests</div></div>
+      <div class="stat"><div class="stat-label">All time</div><div class="stat-value">$891.05</div><div class="stat-sub">297,017 requests</div></div>
+    </div>
+    <div class="balance-bar"><div><div class="balance-label">Wallet balance</div><div class="balance-amount">$891.05 <span class="balance-currency">USDC</span></div><div class="balance-address">0x7a3f...c291 <span class="badge">xenarch wallet</span></div></div><button class="btn-withdraw">Cash out</button></div>
+    <div class="period-row"><span class="section-title">Transactions</span><div class="period-pills"><button class="pill">24h</button><button class="pill active">7d</button><button class="pill">30d</button><button class="pill">All</button></div></div>
+    <table><thead><tr><th>Type</th><th>Page</th><th>Agent</th><th style="text-align:right">Amount</th><th style="text-align:right">Time</th></tr></thead><tbody>
+      <tr><td><span class="tx-type">earn</span></td><td class="path">/docs/api-reference</td><td class="agent">GPTBot</td><td class="amount">+$0.01</td><td class="time">2 min ago</td></tr>
+      <tr><td><span class="tx-type">earn</span></td><td class="path">/docs/getting-started</td><td class="agent">ClaudeBot</td><td class="amount">+$0.01</td><td class="time">4 min ago</td></tr>
+      <tr><td><span class="tx-type">earn</span></td><td class="path">/blog/ai-payments-2026</td><td class="agent">PerplexityBot</td><td class="amount">+$0.003</td><td class="time">7 min ago</td></tr>
+      <tr><td><span class="tx-type">earn</span></td><td class="path">/api/v2/endpoints</td><td class="agent">GPTBot</td><td class="amount">+$0.05</td><td class="time">12 min ago</td></tr>
+      <tr><td><span class="tx-type">earn</span></td><td class="path">/docs/authentication</td><td class="agent">GoogleBot-AI</td><td class="amount">+$0.01</td><td class="time">15 min ago</td></tr>
+      <tr><td><span class="tx-type">earn</span></td><td class="path">/blog/micropayments</td><td class="agent">ClaudeBot</td><td class="amount">+$0.003</td><td class="time">22 min ago</td></tr>
+      <tr><td><span class="tx-type">earn</span></td><td class="path">/docs/webhooks</td><td class="agent">xn_agent_7kf2m</td><td class="amount">+$0.01</td><td class="time">28 min ago</td></tr>
+      <tr><td><span class="tx-type">earn</span></td><td class="path">/api/v2/search</td><td class="agent">GPTBot</td><td class="amount">+$0.05</td><td class="time">35 min ago</td></tr>
+    </tbody></table>
+  </div></div>
+</div>
+</body>
+</html>

@@ -1,9 +1,9 @@
 <?php
 /**
  * Plugin Name: Xenarch
- * Plugin URI:  https://xenarch.com
+ * Plugin URI:  https://xenarch.com/wordpress
  * Description: Monetize AI bot traffic on your WordPress site. Xenarch detects AI agents and charges micropayments for content access via the x402 protocol.
- * Version:     0.7.13
+ * Version:     1.0.0
  * Author:      Xenarch
  * Author URI:  https://xenarch.com
  * License:     GPL-2.0+
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Plugin constants.
  */
-define( 'XENARCH_VERSION', '0.7.13' );
+define( 'XENARCH_VERSION', '1.0.0' );
 define( 'XENARCH_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'XENARCH_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'XENARCH_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
@@ -125,8 +125,8 @@ function xenarch_init() {
 		new Xenarch_Admin();
 	}
 
-	// Frontend l.js loading.
-	new Xenarch_Frontend();
+	// Frontend l.js loading — disabled until cdn.xenarch.dev is live.
+	// new Xenarch_Frontend();
 
 	// Server-side bot gating (returns 402 for detected AI crawlers).
 	new Xenarch_Gate();

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" group="system" method="upgrade">
+    <name>System - Xenarch</name>
+    <version>1.0.0</version>
+    <creationDate>2026-04</creationDate>
+    <author>Xenarch</author>
+    <authorUrl>https://xenarch.com</authorUrl>
+    <license>GPL-2.0-or-later</license>
+    <description>Server-side AI bot detection and payment gating for Xenarch.</description>
+
+    <namespace path="src">Xenarch\Plugin\System\Xenarch</namespace>
+
+    <files>
+        <folder>services</folder>
+        <folder>src</folder>
+    </files>
+</extension>

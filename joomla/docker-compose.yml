@@ -1,0 +1,36 @@
+version: "3.8"
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: xenarch
+      MYSQL_DATABASE: joomla
+      MYSQL_USER: joomla
+      MYSQL_PASSWORD: joomla
+    volumes:
+      - db_data:/var/lib/mysql
+
+  joomla:
+    image: joomla:5.4-php8.3-apache
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "8889:80"
+    environment:
+      JOOMLA_DB_HOST: db
+      JOOMLA_DB_USER: joomla
+      JOOMLA_DB_PASSWORD: joomla
+      JOOMLA_DB_NAME: joomla
+    volumes:
+      - joomla_data:/var/www/html
+      - ./src/administrator/components/com_xenarch:/var/www/html/administrator/components/com_xenarch
+      - ./src/api/components/com_xenarch:/var/www/html/api/components/com_xenarch
+      - ./src/media/com_xenarch:/var/www/html/media/com_xenarch
+      - ./src/plugins/system/xenarch:/var/www/html/plugins/system/xenarch
+      - ./src/plugins/webservices/xenarch:/var/www/html/plugins/webservices/xenarch
+
+volumes:
+  db_data:
+  joomla_data:

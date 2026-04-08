@@ -29,11 +29,9 @@ export function StatusTab({ settings }: Props) {
     state === 'pending'   ? 'pending' :
                             'disconnected'
 
-  /* Server-side detection works locally even in pending state */
-  const serverSideActive = state === 'connected' || state === 'pending'
-
-  /* l.js only loads when fully connected (needs site token) */
-  const ljsActive = state === 'connected'
+  /* Server-side detection: check actual gate toggle, not just connection state */
+  const gateEnabled = settings.gate_enabled === '1'
+  const serverSideActive = (state === 'connected' || state === 'pending') && gateEnabled
 
   /* URLs only available when fully connected */
   const hasUrls = state === 'connected'
@@ -70,28 +68,15 @@ export function StatusTab({ settings }: Props) {
               <span className="xn-dot xn-dot--green" />
               Active &mdash; {settings.bot_signature_count} bot signatures
             </>
+          ) : (state === 'connected' || state === 'pending') && !gateEnabled ? (
+            <>
+              <span className="xn-dot xn-dot--red" />
+              Disabled
+            </>
           ) : (
             <>
               <span className="xn-dot xn-dot--red" />
               Inactive
-            </>
-          )}
-        </span>
-      </div>
-
-      {/* l.js */}
-      <div className="xn-data-row">
-        <span className="xn-data-key">l.js</span>
-        <span className="xn-data-val">
-          {ljsActive ? (
-            <>
-              <span className="xn-dot xn-dot--green" />
-              Loading on frontend
-            </>
-          ) : (
-            <>
-              <span className="xn-dot xn-dot--red" />
-              Not active
             </>
           )}
         </span>

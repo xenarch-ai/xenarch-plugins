@@ -11,7 +11,7 @@ SEO keyword targets (from Google Ads Keyword Planner, April 2026):
 ## Short Description (150 chars max)
 
 ```
-Stop giving your content to AI for free. Xenarch detects 120+ AI bots, sorts them into 6 categories, and charges them per page.
+Stop giving your content to AI for free. Xenarch detects 135+ AI bots, sorts them into 6 categories, and charges them per page.
 ```
 
 128 chars.
@@ -23,7 +23,7 @@ Stop giving your content to AI for free. Xenarch detects 120+ AI bots, sorts the
 ```
 = Monetize AI Bot Traffic — Don't Just Block It =
 
-AI web scraping is eating your content. Every day, AI crawlers — GPTBot, ClaudeBot, Google-Extended, and 120+ others — scrape your site for free. You get nothing.
+AI web scraping is eating your content. Every day, AI crawlers — GPTBot, ClaudeBot, Google-Extended, and 135+ others — scrape your site for free. You get nothing.
 
 Xenarch flips the script: instead of blocking AI bots, **charge them**. When an AI crawler hits your site, Xenarch returns an HTTP 402 Payment Required response with pricing via the x402 protocol. The agent pays a micropayment in USDC. Settlement in under 2 seconds. No accounts, no invoices — just pay-per-crawl.
 
@@ -31,7 +31,7 @@ This is not a paywall for humans. This is a **payment gate for AI agents**.
 
 == How It Works ==
 
-1. **AI Bot Detection** — Xenarch identifies 120+ AI crawlers, training bots, scraping tools, and AI agents — including GPTBot, ClaudeBot, PerplexityBot, and more. Detection runs at the server level — no JavaScript required.
+1. **AI Bot Detection** — Xenarch identifies 135+ AI crawlers, training bots, scraping tools, and AI agents — including GPTBot, ClaudeBot, PerplexityBot, and more. Detection runs at the server level — no JavaScript required.
 
 2. **6 Smart Categories** — Not all bots are equal. Xenarch sorts them into AI Search, AI Assistants, AI Agents, AI Training, Scrapers, and General AI. You choose which categories to charge and which to let through free.
 
@@ -59,7 +59,7 @@ Everything is ready in under 60 seconds.
 * **x402 Protocol** — Built on the open x402 standard (HTTP 402 + USDC on Base), backed by Coinbase, Cloudflare, Google, and Visa via the x402 Foundation.
 * **Pay-per-crawl pricing** — Set your price per page. Micropayments from $0.001 per request. No subscriptions, no minimums.
 * **6 bot categories** — AI Search bots that bring you referral traffic? Let them through free. Training crawlers extracting your content? Charge them.
-* **120+ bot signatures** — OpenAI, Anthropic, Google, Meta, Perplexity, Amazon, ByteDance, and dozens more. Updated regularly.
+* **135+ bot signatures** — OpenAI, Anthropic, Google, Meta, Perplexity, Amazon, ByteDance, and dozens more. Updated regularly.
 * **Auto-detection of new bots** — Unknown AI crawlers are automatically categorized and logged. You see them instantly in the dashboard.
 * **Human visitors unaffected** — Search engines (Google, Bing) and social previews (Twitter, LinkedIn) always pass through free.
 * **Works with any theme** — Operates at the HTTP level, before your theme loads. Zero frontend impact.
@@ -101,6 +101,18 @@ The plugin auto-registers your site when you connect a wallet. No data is sent b
 
 * [Xenarch Terms of Service](https://xenarch.com/terms)
 * [Xenarch Privacy Policy](https://xenarch.com/privacy)
+
+This plugin also connects to the following third-party services:
+
+**Coinbase** (`api.developer.coinbase.com`)
+Used for: wallet creation via Google/Apple sign-in (Coinbase Embedded Wallets) and cash-out to fiat via Coinbase Offramp. Only triggered when the publisher uses these features.
+* [Coinbase Terms of Service](https://www.coinbase.com/legal/user-agreement)
+* [Coinbase Privacy Policy](https://www.coinbase.com/legal/privacy)
+
+**WalletConnect / Reown** (`relay.walletconnect.com`)
+Used for: connecting an external crypto wallet (MetaMask, Coinbase Wallet, etc.) via the WalletConnect protocol. Only triggered when the publisher chooses "Connect wallet".
+* [WalletConnect Terms of Service](https://walletconnect.com/terms)
+* [WalletConnect Privacy Policy](https://walletconnect.com/privacy)
 ```
 
 ---
@@ -148,7 +160,7 @@ No. Only AI bots and automated agents see the payment gate. Human visitors, sear
 
 = Which AI bots does Xenarch detect? =
 
-120+ signatures across 6 categories: AI Search (OAI-SearchBot, PerplexityBot), AI Assistants (ChatGPT-User, Claude-User), AI Agents (ChatGPT Agent, Devin), AI Training (Google-Extended, CCBot), Scrapers (Puppeteer, Ahrefs), and General AI (GPTBot, ClaudeBot). New AI crawlers are auto-detected and categorized.
+135+ signatures across 6 categories: AI Search (OAI-SearchBot, PerplexityBot), AI Assistants (ChatGPT-User, Claude-User), AI Agents (ChatGPT Agent, Devin), AI Training (Google-Extended, CCBot), Scrapers (Puppeteer, Ahrefs), and General AI (GPTBot, ClaudeBot). New AI crawlers are auto-detected and categorized.
 
 = Can I choose which bots to charge? =
 
@@ -198,7 +210,7 @@ Xenarch complements Cloudflare's x402 pay-per-crawl tooling. Both use the same x
 * Cash out to fiat via Coinbase Offramp — withdraw USDC to your bank account
 * Redesigned admin UI with 3 tabs: Earnings, Settings, Status
 * Earnings dashboard with category breakdown and transaction history
-* 120+ bot signatures with auto-detection of new AI crawlers
+* 135+ bot signatures with auto-detection of new AI crawlers
 * Database-backed bot detection logging
 * Auto-save settings with toggle snap-back on failure
 * Path-based pricing rules with WordPress autocomplete
