@@ -61,7 +61,7 @@ class Xenarch_Gate {
 		// If the request presents a verified access token (paid gate receipt), let it through.
 		$auth_header = $this->get_authorization_header();
 		$token       = Xenarch_Access_Token::extract_token( $auth_header );
-		if ( $token && Xenarch_Access_Token::verify_token( $token ) ) {
+		if ( $token && Xenarch_Access_Token::verify_token( $token, $request_uri ) ) {
 			return;
 		}
 
@@ -289,7 +289,7 @@ class Xenarch_Gate {
 
 		$auth_header = $this->get_authorization_header();
 		$token       = Xenarch_Access_Token::extract_token( $auth_header );
-		if ( $token && Xenarch_Access_Token::verify_token( $token ) ) {
+		if ( $token && Xenarch_Access_Token::verify_token( $token, $request_uri ) ) {
 			return $response;
 		}
 

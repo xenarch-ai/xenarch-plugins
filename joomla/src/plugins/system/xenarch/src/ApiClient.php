@@ -40,14 +40,19 @@ class ApiClient
         return $this->post('/v1/sites', ['domain' => $domain], $this->authHeaders());
     }
 
-    public function verifyAccessToken(string $token): ?array
+    public function verifyAccessToken(string $token, string $url = ''): ?array
     {
         $params = ComponentHelper::getParams('com_xenarch');
         $siteToken = $params->get('site_token', '');
 
+        $body = ['token' => $token];
+        if ($url !== '') {
+            $body['url'] = $url;
+        }
+
         return $this->post(
             '/v1/access-tokens/verify',
-            ['token' => $token],
+            $body,
             ['X-Site-Token' => $siteToken]
         );
     }

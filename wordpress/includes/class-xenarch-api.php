@@ -83,12 +83,17 @@ class Xenarch_Api {
 	 * @param string $token The bearer token to verify.
 	 * @return array|WP_Error Response with 'valid' boolean, or WP_Error on failure.
 	 */
-	public function verify_access_token( $token ) {
+	public function verify_access_token( $token, $url = '' ) {
 		$site_token = get_option( 'xenarch_site_token', '' );
+
+		$body = array( 'token' => $token );
+		if ( ! empty( $url ) ) {
+			$body['url'] = $url;
+		}
 
 		return $this->post(
 			'/v1/access-tokens/verify',
-			array( 'token' => $token ),
+			$body,
 			array( 'X-Site-Token' => $site_token )
 		);
 	}
