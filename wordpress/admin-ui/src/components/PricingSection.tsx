@@ -46,7 +46,7 @@ export function PricingSection({ settings, onSettingsChange, loading }: Props) {
   }, [defaultPrice, onSettingsChange])
 
   const addRule = useCallback(() => {
-    setRules((prev) => [...prev, { path_contains: '', price_usd: '0.003' }])
+    setRules((prev) => [...prev, { path_contains: '', price_usd: '0.003', billing_scope: 'page' }])
   }, [])
 
   const updateRule = useCallback((index: number, updated: PricingRule) => {

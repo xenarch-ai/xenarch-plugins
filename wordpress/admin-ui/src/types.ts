@@ -49,6 +49,7 @@ export interface Settings {
 export interface PricingRule {
   path_contains: string
   price_usd: string
+  billing_scope: 'page' | 'path'
 }
 
 export interface StatsBucket {

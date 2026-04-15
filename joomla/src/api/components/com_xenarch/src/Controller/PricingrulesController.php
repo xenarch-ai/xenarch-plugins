@@ -35,6 +35,7 @@ class PricingrulesController extends ApiController
                 $cleanRules[] = [
                     'path_contains' => filter_var($rule['path_contains'], FILTER_SANITIZE_SPECIAL_CHARS),
                     'price_usd'     => filter_var($rule['price_usd'], FILTER_SANITIZE_SPECIAL_CHARS),
+                    'billing_scope' => isset($rule['billing_scope']) && $rule['billing_scope'] === 'path' ? 'path' : 'page',
                 ];
             }
         }
@@ -47,7 +48,11 @@ class PricingrulesController extends ApiController
         if (!empty($siteId)) {
             $apiRules = [];
             foreach ($cleanRules as $rule) {
-                $apiRules[] = ['path' => '*' . $rule['path_contains'] . '*', 'price_usd' => (float) $rule['price_usd']];
+                $apiRules[] = [
+                    'path'          => '*' . $rule['path_contains'] . '*',
+                    'price_usd'     => (float) $rule['price_usd'],
+                    'billing_scope' => $rule['billing_scope'],
+                ];
             }
             $api = new ApiClient();
             $api->updatePricing($siteId, (float) ($params['default_price'] ?? '0.003'), $apiRules);
