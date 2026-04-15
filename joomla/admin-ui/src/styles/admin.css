@@ -2499,6 +2499,10 @@ w3m-account-button {
   color: var(--xn-dot-red);
 }
 
+#xenarch-admin .xenarch-rule-scope {
+  flex-shrink: 0;
+}
+
 /* ═══════ SETTINGS — WALLET CHANGE BLOCKED ═══════ */
 
 #xenarch-admin .xenarch-wallet-change--disabled {

@@ -73,7 +73,7 @@ class Xenarch_Access_Token {
 	 * @param string $token The bearer token string.
 	 * @return bool True if the token is a verified paid access token.
 	 */
-	public static function verify_token( $token ) {
+	public static function verify_token( $token, $url = '' ) {
 		if ( empty( $token ) ) {
 			return false;
 		}
@@ -83,8 +83,8 @@ class Xenarch_Access_Token {
 			return false;
 		}
 
-		// Check transient cache.
-		$cache_key = self::CACHE_PREFIX . md5( $token );
+		// Check transient cache (key includes URL for per-page/path scoping).
+		$cache_key = self::CACHE_PREFIX . md5( $token . '|' . $url );
 		$cached    = get_transient( $cache_key );
 
 		if ( 'valid' === $cached ) {
@@ -102,7 +102,7 @@ class Xenarch_Access_Token {
 		}
 
 		$api    = new Xenarch_Api();
-		$result = $api->verify_access_token( $token );
+		$result = $api->verify_access_token( $token, $url );
 
 		if ( is_wp_error( $result ) ) {
 			// API unreachable — fail open to avoid blocking legitimate paid requests.

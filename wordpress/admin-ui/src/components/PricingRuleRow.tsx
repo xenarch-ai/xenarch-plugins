@@ -19,6 +19,7 @@ export function PricingRuleRow({ index, rule, onChange, onDelete, onMove, onPath
   const rowRef = useRef<HTMLDivElement>(null)
 
   const isFree = rule.price_usd === '0' || rule.price_usd === '0.00' || rule.price_usd === '0.000'
+  const scope = rule.billing_scope || 'page'
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -109,6 +110,20 @@ export function PricingRuleRow({ index, rule, onChange, onDelete, onMove, onPath
           placeholder="0.00"
         />
       )}
+      <div className="xenarch-action-seg xenarch-rule-scope">
+        <button
+          className={`xenarch-action-btn${scope === 'page' ? ' xenarch-action-btn--active' : ''}`}
+          onClick={() => onChange(index, { ...rule, billing_scope: 'page' })}
+        >
+          per page
+        </button>
+        <button
+          className={`xenarch-action-btn${scope === 'path' ? ' xenarch-action-btn--active' : ''}`}
+          onClick={() => onChange(index, { ...rule, billing_scope: 'path' })}
+        >
+          per path
+        </button>
+      </div>
       <button
         className="xenarch-rule-remove"
         onClick={() => onDelete(index)}

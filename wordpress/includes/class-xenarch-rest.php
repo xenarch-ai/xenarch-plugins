@@ -314,8 +314,9 @@ class Xenarch_Rest {
 				foreach ( $rules as $rule ) {
 					if ( ! empty( $rule['path_contains'] ) && isset( $rule['price_usd'] ) ) {
 						$api_rules[] = array(
-							'path'      => '*' . $rule['path_contains'] . '*',
-							'price_usd' => (float) $rule['price_usd'],
+							'path'          => '*' . $rule['path_contains'] . '*',
+							'price_usd'     => (float) $rule['price_usd'],
+							'billing_scope' => isset( $rule['billing_scope'] ) ? $rule['billing_scope'] : 'page',
 						);
 					}
 				}
@@ -446,6 +447,7 @@ class Xenarch_Rest {
 				$clean_rules[] = array(
 					'path_contains' => sanitize_text_field( $rule['path_contains'] ),
 					'price_usd'     => sanitize_text_field( $rule['price_usd'] ),
+					'billing_scope' => isset( $rule['billing_scope'] ) && 'path' === $rule['billing_scope'] ? 'path' : 'page',
 				);
 			}
 		}
@@ -458,8 +460,9 @@ class Xenarch_Rest {
 			$api_rules = array();
 			foreach ( $clean_rules as $rule ) {
 				$api_rules[] = array(
-					'path'      => '*' . $rule['path_contains'] . '*',
-					'price_usd' => (float) $rule['price_usd'],
+					'path'          => '*' . $rule['path_contains'] . '*',
+					'price_usd'     => (float) $rule['price_usd'],
+					'billing_scope' => $rule['billing_scope'],
 				);
 			}
 

@@ -97,7 +97,7 @@ class Xenarch extends CMSPlugin implements SubscriberInterface
         // If the request presents a verified access token, let it through.
         $authHeader = $this->getAuthorizationHeader();
         $token = AccessToken::extractToken($authHeader);
-        if ($token && AccessToken::verifyToken($token)) {
+        if ($token && AccessToken::verifyToken($token, $requestUri)) {
             return;
         }
 

@@ -54,7 +54,7 @@ class AccessToken
     /**
      * Verify a bearer token is valid (paid gate receipt).
      */
-    public static function verifyToken(string $token): bool
+    public static function verifyToken(string $token, string $url = ''): bool
     {
         if (empty($token)) {
             return false;
@@ -64,7 +64,8 @@ class AccessToken
             return false;
         }
 
-        $cacheKey = self::CACHE_PREFIX . md5($token);
+        // Cache key includes URL for per-page/path scoping.
+        $cacheKey = self::CACHE_PREFIX . md5($token . '|' . $url);
 
         // Check cache table.
         $cached = self::getCached($cacheKey);
@@ -83,7 +84,7 @@ class AccessToken
         }
 
         $api = new ApiClient();
-        $result = $api->verifyAccessToken($token);
+        $result = $api->verifyAccessToken($token, $url);
 
         if ($result === null) {
             // API unreachable — fail open.
