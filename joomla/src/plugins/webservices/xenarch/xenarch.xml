@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="plugin" group="webservices" method="upgrade">
     <name>Web Services - Xenarch</name>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <creationDate>2026-04</creationDate>
     <author>Xenarch</author>
     <authorUrl>https://xenarch.com</authorUrl>

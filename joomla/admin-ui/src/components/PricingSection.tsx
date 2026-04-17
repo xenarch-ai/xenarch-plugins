@@ -107,7 +107,7 @@ export function PricingSection({ settings, onSettingsChange, loading }: Props) {
   return (
     <div className="xenarch-section">
       <div className="xenarch-section-title">Pricing</div>
-      <div className="xenarch-section-desc">How much bots pay per page. Add rules for specific paths.</div>
+      <div className="xenarch-section-desc">Set pricing for bot traffic. Choose per-page or per-path billing for each rule.</div>
 
       {/* Default price row */}
       <div className="xenarch-pricing-row">

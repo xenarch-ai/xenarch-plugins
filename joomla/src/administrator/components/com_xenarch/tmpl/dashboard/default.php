@@ -26,7 +26,7 @@ if (class_exists('Xenarch\\Plugin\\System\\Xenarch\\BotDetect')) {
 }
 
 $siteUrl = XenarchHelper::getSiteUrl();
-$version = '1.0.0';
+$version = '1.0.3';
 
 $initialSettings = [
     'api_key'             => !empty($params['api_key'] ?? ''),
