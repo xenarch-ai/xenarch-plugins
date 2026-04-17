@@ -2411,6 +2411,7 @@ w3m-account-button {
 }
 
 #xenarch-admin .xenarch-pricing-unit {
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--xn-text-muted);
 }
