@@ -34,7 +34,7 @@ class Xenarch_Api {
 		 *
 		 * @param string $base_url Default API base URL.
 		 */
-		$this->base_url = apply_filters( 'xenarch_api_base', 'https://api.xenarch.dev' );
+		$this->base_url = apply_filters( 'xenarch_api_base', 'https://xenarch.dev' );
 	}
 
 	/**
@@ -78,22 +78,22 @@ class Xenarch_Api {
 	}
 
 	/**
-	 * Verify an access token against the platform.
+	 * Verify an on-chain payment against a gate.
 	 *
-	 * @param string $token The bearer token to verify.
-	 * @return array|WP_Error Response with 'valid' boolean, or WP_Error on failure.
+	 * Posts the tx hash to the platform, which re-checks the transaction
+	 * on Base and confirms it satisfies the gate's price + recipient.
+	 * No JWT, no cached session — verification is stateless per call.
+	 *
+	 * @param string $gate_id Gate UUID returned from create_gate().
+	 * @param string $tx_hash On-chain transaction hash (0x-prefixed).
+	 * @return array|WP_Error Response with 'verified' boolean, or WP_Error on failure.
 	 */
-	public function verify_access_token( $token, $url = '' ) {
+	public function verify_payment( $gate_id, $tx_hash ) {
 		$site_token = get_option( 'xenarch_site_token', '' );
 
-		$body = array( 'token' => $token );
-		if ( ! empty( $url ) ) {
-			$body['url'] = $url;
-		}
-
 		return $this->post(
-			'/v1/access-tokens/verify',
-			$body,
+			'/v1/gates/' . urlencode( $gate_id ) . '/verify',
+			array( 'tx_hash' => $tx_hash ),
 			array( 'X-Site-Token' => $site_token )
 		);
 	}

@@ -2,13 +2,13 @@
  * Hidden iframe bridge for Coinbase wallet creation.
  *
  * Same pattern as Reown AppKit: visible modal in the page DOM,
- * hidden iframe to api.xenarch.dev for the actual Coinbase SDK calls.
+ * hidden iframe to xenarch.dev for the actual Coinbase SDK calls.
  * Communication via postMessage.
  *
  * Supports: email + OTP, Google OAuth, Apple OAuth.
  */
 
-const PLATFORM_BASE = 'https://api.xenarch.dev'
+const PLATFORM_BASE = 'https://xenarch.dev'
 const BRIDGE_TIMEOUT_MS = 15000
 
 export interface WalletBridge {

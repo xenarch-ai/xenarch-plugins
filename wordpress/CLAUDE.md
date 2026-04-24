@@ -239,7 +239,7 @@ Setup phase hides, replaced by a compact card showing:
   - `connected via MetaMask` — blue, for WalletConnect (same blue as "own wallet")
 - Note below address:
   - Xenarch wallet: "Your wallet. Cash out to fiat anytime from the Earnings tab."
-  - Own/connected: "Settled on-chain via splitter contract. No funds held by Xenarch."
+  - Own/connected: "Settled on-chain directly to your wallet. No funds held by Xenarch."
 - "Change" link (right side) — reopens Phase 1
 
 ---
@@ -394,7 +394,7 @@ Indexed on: `signature` (unique), `category`, `last_seen`.
 
 See `bot-classification.md` for full detection priority. Summary:
 
-1. Skip checks (admin, logged-in, `.well-known/`, Bearer token, free pricing rule)
+1. Skip checks (admin, logged-in, `.well-known/`, verified `X-Payment-Tx` header, free pricing rule)
 2. Search crawler allowlist → always allow
 3. Social preview match → always allow
 4. AI signature match → look up category → apply category toggle or per-bot override
@@ -421,6 +421,6 @@ The existing `class-xenarch-bot-detect.php` handles detection. The category/over
 | `includes/class-xenarch-discovery.php` | pay.json and .well-known serving |
 | `includes/class-xenarch-frontend.php` | Frontend snippet loading |
 | `includes/class-xenarch-gate-response.php` | 402/403 response rendering |
-| `includes/class-xenarch-access-token.php` | Bearer token validation |
+| `includes/class-xenarch-payment-proof.php` | On-chain `X-Payment-Tx` verification (replaces JWT access tokens post-XEN-179) |
 | `admin-ui/` | React admin dashboard (Vite, TypeScript) |
 | `mockups/` | HTML mockups (design source of truth) |

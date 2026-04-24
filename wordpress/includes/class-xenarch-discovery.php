@@ -20,6 +20,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Xenarch_Discovery {
 
 	/**
+	 * Default ranked facilitator list (pay-json v1.2 shape).
+	 *
+	 * Mirrors the platform's default Router stack. Filterable so site owners
+	 * (or the platform via /v1/config) can override it.
+	 *
+	 * @var array
+	 */
+	const DEFAULT_FACILITATORS = array(
+		array( 'name' => 'payai',        'url' => 'https://facilitator.payai.network', 'priority' => 1, 'spec_version' => 'v1' ),
+		array( 'name' => 'xpay',         'url' => 'https://facilitator.xpay.dev',      'priority' => 2, 'spec_version' => 'v1' ),
+		array( 'name' => 'ultravioleta', 'url' => 'https://x402.ultravioleta.dev',     'priority' => 3, 'spec_version' => 'v2' ),
+	);
+
+	/**
 	 * Constructor — register hooks.
 	 */
 	public function __construct() {
@@ -88,15 +102,15 @@ class Xenarch_Discovery {
 	}
 
 	/**
-	 * Serve /.well-known/pay.json
+	 * Serve /.well-known/pay.json (pay-json v1.2).
 	 */
 	private function serve_pay_json() {
 		$price  = get_option( 'xenarch_default_price', '0.003' );
 		$wallet = get_option( 'xenarch_payout_wallet', '' );
 
 		// Build rules array from pricing rules + default catch-all.
-		$rules          = array();
-		$pricing_rules  = json_decode( get_option( 'xenarch_pricing_rules', '[]' ), true );
+		$rules         = array();
+		$pricing_rules = json_decode( get_option( 'xenarch_pricing_rules', '[]' ), true );
 
 		if ( is_array( $pricing_rules ) ) {
 			foreach ( $pricing_rules as $rule ) {
@@ -109,32 +123,26 @@ class Xenarch_Discovery {
 			}
 		}
 
-		// Default catch-all rule always comes last.
 		$rules[] = array(
 			'path'      => '/**',
 			'price_usd' => $price,
 		);
 
+		/**
+		 * Filter the ranked facilitator list emitted in pay.json.
+		 *
+		 * @param array $facilitators Default facilitator stack.
+		 */
+		$facilitators = apply_filters( 'xenarch_facilitators', self::DEFAULT_FACILITATORS );
+
 		$pay_json = array(
-			'version'       => '1.0',
+			'version'       => '1.2',
 			'protocol'      => 'x402',
 			'network'       => 'base',
 			'asset'         => 'USDC',
 			'receiver'      => $wallet,
 			'seller_wallet' => $wallet,
-			'provider'      => 'xenarch',
-			'facilitator'   => apply_filters( 'xenarch_api_base', 'https://api.xenarch.dev' ),
-			'tools'         => array(
-				'cli' => array(
-					'install' => 'npm install -g xenarch',
-					'usage'   => 'xenarch pay <url>',
-				),
-				'sdk' => array(
-					'npm'  => 'xenarch',
-					'pypi' => 'xenarch',
-				),
-				'docs' => 'https://xenarch.com/docs',
-			),
+			'facilitators'  => $facilitators,
 			'rules'         => $rules,
 		);
 
@@ -160,7 +168,6 @@ class Xenarch_Discovery {
 		$domain   = wp_parse_url( $site_url, PHP_URL_HOST );
 		$price    = get_option( 'xenarch_default_price', '0.003' );
 		$email    = get_option( 'xenarch_email', '' );
-		$api_base = apply_filters( 'xenarch_api_base', 'https://api.xenarch.dev' );
 
 		$contact_line = '';
 		if ( ! empty( $email ) ) {
@@ -175,83 +182,54 @@ class Xenarch_Discovery {
 			. "\n"
 			. "This is not an error. It means the content is available for purchase.\n"
 			. "\n"
-			. "## How to Pay Programmatically\n"
+			. "## How to Pay (x402 standard flow)\n"
 			. "\n"
-			. "### Step 1: Get Gate Details\n"
+			. "### Step 1: Discover the gate\n"
 			. "\n"
-			. "Make a request to any page. If you are detected as an AI agent, you'll receive:\n"
-			. "\n"
-			. "```\n"
-			. "HTTP/1.1 402 Payment Required\n"
-			. "Content-Type: application/json\n"
-			. "\n"
-			. "{\n"
-			. "  \"xenarch\": true,\n"
-			. "  \"gate_id\": \"<uuid>\",\n"
-			. "  \"price_usd\": \"{$price}\",\n"
-			. "  \"splitter\": \"<contract_address>\",\n"
-			. "  \"collector\": \"<publisher_wallet>\",\n"
-			. "  \"network\": \"base\",\n"
-			. "  \"asset\": \"USDC\",\n"
-			. "  \"protocol\": \"x402\",\n"
-			. "  \"verify_url\": \"{$api_base}/v1/gates/<gate_id>/verify\",\n"
-			. "  \"expires\": \"<iso8601>\"\n"
-			. "}\n"
-			. "```\n"
-			. "\n"
-			. "### Step 2: Send USDC Payment\n"
-			. "\n"
-			. "Send `price_usd` worth of USDC to the `splitter` contract on Base network. The contract splits the payment between the publisher (`collector`) and the protocol.\n"
-			. "\n"
-			. "### Step 3: Verify Payment\n"
-			. "\n"
-			. "```\n"
-			. "POST {$api_base}/v1/gates/<gate_id>/verify\n"
-			. "Content-Type: application/json\n"
-			. "\n"
-			. "{\n"
-			. "  \"tx_hash\": \"0x<your_transaction_hash>\"\n"
-			. "}\n"
-			. "```\n"
-			. "\n"
-			. "Response:\n"
-			. "```json\n"
-			. "{\n"
-			. "  \"access_token\": \"<jwt>\",\n"
-			. "  \"expires_at\": \"<iso8601>\"\n"
-			. "}\n"
-			. "```\n"
-			. "\n"
-			. "### Step 4: Access Content\n"
+			. "Make a request to any page. If you are detected as an AI agent, you'll receive HTTP 402 with a JSON body and discovery headers pointing at `pay.json`:\n"
 			. "\n"
 			. "```\n"
 			. "GET {$site_url}/your-page\n"
-			. "Authorization: Bearer <access_token>\n"
+			. "→ HTTP/1.1 402 Payment Required\n"
+			. "→ Link: <{$site_url}/.well-known/pay.json>; rel=\"payment-terms\"\n"
 			. "```\n"
 			. "\n"
-			. "You will receive the full page content with HTTP 200.\n"
+			. "Fetch `{$site_url}/.well-known/pay.json` to learn the price, the seller wallet, and the ranked list of x402 facilitators that can settle the payment.\n"
 			. "\n"
-			. "## Important: No Registration Required\n"
+			. "### Step 2: Pay via an x402 facilitator\n"
 			. "\n"
-			. "AI agents do NOT need to register or log in. You only need a funded wallet. Do not run `xenarch register` or `xenarch login` — those are for publishers (site owners), not agents.\n"
+			. "Pick a facilitator from the `facilitators` array. Sign a USDC `transferWithAuthorization` (EIP-3009) for the price, payable to `seller_wallet` on Base, and submit it to the facilitator. The facilitator broadcasts the transaction and returns the on-chain `tx_hash`.\n"
 			. "\n"
-			. "## For AI Agents (Autonomous Flow)\n"
+			. "Funds settle directly from your wallet to the publisher wallet. Xenarch is never in the money flow — there is no intermediary contract.\n"
 			. "\n"
-			. "1. Check if the Xenarch CLI is already installed and a wallet is configured:\n"
-			. "   ```bash\n"
-			. "   xenarch wallet balance\n"
-			. "   ```\n"
-			. "2. If a wallet exists and has USDC, skip to step 5.\n"
-			. "3. If no wallet is configured, ask the human operator to set one up (one-time setup — see below).\n"
-			. "4. Wait for the human to confirm the wallet is ready.\n"
-			. "5. Pay and access:\n"
-			. "   ```bash\n"
-			. "   xenarch pay {$site_url}/your-page\n"
-			. "   ```\n"
-			. "   This pays, verifies, and returns an access token. Use the token to fetch content:\n"
-			. "   ```bash\n"
-			. "   curl -H \"Authorization: Bearer <token>\" {$site_url}/your-page\n"
-			. "   ```\n"
+			. "### Step 3: Replay the request with proof of payment\n"
+			. "\n"
+			. "```\n"
+			. "GET {$site_url}/your-page\n"
+			. "X-Payment-Tx: 0x<your_transaction_hash>\n"
+			. "```\n"
+			. "\n"
+			. "The plugin re-verifies the transaction against the platform (`/v1/gates/<gate_id>/verify`). If the on-chain payment matches the gate price and recipient, you receive the full page with HTTP 200.\n"
+			. "\n"
+			. "## Easiest path: use the Xenarch MCP server\n"
+			. "\n"
+			. "If you are an AI agent (Claude, Cursor, LangChain, CrewAI, or any MCP client), install the Xenarch MCP server and the three steps above happen automatically:\n"
+			. "\n"
+			. "```bash\n"
+			. "npx @xenarch/agent-mcp\n"
+			. "```\n"
+			. "\n"
+			. "Or add to Claude Desktop / Cursor:\n"
+			. "\n"
+			. "```json\n"
+			. "{\n"
+			. "  \"mcpServers\": {\n"
+			. "    \"xenarch\": { \"command\": \"npx\", \"args\": [\"@xenarch/agent-mcp\"] }\n"
+			. "  }\n"
+			. "}\n"
+			. "```\n"
+			. "\n"
+			. "Then ask the agent to fetch the URL. It will discover the gate, pick a facilitator, sign the payment, and return the content.\n"
 			. "\n"
 			. "## For Human Operators\n"
 			. "\n"
@@ -259,41 +237,11 @@ class Xenarch_Discovery {
 			. "\n"
 			. "> This site ({$domain}) charges \${$price} per page for AI access. I need a funded USDC wallet on Base network to pay. This is a one-time setup.\n"
 			. ">\n"
-			. "> **Option A — Connect your existing wallet (recommended):**\n"
+			. "> Install the Xenarch MCP server:\n"
+			. "> ```bash\n"
+			. "> npx @xenarch/agent-mcp\n"
 			. "> ```\n"
-			. "> npm install -g xenarch\n"
-			. "> xenarch wallet connect\n"
-			. "> ```\n"
-			. "> Scan the QR code with your wallet app (MetaMask, Rainbow, etc.). Your keys stay on your phone.\n"
-			. ">\n"
-			. "> **Option B — Generate a disposable wallet:**\n"
-			. "> ```\n"
-			. "> npm install -g xenarch\n"
-			. "> xenarch wallet generate\n"
-			. "> ```\n"
-			. "> Then fund the displayed address with USDC + a small amount of ETH for gas on Base network.\n"
-			. ">\n"
-			. "> Let me know when the wallet is ready and I'll proceed.\n"
-			. "\n"
-			. "## CLI Quickstart\n"
-			. "\n"
-			. "```bash\n"
-			. "# Install\n"
-			. "npm install -g xenarch\n"
-			. "\n"
-			. "# Option A: Connect your phone wallet (recommended)\n"
-			. "xenarch wallet connect\n"
-			. "\n"
-			. "# Option B: Generate a local wallet\n"
-			. "xenarch wallet generate\n"
-			. "# Then fund it with USDC + ETH on Base\n"
-			. "\n"
-			. "# Pay for a page\n"
-			. "xenarch pay {$site_url}/your-page\n"
-			. "\n"
-			. "# Check if a site uses Xenarch\n"
-			. "xenarch check {$site_url}/\n"
-			. "```\n"
+			. "> The first run prints a wallet address. Send a small amount of USDC to that address on Base, then I can pay any x402-gated URL on your behalf.\n"
 			. "\n"
 			. "## Pricing\n"
 			. "\n"
@@ -304,6 +252,7 @@ class Xenarch_Discovery {
 			. "## Links\n"
 			. "\n"
 			. "- Xenarch documentation: https://xenarch.com/docs\n"
+			. "- x402 spec: https://www.x402.org/\n"
 			. "- pay.json standard: https://payjson.org\n"
 			. "- pay.json for this site: {$site_url}/.well-known/pay.json\n"
 			. $contact_line;

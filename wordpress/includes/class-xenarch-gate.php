@@ -58,11 +58,14 @@ class Xenarch_Gate {
 			return;
 		}
 
-		// If the request presents a verified access token (paid gate receipt), let it through.
-		$auth_header = $this->get_authorization_header();
-		$token       = Xenarch_Access_Token::extract_token( $auth_header );
-		if ( $token && Xenarch_Access_Token::verify_token( $token, $request_uri ) ) {
-			return;
+		// If the request presents a verified payment proof (on-chain tx hash), let it through.
+		$tx_hash = Xenarch_Payment_Proof::extract_tx_hash();
+		if ( $tx_hash ) {
+			$gate = $this->get_or_create_gate( $request_uri, 'payment_replay' );
+			if ( ! is_wp_error( $gate ) && ! empty( $gate['gate_id'] )
+				&& Xenarch_Payment_Proof::verify( $tx_hash, $gate['gate_id'] ) ) {
+				return;
+			}
 		}
 
 		// Check if a pricing rule marks this path as FREE (price_usd = "0").
@@ -287,10 +290,13 @@ class Xenarch_Gate {
 			return $response;
 		}
 
-		$auth_header = $this->get_authorization_header();
-		$token       = Xenarch_Access_Token::extract_token( $auth_header );
-		if ( $token && Xenarch_Access_Token::verify_token( $token, $request_uri ) ) {
-			return $response;
+		$tx_hash = Xenarch_Payment_Proof::extract_tx_hash();
+		if ( $tx_hash ) {
+			$gate_check = $this->get_or_create_gate( $request_uri, 'payment_replay' );
+			if ( ! is_wp_error( $gate_check ) && ! empty( $gate_check['gate_id'] )
+				&& Xenarch_Payment_Proof::verify( $tx_hash, $gate_check['gate_id'] ) ) {
+				return $response;
+			}
 		}
 
 		// Check if a pricing rule marks this path as FREE.
@@ -576,37 +582,4 @@ class Xenarch_Gate {
 		return null;
 	}
 
-	/**
-	 * Get the Authorization header from the request.
-	 *
-	 * WordPress/Apache don't always pass Authorization to PHP,
-	 * so we check multiple sources.
-	 *
-	 * @return string|null
-	 */
-	private function get_authorization_header() {
-		// Check standard header.
-		if ( isset( $_SERVER['HTTP_AUTHORIZATION'] ) ) {
-			return sanitize_text_field( wp_unslash( $_SERVER['HTTP_AUTHORIZATION'] ) );
-		}
-
-		// Apache with mod_rewrite.
-		if ( isset( $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ) ) {
-			return sanitize_text_field( wp_unslash( $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ) );
-		}
-
-		// Fallback: getallheaders() (Apache).
-		if ( function_exists( 'getallheaders' ) ) {
-			$headers = getallheaders();
-			if ( isset( $headers['Authorization'] ) ) {
-				return sanitize_text_field( $headers['Authorization'] );
-			}
-			// Some servers lowercase it.
-			if ( isset( $headers['authorization'] ) ) {
-				return sanitize_text_field( $headers['authorization'] );
-			}
-		}
-
-		return null;
-	}
 }

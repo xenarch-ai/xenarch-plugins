@@ -4,7 +4,7 @@ Tags: ai bot detection, ai scraping, ai crawlers, paywall, micropayments
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -44,7 +44,7 @@ Everything is ready in under 60 seconds.
 
 == Why Xenarch ==
 
-* **Non-custodial** — Payments go directly to your wallet via smart contract on Base. Xenarch never holds your funds.
+* **Non-custodial** — Payments settle as a direct USDC transfer from the agent wallet to your wallet on Base. No intermediary contract. Xenarch never holds your funds.
 * **0% platform fee** — What the agent pays is what you receive. The contract is immutable.
 * **Cash out to your bank** — Created a wallet with Xenarch? Cash out USDC to your bank account anytime via Coinbase Offramp. See fees before you confirm.
 * **x402 Protocol** — Built on the open x402 standard (HTTP 402 + USDC on Base), backed by Coinbase, Cloudflare, Google, and Visa via the x402 Foundation.
@@ -83,7 +83,7 @@ Learn more at [xenarch.com](https://xenarch.com).
 
 == Third-Party Services ==
 
-This plugin connects to the Xenarch API (`api.xenarch.dev`) to:
+This plugin connects to the Xenarch API (`xenarch.dev`) to:
 * Create and manage gate transactions
 * Validate payment receipts on-chain
 * Serve pay.json pricing specifications
@@ -155,11 +155,11 @@ Default is $0.003/page. Common pricing: $0.001-$0.01 for blog posts, $0.01-$0.10
 
 = Does Xenarch hold my money? =
 
-No. Fully non-custodial. Payments route through a smart contract on Base directly to your wallet. Xenarch never has access to your funds.
+No. Fully non-custodial. Payments settle as a direct USDC transfer on Base, routed by a third-party x402 facilitator straight from the agent wallet to your wallet. Xenarch is never in the money flow and never has access to your funds.
 
 = Is there a platform fee? =
 
-Zero. 0%. The smart contract sends 100% to you.
+Zero. 0%, structurally. Xenarch is not in the payment flow — 100% of every payment lands in your wallet.
 
 = Does this work with robots.txt? =
 
@@ -184,6 +184,13 @@ Xenarch complements Cloudflare's x402 pay-per-crawl tooling. Both use the same x
 7. Terminal showing HTTP 402 response with x-payment headers and JSON gate payload.
 
 == Changelog ==
+
+= 1.1.0 =
+* Facilitator-agnostic: pay.json now ships a ranked `facilitators` array (pay-json v1.2) so agents can pick from any x402 facilitator (PayAI, xpay, Ultravioleta, etc.)
+* Removed the splitter contract from the payment flow — payments now settle as a direct USDC `transferWithAuthorization` from the agent wallet to the publisher wallet
+* Replaced JWT access tokens with stateless on-chain `X-Payment-Tx` re-verification — no session state, no token caching divergence
+* Updated `/.well-known/xenarch.md` to describe the x402 standard flow (sign → submit via facilitator → replay with proof)
+* Default platform endpoint moved from `api.xenarch.dev` to `xenarch.dev`
 
 = 1.0.0 =
 * First public release on the WordPress Plugin Directory
