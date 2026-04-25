@@ -14,12 +14,12 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Plugin\CMSPlugin;
 use Joomla\CMS\Uri\Uri;
 use Joomla\Event\SubscriberInterface;
-use Xenarch\Plugin\System\Xenarch\AccessToken;
 use Xenarch\Plugin\System\Xenarch\ApiClient;
 use Xenarch\Plugin\System\Xenarch\BotDetect;
 use Xenarch\Plugin\System\Xenarch\BrowserProof;
 use Xenarch\Plugin\System\Xenarch\Discovery;
 use Xenarch\Plugin\System\Xenarch\GateResponse;
+use Xenarch\Plugin\System\Xenarch\PaymentProof;
 
 /**
  * System plugin — intercepts requests for bot detection, payment gating,
@@ -94,10 +94,9 @@ class Xenarch extends CMSPlugin implements SubscriberInterface
             return;
         }
 
-        // If the request presents a verified access token, let it through.
-        $authHeader = $this->getAuthorizationHeader();
-        $token = AccessToken::extractToken($authHeader);
-        if ($token && AccessToken::verifyToken($token, $requestUri)) {
+        // If the request presents a verified payment proof (gate id + on-chain tx hash), let it through.
+        $proof = PaymentProof::extractPaymentProof();
+        if ($proof && PaymentProof::verify($proof['gate_id'], $proof['tx_hash'])) {
             return;
         }
 
@@ -414,30 +413,4 @@ class Xenarch extends CMSPlugin implements SubscriberInterface
         $db->execute();
     }
 
-    private function getAuthorizationHeader(): ?string
-    {
-        $server = $this->getApplication()->getInput()->server;
-
-        $auth = $server->getString('HTTP_AUTHORIZATION', '');
-        if (!empty($auth)) {
-            return $auth;
-        }
-
-        $auth = $server->getString('REDIRECT_HTTP_AUTHORIZATION', '');
-        if (!empty($auth)) {
-            return $auth;
-        }
-
-        if (function_exists('getallheaders')) {
-            $headers = getallheaders();
-            if (isset($headers['Authorization'])) {
-                return $headers['Authorization'];
-            }
-            if (isset($headers['authorization'])) {
-                return $headers['authorization'];
-            }
-        }
-
-        return null;
-    }
 }

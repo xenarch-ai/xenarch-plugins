@@ -19,7 +19,7 @@ Joomla package (`pkg_xenarch`) containing 3 extensions:
 | `src/plugins/system/xenarch/src/Extension/Xenarch.php` | Main system plugin (gate + discovery) |
 | `src/plugins/system/xenarch/src/BotDetect.php` | UA signature matching, header scoring |
 | `src/plugins/system/xenarch/src/BrowserProof.php` | Browser challenge cookie |
-| `src/plugins/system/xenarch/src/AccessToken.php` | Bearer token validation |
+| `src/plugins/system/xenarch/src/PaymentProof.php` | On-chain payment verification via canonical `X-Xenarch-Gate-Id` + `X-Xenarch-Tx-Hash` headers (replaces JWT access tokens post-XEN-179) |
 | `src/plugins/system/xenarch/src/ApiClient.php` | Xenarch platform API client |
 | `src/plugins/system/xenarch/src/GateResponse.php` | 402/403 response rendering |
 | `src/plugins/system/xenarch/src/Discovery.php` | pay.json and xenarch.md serving |
@@ -42,7 +42,7 @@ Joomla package (`pkg_xenarch`) containing 3 extensions:
 | `register_rest_route()` | `onBeforeApiRoute` + Route objects | Web services plugin |
 | `get_option()` / `update_option()` | `ComponentHelper::getParams()` / XenarchHelper | Throughout |
 | `wp_remote_post/get()` | `HttpFactory::getHttp()->post/get()` | ApiClient |
-| `get_transient()` / `set_transient()` | `#__xenarch_cache` table | AccessToken, gate caching |
+| `get_transient()` / `set_transient()` | `#__xenarch_cache` table | PaymentProof, gate caching |
 | `$wpdb` queries | `DatabaseInterface` with query builder | Bot logging, cache |
 | `X-WP-Nonce` | `X-CSRF-Token` (Joomla session form token) | Admin UI API calls |
 

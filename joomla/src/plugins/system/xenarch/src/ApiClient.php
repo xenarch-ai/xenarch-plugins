@@ -40,19 +40,21 @@ class ApiClient
         return $this->post('/v1/sites', ['domain' => $domain], $this->authHeaders());
     }
 
-    public function verifyAccessToken(string $token, string $url = ''): ?array
+    /**
+     * Verify an on-chain payment against a gate.
+     *
+     * Posts the tx hash to the platform, which re-checks the transaction
+     * on Base and confirms it satisfies the gate's price + recipient.
+     * No JWT, no cached session — verification is stateless per call.
+     */
+    public function verifyPayment(string $gateId, string $txHash): ?array
     {
         $params = ComponentHelper::getParams('com_xenarch');
         $siteToken = $params->get('site_token', '');
 
-        $body = ['token' => $token];
-        if ($url !== '') {
-            $body['url'] = $url;
-        }
-
         return $this->post(
-            '/v1/access-tokens/verify',
-            $body,
+            '/v1/gates/' . urlencode($gateId) . '/verify',
+            ['tx_hash' => $txHash],
             ['X-Site-Token' => $siteToken]
         );
     }
