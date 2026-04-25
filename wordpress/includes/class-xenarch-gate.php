@@ -58,14 +58,10 @@ class Xenarch_Gate {
 			return;
 		}
 
-		// If the request presents a verified payment proof (on-chain tx hash), let it through.
-		$tx_hash = Xenarch_Payment_Proof::extract_tx_hash();
-		if ( $tx_hash ) {
-			$gate = $this->get_or_create_gate( $request_uri, 'payment_replay' );
-			if ( ! is_wp_error( $gate ) && ! empty( $gate['gate_id'] )
-				&& Xenarch_Payment_Proof::verify( $tx_hash, $gate['gate_id'] ) ) {
-				return;
-			}
+		// If the request presents a verified payment proof (gate id + on-chain tx hash), let it through.
+		$proof = Xenarch_Payment_Proof::extract_payment_proof();
+		if ( $proof && Xenarch_Payment_Proof::verify( $proof['gate_id'], $proof['tx_hash'] ) ) {
+			return;
 		}
 
 		// Check if a pricing rule marks this path as FREE (price_usd = "0").
@@ -290,13 +286,9 @@ class Xenarch_Gate {
 			return $response;
 		}
 
-		$tx_hash = Xenarch_Payment_Proof::extract_tx_hash();
-		if ( $tx_hash ) {
-			$gate_check = $this->get_or_create_gate( $request_uri, 'payment_replay' );
-			if ( ! is_wp_error( $gate_check ) && ! empty( $gate_check['gate_id'] )
-				&& Xenarch_Payment_Proof::verify( $tx_hash, $gate_check['gate_id'] ) ) {
-				return $response;
-			}
+		$proof = Xenarch_Payment_Proof::extract_payment_proof();
+		if ( $proof && Xenarch_Payment_Proof::verify( $proof['gate_id'], $proof['tx_hash'] ) ) {
+			return $response;
 		}
 
 		// Check if a pricing rule marks this path as FREE.

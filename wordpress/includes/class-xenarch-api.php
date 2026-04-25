@@ -34,7 +34,7 @@ class Xenarch_Api {
 		 *
 		 * @param string $base_url Default API base URL.
 		 */
-		$this->base_url = apply_filters( 'xenarch_api_base', 'https://xenarch.dev' );
+		$this->base_url = apply_filters( 'xenarch_api_base', 'https://api.xenarch.dev' );
 	}
 
 	/**
