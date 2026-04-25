@@ -2,7 +2,7 @@
  * Coinbase wallet creation modal.
  *
  * Renders as an inline overlay (like BotDetailModal), not a popup.
- * Uses a hidden iframe to api.xenarch.dev for the Coinbase CDP SDK.
+ * Uses a hidden iframe to xenarch.dev for the Coinbase CDP SDK.
  * Same pattern as Reown AppKit's Connect Wallet modal.
  *
  * Supports: email + OTP, Google OAuth, Apple OAuth.

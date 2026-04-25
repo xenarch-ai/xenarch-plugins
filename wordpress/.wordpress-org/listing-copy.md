@@ -53,7 +53,7 @@ Everything is ready in under 60 seconds.
 
 == Why Xenarch ==
 
-* **Non-custodial** — Payments go directly to your wallet via smart contract on Base. Xenarch never holds your funds.
+* **Non-custodial** — Payments settle as a direct USDC transfer from the agent wallet to your wallet on Base. No intermediary contract. Xenarch never holds your funds.
 * **0% platform fee** — What the agent pays is what you receive. The contract is immutable.
 * **Cash out to your bank** — Created a wallet with Xenarch? Cash out USDC to your bank account anytime via Coinbase Offramp. See fees before you confirm.
 * **x402 Protocol** — Built on the open x402 standard (HTTP 402 + USDC on Base), backed by Coinbase, Cloudflare, Google, and Visa via the x402 Foundation.
@@ -92,7 +92,7 @@ Learn more at [xenarch.com](https://xenarch.com).
 
 == Third-Party Services ==
 
-This plugin connects to the Xenarch API (`api.xenarch.dev`) to:
+This plugin connects to the Xenarch API (`xenarch.dev`) to:
 * Create and manage gate transactions
 * Validate payment receipts on-chain
 * Serve pay.json pricing specifications
@@ -176,11 +176,11 @@ Default is $0.003/page. Common pricing: $0.001–$0.01 for blog posts, $0.01–$
 
 = Does Xenarch hold my money? =
 
-No. Fully non-custodial. Payments route through a smart contract on Base directly to your wallet. Xenarch never has access to your funds.
+No. Fully non-custodial. Payments settle as a direct USDC transfer on Base, routed by a third-party x402 facilitator straight from the agent wallet to your wallet. Xenarch is never in the money flow and never has access to your funds.
 
 = Is there a platform fee? =
 
-Zero. 0%. The smart contract sends 100% to you.
+Zero. 0%, structurally. Xenarch is not in the payment flow — 100% of every payment lands in your wallet.
 
 = Does this work with robots.txt? =
 
