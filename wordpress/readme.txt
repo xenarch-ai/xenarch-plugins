@@ -4,7 +4,7 @@ Tags: ai bot detection, ai scraping, ai crawlers, paywall, micropayments
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -185,12 +185,16 @@ Xenarch complements Cloudflare's x402 pay-per-crawl tooling. Both use the same x
 
 == Changelog ==
 
+= 1.1.1 =
+* Adopt SDK-canonical replay headers: `X-Xenarch-Gate-Id` + `X-Xenarch-Tx-Hash` (replaces the interim `X-Payment-Tx` header from 1.1.0). Gate ID now comes straight from the agent header — no server-side re-derivation.
+* Fix platform API base URL: `xenarch.dev` → `api.xenarch.dev`.
+* Accept the platform's `status:"paid"` verify response (with `verified`/`valid` fallbacks for forward compatibility).
+
 = 1.1.0 =
 * Facilitator-agnostic: pay.json now ships a ranked `facilitators` array (pay-json v1.2) so agents can pick from any x402 facilitator (PayAI, xpay, Ultravioleta, etc.)
 * Removed the splitter contract from the payment flow — payments now settle as a direct USDC `transferWithAuthorization` from the agent wallet to the publisher wallet
-* Replaced JWT access tokens with stateless on-chain `X-Payment-Tx` re-verification — no session state, no token caching divergence
+* Replaced JWT access tokens with stateless on-chain re-verification — no session state, no token caching divergence
 * Updated `/.well-known/xenarch.md` to describe the x402 standard flow (sign → submit via facilitator → replay with proof)
-* Default platform endpoint moved from `api.xenarch.dev` to `xenarch.dev`
 
 = 1.0.0 =
 * First public release on the WordPress Plugin Directory
