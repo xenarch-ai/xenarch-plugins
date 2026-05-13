@@ -94,7 +94,7 @@ export function WalletSection({ settings, onSettingsChange, loading }: Props) {
   const badgeClass = walletType === 'xenarch' || walletType === 'coinbase' ? 'xenarch-wallet-badge--xenarch' : 'xenarch-wallet-badge--external'
   const noteText = isXenarchWallet
     ? 'Your wallet. Cash out to your bank from the Earnings tab.'
-    : 'Settled on-chain via splitter contract. No funds held by Xenarch.'
+    : 'Settled on-chain directly to your wallet. No funds held by Xenarch.'
 
   const changeBlocked = isXenarchWallet && balance !== null && parseFloat(balance) > 0
 
