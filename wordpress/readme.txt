@@ -4,7 +4,7 @@ Tags: ai bot detection, ai scraping, ai crawlers, paywall, micropayments
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -184,6 +184,9 @@ Xenarch complements Cloudflare's x402 pay-per-crawl tooling. Both use the same x
 7. Terminal showing HTTP 402 response with x-payment headers and JSON gate payload.
 
 == Changelog ==
+
+= 1.2.1 =
+* When the merchant picks "Connect wallet" during onboarding, the plugin registers the connected address as an identity auth method on the Xenarch platform. The same wallet signing in on the dashboard (dash.xenarch.dev) then resolves to the same merchant account, so plugin-created sites appear in the dashboard immediately. (XEN-365)
 
 = 1.2.0 =
 * Gating config is now sourced from the Xenarch dashboard. Master toggle and per-category on/off live at the platform; the plugin caches the config in a 60-second transient and enforces the publisher's dashboard choices in real time. (XEN-364)

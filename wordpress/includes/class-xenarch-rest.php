@@ -334,6 +334,29 @@ class Xenarch_Rest {
 			$this->api->update_payout( $params['xenarch_payout_wallet'] );
 		}
 
+		// XEN-365: when the publisher picks "Connect wallet" (WalletConnect),
+		// register the connected address as an identity auth method so the
+		// same wallet SIWE'd on the dashboard resolves to this publisher's
+		// identity. Skip the "manual" and "xenarch" paths — only the
+		// connected wallet is something the human can sign with.
+		$wallet_type = isset( $params['xenarch_wallet_type'] )
+			? $params['xenarch_wallet_type']
+			: get_option( 'xenarch_wallet_type', '' );
+		$payout_wallet = isset( $params['xenarch_payout_wallet'] )
+			? $params['xenarch_payout_wallet']
+			: get_option( 'xenarch_payout_wallet', '' );
+
+		if ( 'connected' === $wallet_type && ! empty( $payout_wallet ) ) {
+			$resp = $this->api->link_identity_wallet( $payout_wallet );
+			// Non-fatal: a 409 just means the wallet is already on
+			// another identity (rare). Payments still flow via
+			// payout_wallet; dashboard cross-visibility is the only
+			// thing affected, and that's surfaced separately.
+			if ( is_wp_error( $resp ) ) {
+				error_log( '[xenarch] link_identity_wallet failed: ' . $resp->get_error_message() );
+			}
+		}
+
 		return new WP_REST_Response( $this->get_all_settings(), 200 );
 	}
 
