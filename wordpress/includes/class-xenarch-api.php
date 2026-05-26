@@ -108,6 +108,30 @@ class Xenarch_Api {
 	}
 
 	/**
+	 * Link a wallet to the API-key holder's identity (XEN-365).
+	 *
+	 * The plugin calls this when the merchant picks "Connect wallet"
+	 * during onboarding. The wallet then doubles as an auth method
+	 * for dashboard SIWE — the same human signing in at
+	 * dash.xenarch.dev resolves to the same identity → same publisher
+	 * → sees the WP-installed sites.
+	 *
+	 * Idempotent on the same identity. 409 if the wallet is already
+	 * attached to a different identity (e.g. merchant SIWE'd with the
+	 * wallet on a different account first).
+	 *
+	 * @param string $wallet 0x-prefixed address (any case).
+	 * @return array|WP_Error
+	 */
+	public function link_identity_wallet( $wallet ) {
+		return $this->post(
+			'/v1/publishers/me/identity/wallets',
+			array( 'wallet' => $wallet ),
+			$this->auth_headers()
+		);
+	}
+
+	/**
 	 * Fetch the dashboard-managed gating config for the site this
 	 * plugin is bound to (XEN-364).
 	 *
