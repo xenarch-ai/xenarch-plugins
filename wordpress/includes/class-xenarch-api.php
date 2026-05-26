@@ -108,6 +108,31 @@ class Xenarch_Api {
 	}
 
 	/**
+	 * Fetch the dashboard-managed gating config for the site this
+	 * plugin is bound to (XEN-364).
+	 *
+	 * Returns { gating_enabled: bool, gated_categories: {<key>: bool} }
+	 * on success. Plugin caches the result in a transient — see
+	 * Xenarch_Gate::get_gating_config().
+	 *
+	 * X-Site-Token authed so the dashboard remains the source of
+	 * truth for what gets gated and the plugin just enforces.
+	 *
+	 * @return array|WP_Error
+	 */
+	public function get_gating_config() {
+		$site_token = get_option( 'xenarch_site_token', '' );
+		if ( empty( $site_token ) ) {
+			return new WP_Error( 'no_site_token', 'site token not configured' );
+		}
+
+		return $this->get(
+			'/v1/sites/me/gating-config',
+			array( 'X-Site-Token' => $site_token )
+		);
+	}
+
+	/**
 	 * Update pricing rules for a site.
 	 *
 	 * @param string $site_id          Site UUID.

@@ -20,11 +20,33 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Xenarch_Gate {
 
 	/**
+	 * Transient key for the dashboard-managed gating config (XEN-364).
+	 *
+	 * @var string
+	 */
+	const GATING_CONFIG_TRANSIENT = 'xenarch_gating_config_cache';
+
+	/**
+	 * Gating config transient TTL in seconds.
+	 *
+	 * @var int
+	 */
+	const GATING_CONFIG_TTL = 60;
+
+	/**
 	 * API client instance.
 	 *
 	 * @var Xenarch_Api
 	 */
 	private $api;
+
+	/**
+	 * Per-request cache of the gating config so we hit the transient
+	 * (and possibly the API) at most once per PHP request.
+	 *
+	 * @var array|null
+	 */
+	private $gating_config_request_cache = null;
 
 	/**
 	 * Constructor — register hooks.
@@ -69,8 +91,10 @@ class Xenarch_Gate {
 			return;
 		}
 
-		// Master gate toggle — if OFF, allow everything.
-		if ( '1' !== get_option( 'xenarch_gate_enabled', '1' ) ) {
+		// Master gate toggle — if OFF, allow everything. (XEN-364:
+		// sourced from platform, cached in a 60s transient.)
+		$gating_cfg = $this->get_gating_config();
+		if ( ! $gating_cfg['gating_enabled'] ) {
 			return;
 		}
 
@@ -296,8 +320,9 @@ class Xenarch_Gate {
 			return $response;
 		}
 
-		// Master gate toggle — if OFF, allow everything.
-		if ( '1' !== get_option( 'xenarch_gate_enabled', '1' ) ) {
+		// Master gate toggle — if OFF, allow everything. (XEN-364)
+		$gating_cfg = $this->get_gating_config();
+		if ( ! $gating_cfg['gating_enabled'] ) {
 			return $response;
 		}
 
@@ -526,13 +551,83 @@ class Xenarch_Gate {
 			return true;
 		}
 
-		$categories = json_decode( get_option( 'xenarch_bot_categories', '{}' ), true );
-		if ( is_array( $categories ) && isset( $categories[ $category ] ) ) {
-			return 'charge' === $categories[ $category ];
+		// XEN-364: category map is now sourced from platform via
+		// get_gating_config() (cached transient). Each value is bool —
+		// true = gate this category, false = let it pass free.
+		$cfg        = $this->get_gating_config();
+		$categories = $cfg['gated_categories'];
+		if ( is_array( $categories ) && array_key_exists( $category, $categories ) ) {
+			return (bool) $categories[ $category ];
 		}
 
 		// Default: gate unknown categories.
 		return true;
+	}
+
+	/**
+	 * Fetch the dashboard-managed gating config (XEN-364).
+	 *
+	 * Returns ``array( 'gating_enabled' => bool, 'gated_categories' => array )``
+	 * where ``gated_categories`` is keyed by category slug and each value
+	 * is ``true`` when that category should be gated.
+	 *
+	 * Resolution order:
+	 *   1. Per-request cache (avoids redundant transient reads inside the same PHP request)
+	 *   2. WP transient ``xenarch_gating_config_cache`` (60s TTL)
+	 *   3. Platform ``GET /v1/sites/me/gating-config`` (X-Site-Token authed)
+	 *   4. Legacy WP-option fallback when the API call fails — keeps the
+	 *      site enforcing the publisher's last-known intent during a
+	 *      platform outage rather than flipping behaviour silently.
+	 *
+	 * @return array
+	 */
+	private function get_gating_config() {
+		if ( null !== $this->gating_config_request_cache ) {
+			return $this->gating_config_request_cache;
+		}
+
+		$cached = get_transient( self::GATING_CONFIG_TRANSIENT );
+		if ( is_array( $cached ) && isset( $cached['gating_enabled'], $cached['gated_categories'] ) ) {
+			$this->gating_config_request_cache = $cached;
+			return $cached;
+		}
+
+		$resp = $this->api->get_gating_config();
+
+		if ( is_array( $resp )
+		     && isset( $resp['gating_enabled'] )
+		     && isset( $resp['gated_categories'] )
+		     && is_array( $resp['gated_categories'] ) ) {
+			$cfg = array(
+				'gating_enabled'   => (bool) $resp['gating_enabled'],
+				'gated_categories' => array_map( 'boolval', $resp['gated_categories'] ),
+			);
+			set_transient( self::GATING_CONFIG_TRANSIENT, $cfg, self::GATING_CONFIG_TTL );
+			$this->gating_config_request_cache = $cfg;
+			return $cfg;
+		}
+
+		// API miss — read the legacy local options so behaviour is at
+		// least *some* publisher intent, not a silent flip.
+		$legacy_cats     = json_decode( get_option( 'xenarch_bot_categories', '{}' ), true );
+		$normalized_cats = array();
+		if ( is_array( $legacy_cats ) ) {
+			foreach ( $legacy_cats as $key => $val ) {
+				// Legacy values were 'charge' / 'allow'; new shape is bool.
+				if ( is_bool( $val ) ) {
+					$normalized_cats[ $key ] = $val;
+				} else {
+					$normalized_cats[ $key ] = ( 'charge' === $val );
+				}
+			}
+		}
+
+		$fallback = array(
+			'gating_enabled'   => '1' === get_option( 'xenarch_gate_enabled', '1' ),
+			'gated_categories' => $normalized_cats,
+		);
+		$this->gating_config_request_cache = $fallback;
+		return $fallback;
 	}
 
 	/**
