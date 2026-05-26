@@ -4,7 +4,7 @@ Tags: ai bot detection, ai scraping, ai crawlers, paywall, micropayments
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.1.1
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -184,6 +184,10 @@ Xenarch complements Cloudflare's x402 pay-per-crawl tooling. Both use the same x
 7. Terminal showing HTTP 402 response with x-payment headers and JSON gate payload.
 
 == Changelog ==
+
+= 1.2.0 =
+* Gating config is now sourced from the Xenarch dashboard. Master toggle and per-category on/off live at the platform; the plugin caches the config in a 60-second transient and enforces the publisher's dashboard choices in real time. (XEN-364)
+* If the platform is unreachable, the plugin falls back to the legacy `xenarch_gate_enabled` / `xenarch_bot_categories` wp_options so a temporary outage keeps the publisher's last-known intent in force instead of flipping behaviour silently.
 
 = 1.1.1 =
 * Adopt SDK-canonical replay headers: `X-Xenarch-Gate-Id` + `X-Xenarch-Tx-Hash` (replaces the interim `X-Payment-Tx` header from 1.1.0). Gate ID now comes straight from the agent header — no server-side re-derivation.
