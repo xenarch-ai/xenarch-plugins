@@ -119,6 +119,75 @@ class Xenarch_Api {
 	}
 
 	// ------------------------------------------------------------------
+	// XEN-380 / XEN-383 — thin-window mirror of /me/sites/{id}/*
+	// All X-Site-Token authed.
+	// ------------------------------------------------------------------
+
+	private function site_token_headers() {
+		$site_token = get_option( 'xenarch_site_token', '' );
+		return array( 'X-Site-Token' => $site_token );
+	}
+
+	/** Full site detail (mirror of dashboard /sites/[id]). */
+	public function get_my_site() {
+		$site_token = get_option( 'xenarch_site_token', '' );
+		if ( empty( $site_token ) ) {
+			return new WP_Error( 'no_site_token', 'site token not configured' );
+		}
+		return $this->get( '/v1/sites/me', $this->site_token_headers() );
+	}
+
+	/** PUT gating — full replace of gating_enabled + gated_categories + use_publisher_defaults. */
+	public function put_my_site_gating( $gating_enabled, $gated_categories, $use_publisher_defaults ) {
+		return $this->post(
+			'/v1/sites/me/gating',
+			array(
+				'gating_enabled'         => (bool) $gating_enabled,
+				'gated_categories'       => $gated_categories,
+				'use_publisher_defaults' => (bool) $use_publisher_defaults,
+			),
+			$this->site_token_headers(),
+			'PUT'
+		);
+	}
+
+	/** PUT pricing — default + per-path rules. */
+	public function put_my_site_pricing( $default_price_usd, $rules, $default_billing_scope = 'page' ) {
+		return $this->post(
+			'/v1/sites/me/pricing',
+			array(
+				'default_price_usd'     => (float) $default_price_usd,
+				'default_billing_scope' => $default_billing_scope,
+				'rules'                 => $rules,
+			),
+			$this->site_token_headers(),
+			'PUT'
+		);
+	}
+
+	/** Today / month / all-time stats. */
+	public function get_my_site_stats() {
+		return $this->get( '/v1/sites/me/stats', $this->site_token_headers() );
+	}
+
+	/** Paginated transactions feed. */
+	public function get_my_site_transactions( $params = array() ) {
+		$qs = http_build_query( $params );
+		return $this->get(
+			'/v1/sites/me/transactions' . ( $qs ? '?' . $qs : '' ),
+			$this->site_token_headers()
+		);
+	}
+
+	/** Earnings grouped by detected bot category. */
+	public function get_my_site_category_breakdown() {
+		return $this->get(
+			'/v1/sites/me/category-breakdown',
+			$this->site_token_headers()
+		);
+	}
+
+	// ------------------------------------------------------------------
 	// Internal HTTP helpers
 	// ------------------------------------------------------------------
 

@@ -4,7 +4,7 @@ Tags: ai bot detection, ai scraping, ai crawlers, paywall, micropayments
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.5.0
+Stable tag: 1.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -184,6 +184,11 @@ Xenarch complements Cloudflare's x402 pay-per-crawl tooling. Both use the same x
 7. Terminal showing HTTP 402 response with x-payment headers and JSON gate payload.
 
 == Changelog ==
+
+= 1.6.0 =
+* Plugin admin is now a real mirror of dash.xenarch.dev: Earnings tab shows live stats (today / month / all-time), category breakdown, and the recent paid-requests table fetched from the platform. Settings tab lets you edit gating toggles + per-path pricing rules; saves write straight back to the platform via site-token-authed endpoints, and the same state shows up on the dashboard immediately. (XEN-380, XEN-383)
+* Wallet card is read-only with a "Change in dashboard →" link, because payout changes go through the email-confirm flow that lives on dash.xenarch.dev.
+* New platform endpoints (X-Site-Token authed): GET /v1/sites/me, PUT /v1/sites/me/gating, PUT /v1/sites/me/pricing, GET /v1/sites/me/stats, GET /v1/sites/me/transactions, GET /v1/sites/me/category-breakdown.
 
 = 1.5.0 =
 * Plugin is now a thin window into the Xenarch platform. Payout wallet, pricing rules, gating, bot category overrides, earnings, transactions — all live on the backend and are managed in dash.xenarch.dev. WordPress MySQL only stores the site token (the credential pointing at the platform) and a per-server bot detection log.

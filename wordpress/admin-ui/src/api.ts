@@ -1,10 +1,12 @@
-import type { Settings } from './types'
-
-// All admin-side traffic to platform goes through the plugin's own REST
-// proxy (server-to-server). The React app never talks to api.xenarch.dev
-// directly — that would be cross-origin against an allow-list that
-// doesn't include merchant domains, and would also require the merchant
-// to set up the SIWE cookie scope manually.
+import type {
+  Settings,
+  SiteDetail,
+  SiteStats,
+  TransactionsResponse,
+  CategoryBreakdownResponse,
+  GatedCategories,
+  PricingRule,
+} from './types'
 
 function getConfig() {
   return window.xenarchAdmin
@@ -32,16 +34,11 @@ async function apiFetch<T>(
   return res.json()
 }
 
+// Plugin-local
 export function fetchSettings(): Promise<Settings> {
   return apiFetch<Settings>('/settings')
 }
 
-// XEN-380: finish the claim handshake. The merchant clicked "Connect"
-// in the plugin admin, was redirected to dash.xenarch.dev/sites/claim
-// where they confirmed pairing this domain with their Xenarch identity,
-// and was bounced back here with ``?claim_token=…`` in the URL. We POST
-// the token to our own REST proxy, which calls the platform server-side
-// for the long-lived site_token.
 export function exchangeClaim(claimToken: string): Promise<Settings> {
   return apiFetch<Settings>('/claim-exchange', {
     method: 'POST',
@@ -51,4 +48,58 @@ export function exchangeClaim(claimToken: string): Promise<Settings> {
 
 export function disconnect(): Promise<Settings> {
   return apiFetch<Settings>('/disconnect', { method: 'POST' })
+}
+
+// XEN-380/383 — platform-mirrored reads/writes via /xenarch/v1/site/*
+export function fetchSite(): Promise<SiteDetail> {
+  return apiFetch<SiteDetail>('/site')
+}
+
+export function fetchStats(): Promise<SiteStats> {
+  return apiFetch<SiteStats>('/site/stats')
+}
+
+export function fetchTransactions(
+  period: '24h' | '7d' | '30d' | 'all' = 'all',
+  page = 1,
+  per_page = 25,
+  status: 'paid' | 'blocked' | 'withdraw' | 'all' = 'all',
+): Promise<TransactionsResponse> {
+  const qs = new URLSearchParams({
+    period,
+    page: String(page),
+    per_page: String(per_page),
+    status,
+  })
+  return apiFetch<TransactionsResponse>(`/site/transactions?${qs}`)
+}
+
+export function fetchCategoryBreakdown(): Promise<CategoryBreakdownResponse> {
+  return apiFetch<CategoryBreakdownResponse>('/site/category-breakdown')
+}
+
+export interface GatingUpdate {
+  gating_enabled: boolean
+  gated_categories: GatedCategories
+  use_publisher_defaults: boolean
+}
+
+export function putGating(body: GatingUpdate): Promise<GatingUpdate> {
+  return apiFetch<GatingUpdate>('/site/gating', {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  })
+}
+
+export interface PricingUpdate {
+  default_price_usd: number
+  default_billing_scope: 'page' | 'path'
+  rules: PricingRule[]
+}
+
+export function putPricing(body: PricingUpdate): Promise<{ rules_applied: number }> {
+  return apiFetch<{ rules_applied: number }>('/site/pricing', {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  })
 }

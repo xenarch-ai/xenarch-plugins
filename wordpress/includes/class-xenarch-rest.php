@@ -73,6 +73,66 @@ class Xenarch_Rest {
 				'permission_callback' => array( $this, 'check_admin' ),
 			)
 		);
+
+		// XEN-380 / XEN-383 — thin-window proxies to the platform's
+		// /v1/sites/me/* X-Site-Token surface. The React admin treats
+		// these as same-origin; PHP forwards each one to api.xenarch.dev
+		// with the locally-stored site_token so the browser never has to
+		// open a cross-origin request to the platform.
+		register_rest_route(
+			self::NAMESPACE,
+			'/site',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'handle_get_site' ),
+				'permission_callback' => array( $this, 'check_admin' ),
+			)
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			'/site/gating',
+			array(
+				'methods'             => 'PUT',
+				'callback'            => array( $this, 'handle_put_gating' ),
+				'permission_callback' => array( $this, 'check_admin' ),
+			)
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			'/site/pricing',
+			array(
+				'methods'             => 'PUT',
+				'callback'            => array( $this, 'handle_put_pricing' ),
+				'permission_callback' => array( $this, 'check_admin' ),
+			)
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			'/site/stats',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'handle_get_stats' ),
+				'permission_callback' => array( $this, 'check_admin' ),
+			)
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			'/site/transactions',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'handle_get_transactions' ),
+				'permission_callback' => array( $this, 'check_admin' ),
+			)
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			'/site/category-breakdown',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'handle_get_category_breakdown' ),
+				'permission_callback' => array( $this, 'check_admin' ),
+			)
+		);
 	}
 
 	/**
@@ -150,6 +210,69 @@ class Xenarch_Rest {
 		delete_option( 'xenarch_site_id' );
 		delete_transient( Xenarch_Gate::GATING_CONFIG_TRANSIENT );
 		return new WP_REST_Response( $this->snapshot(), 200 );
+	}
+
+	// ------------------------------------------------------------------
+	// XEN-380 / XEN-383 — thin-window proxies (read + write)
+	// ------------------------------------------------------------------
+
+	public function handle_get_site() {
+		return $this->forward( $this->api->get_my_site() );
+	}
+
+	public function handle_put_gating( $request ) {
+		$body = $request->get_json_params();
+		return $this->forward( $this->api->put_my_site_gating(
+			isset( $body['gating_enabled'] ) ? (bool) $body['gating_enabled'] : true,
+			isset( $body['gated_categories'] ) && is_array( $body['gated_categories'] ) ? $body['gated_categories'] : array(),
+			isset( $body['use_publisher_defaults'] ) ? (bool) $body['use_publisher_defaults'] : false
+		) );
+	}
+
+	public function handle_put_pricing( $request ) {
+		$body  = $request->get_json_params();
+		$rules = isset( $body['rules'] ) && is_array( $body['rules'] ) ? $body['rules'] : array();
+		return $this->forward( $this->api->put_my_site_pricing(
+			isset( $body['default_price_usd'] ) ? (float) $body['default_price_usd'] : 0.003,
+			$rules,
+			isset( $body['default_billing_scope'] ) ? (string) $body['default_billing_scope'] : 'page'
+		) );
+	}
+
+	public function handle_get_stats() {
+		return $this->forward( $this->api->get_my_site_stats() );
+	}
+
+	public function handle_get_transactions( $request ) {
+		$params = array(
+			'period'   => $request->get_param( 'period' )   ?: 'all',
+			'status'   => $request->get_param( 'status' )   ?: 'all',
+			'page'     => $request->get_param( 'page' )     ?: 1,
+			'per_page' => $request->get_param( 'per_page' ) ?: 25,
+		);
+		return $this->forward( $this->api->get_my_site_transactions( $params ) );
+	}
+
+	public function handle_get_category_breakdown() {
+		return $this->forward( $this->api->get_my_site_category_breakdown() );
+	}
+
+	/**
+	 * Standard "forward a platform call result to the React caller" wrapper.
+	 * Preserves the platform's HTTP status where useful (401 / 404 / 502).
+	 */
+	private function forward( $result ) {
+		if ( is_wp_error( $result ) ) {
+			$status = (int) $result->get_error_data( 'status' );
+			if ( $status < 400 || $status > 599 ) {
+				$status = 502;
+			}
+			return new WP_REST_Response(
+				array( 'error' => $result->get_error_code(), 'detail' => $result->get_error_message() ),
+				$status
+			);
+		}
+		return new WP_REST_Response( $result, 200 );
 	}
 
 	/**
