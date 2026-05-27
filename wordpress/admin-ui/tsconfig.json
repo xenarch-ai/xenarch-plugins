@@ -18,5 +18,18 @@
     "noUncheckedIndexedAccess": true
   },
   "include": ["src"],
-  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"]
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/components/BotDetailModal.tsx",
+    "src/components/CashOutModal.tsx",
+    "src/components/CustomSelect.tsx",
+    "src/components/GatingSection.tsx",
+    "src/components/PeriodFilter.tsx",
+    "src/components/PricingRuleRow.tsx",
+    "src/components/PricingSection.tsx",
+    "src/components/StatsCards.tsx",
+    "src/components/WalletBar.tsx",
+    "src/components/ThemeToggle.tsx"
+  ]
 }

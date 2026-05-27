@@ -31,7 +31,7 @@ export function WalletBar({ settings }: Props) {
     }
   }
 
-  const walletLabel = settings.wallet_type === 'connected' ? 'WalletConnect' : 'External Wallet'
+  const walletLabel = 'Payout wallet'
 
   return (
     <div className="xenarch-wallet-bar">

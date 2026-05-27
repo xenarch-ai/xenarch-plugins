@@ -4,7 +4,7 @@ Tags: ai bot detection, ai scraping, ai crawlers, paywall, micropayments
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.2.1
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -184,6 +184,18 @@ Xenarch complements Cloudflare's x402 pay-per-crawl tooling. Both use the same x
 7. Terminal showing HTTP 402 response with x-payment headers and JSON gate payload.
 
 == Changelog ==
+
+= 1.5.0 =
+* Plugin is now a thin window into the Xenarch platform. Payout wallet, pricing rules, gating, bot category overrides, earnings, transactions — all live on the backend and are managed in dash.xenarch.dev. WordPress MySQL only stores the site token (the credential pointing at the platform) and a per-server bot detection log.
+* Onboarding rewritten: click "Connect with Xenarch", confirm the site on dash.xenarch.dev (no token to copy, no wallet question), come back done. (XEN-380)
+* Removed all platform-owned `xenarch_*` options from activation (payout wallet, pricing rules, default price, bot categories/overrides, gate toggles, API key, email, wallet type/network).
+* Removed dead REST endpoints (/register, /add-site, the legacy pricing/bot proxy surface) and the unused Reown/WalletConnect bundle. Admin bundle ~152 KB vs. ~250 KB pre-rewrite.
+* Settings + Earnings tabs deep-link to the dashboard for now; a follow-up wires the dashboard's editing surface into the plugin admin via site-token-authed reads/writes.
+
+= 1.4.0 =
+* Dashboard-first onboarding: the plugin's only first-run question is to paste a site token issued by dash.xenarch.dev. Wallet, pricing rules, gating defaults and bot category overrides are managed in the dashboard — the plugin reads them from the platform. (XEN-380)
+* Removed dead `/register` + `/add-site` REST endpoints and the unused WP options (`xenarch_api_key`, `xenarch_email`, `xenarch_wallet_type`, `xenarch_wallet_network`).
+* Wallet section in Settings is now read-only with a "Change in dashboard →" link. Plugin no longer asks for a wallet during setup.
 
 = 1.2.1 =
 * When the merchant picks "Connect wallet" during onboarding, the plugin registers the connected address as an identity auth method on the Xenarch platform. The same wallet signing in on the dashboard (dash.xenarch.dev) then resolves to the same merchant account, so plugin-created sites appear in the dashboard immediately. (XEN-365)

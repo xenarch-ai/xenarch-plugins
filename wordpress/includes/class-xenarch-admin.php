@@ -97,58 +97,6 @@ class Xenarch_Admin {
 	}
 
 	/**
-	 * Get the Reown (WalletConnect) project ID from the platform API.
-	 * Cached as a WordPress transient for 24 hours.
-	 *
-	 * @return string Project ID or empty string on failure.
-	 */
-	private function get_wc_project_id() {
-		$cached = get_transient( 'xenarch_wc_project_id' );
-		if ( false !== $cached ) {
-			return $cached;
-		}
-
-		$api    = new Xenarch_Api();
-		$result = $api->get_config();
-
-		if ( ! is_wp_error( $result ) && ! empty( $result['wc_project_id'] ) ) {
-			set_transient( 'xenarch_wc_project_id', $result['wc_project_id'], DAY_IN_SECONDS );
-			return $result['wc_project_id'];
-		}
-
-		return '';
-	}
-
-	/**
-	 * Get the Coinbase CDP project ID from the platform API.
-	 * Cached as a WordPress transient for 24 hours.
-	 *
-	 * @return string Project ID or empty string on failure.
-	 */
-	private function get_cdp_project_id() {
-		// Check WordPress option first (for manual/testing override).
-		$option = get_option( 'xenarch_cdp_project_id', '' );
-		if ( ! empty( $option ) ) {
-			return $option;
-		}
-
-		$cached = get_transient( 'xenarch_cdp_project_id' );
-		if ( false !== $cached ) {
-			return $cached;
-		}
-
-		$api    = new Xenarch_Api();
-		$result = $api->get_config();
-
-		if ( ! is_wp_error( $result ) && ! empty( $result['cdp_project_id'] ) ) {
-			set_transient( 'xenarch_cdp_project_id', $result['cdp_project_id'], DAY_IN_SECONDS );
-			return $result['cdp_project_id'];
-		}
-
-		return '';
-	}
-
-	/**
 	 * Render the settings page — just a mount point for React.
 	 */
 	public function render_settings_page() {
@@ -156,13 +104,11 @@ class Xenarch_Admin {
 			return;
 		}
 		$config = array(
-			'restUrl'     => rest_url( 'xenarch/v1' ),
-			'nonce'       => wp_create_nonce( 'wp_rest' ),
-			'settings'    => $this->get_initial_settings(),
-			'pluginUrl'   => XENARCH_PLUGIN_URL,
-			'version'     => XENARCH_VERSION,
-			'wcProjectId'  => $this->get_wc_project_id(),
-			'cdpProjectId' => $this->get_cdp_project_id(),
+			'restUrl'   => rest_url( 'xenarch/v1' ),
+			'nonce'     => wp_create_nonce( 'wp_rest' ),
+			'settings'  => $this->get_initial_settings(),
+			'pluginUrl' => XENARCH_PLUGIN_URL,
+			'version'   => XENARCH_VERSION,
 		);
 		echo '<div class="wrap xenarch-wrap">';
 		echo '<div class="xenarch-page-container">';
@@ -192,32 +138,25 @@ class Xenarch_Admin {
 	 *
 	 * @return array
 	 */
+	/**
+	 * Bootstrap state for the React app. Mirrors
+	 * ``Xenarch_Rest::snapshot()`` — keep in sync. Only fields the React
+	 * shell needs to render its initial frame: the rest is fetched live
+	 * from the platform once the admin tabs mount.
+	 */
 	private function get_initial_settings() {
-		$api_key    = get_option( 'xenarch_api_key', '' );
 		$site_id    = get_option( 'xenarch_site_id', '' );
 		$site_token = get_option( 'xenarch_site_token', '' );
-		$categories = json_decode( get_option( 'xenarch_bot_categories', '{}' ), true );
-		$overrides  = json_decode( get_option( 'xenarch_bot_overrides', '{}' ), true );
 
 		return array(
-			'api_key'              => ! empty( $api_key ),
-			'site_id'              => $site_id,
-			'site_token'           => $site_token,
-			'default_price'        => get_option( 'xenarch_default_price', '0.003' ),
-			'payout_wallet'        => get_option( 'xenarch_payout_wallet', '' ),
-			'gate_unknown_traffic' => get_option( 'xenarch_gate_unknown_traffic', '1' ),
-			'gate_enabled'         => get_option( 'xenarch_gate_enabled', '1' ),
-			'bot_categories'       => is_array( $categories ) ? $categories : array(),
-			'bot_overrides'        => is_array( $overrides ) ? $overrides : array(),
-			'wallet_type'          => get_option( 'xenarch_wallet_type', '' ),
-			'wallet_network'       => get_option( 'xenarch_wallet_network', 'base' ),
-			'domain'               => wp_parse_url( get_site_url(), PHP_URL_HOST ),
-			'has_wallet'           => ! empty( get_option( 'xenarch_payout_wallet', '' ) ),
-			'has_site'             => ! empty( $site_id ) && ! empty( $site_token ),
-			'bot_signature_count'  => count( Xenarch_Bot_Detect::get_signatures() ) + count( Xenarch_Bot_Detect::get_fetcher_signatures() ),
-			'pay_json_url'         => get_site_url() . '/.well-known/pay.json',
-			'xenarch_md_url'       => get_site_url() . '/.well-known/xenarch.md',
-			'wallet_type'          => get_option( 'xenarch_wallet_type', '' ),
+			'site_id'             => (string) $site_id,
+			'site_token'          => (string) $site_token,
+			'domain'              => wp_parse_url( get_site_url(), PHP_URL_HOST ),
+			'has_site'            => ! empty( $site_token ),
+			'bot_signature_count' => count( Xenarch_Bot_Detect::get_signatures() )
+				+ count( Xenarch_Bot_Detect::get_fetcher_signatures() ),
+			'pay_json_url'        => get_site_url() . '/.well-known/pay.json',
+			'xenarch_md_url'      => get_site_url() . '/.well-known/xenarch.md',
 		);
 	}
 }
