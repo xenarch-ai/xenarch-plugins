@@ -4,7 +4,7 @@ Tags: ai bot detection, ai scraping, ai crawlers, paywall, micropayments
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.7.0
+Stable tag: 1.7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -184,6 +184,15 @@ Xenarch complements Cloudflare's x402 pay-per-crawl tooling. Both use the same x
 7. Terminal showing HTTP 402 response with x-payment headers and JSON gate payload.
 
 == Changelog ==
+
+= 1.7.2 =
+* Fix: Earnings tab now matches the dashboard's `/sites/[id]/activity` defaults — Earned filter on a 30d period (XEN-366), so the merchant doesn't open to a screen full of unpaid-bot noise. Added the two filter-pill rows (Earned/Gated/All + 24h/7d/30d/All) the dashboard ships.
+* Fix: replaced the HTML `<table>` activity feed with the dashboard's grid-based `.tx-table > .tx-row` layout. Type pills now use `.tx-type.pay / .gate / .cash / .free` colors (success / warning / error / muted) — identical to dashboard.
+* Fix: amount formatting now matches dashboard — "+$X.XX" prefix for positive, "—" for zero, four-decimal precision below $0.01.
+* Added prev/next pagination matching the dashboard's pattern.
+
+= 1.7.1 =
+* Fix: Status tab was rendering with the old `xn-*` class names (data-row, data-key, data-val, status-card) that v1.7.0 had removed from the CSS — text collapsed inline, status pill / disconnect button were unstyled. Tab now uses the dashboard's class system the same way Settings + Earnings already did.
 
 = 1.7.0 =
 * Visual catch-up: plugin admin UI is now a near-1:1 port of dash.xenarch.dev. Same tokens, same component classes (.section / .toggle / .cat-toggle / .bot-type / .stat / .fpills / .rule / .action-seg), same fonts (Inter + JetBrains Mono + Space Grotesk), same rhythm. CSS scoped under #xenarch-admin so WordPress admin's own .btn / .row / .section don't collide. The inherit/customize banner now matches the dashboard's gating page exactly (XEN-369 pattern). (XEN-380)

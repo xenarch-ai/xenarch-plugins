@@ -473,44 +473,63 @@ w3m-button, w3m-connect-button, w3m-account-button {
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   ACTIVITY TABLE.
+   ACTIVITY TABLE — ported 1:1 from dashboard's .tx-table grid.
+   Dashboard hides .activity variant under .surface bg; we use the same.
    ───────────────────────────────────────────────────────────────── */
 
-#xenarch-admin .activity-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-#xenarch-admin .activity-table thead th {
-  text-align: left; padding: 10px 8px;
+#xenarch-admin .filters {
+  display: flex; gap: 10px; margin-bottom: 14px; align-items: center;
+}
+
+#xenarch-admin .tx-table {
+  background: var(--xn-card); border: 1px solid var(--xn-card-border);
+  border-radius: var(--xn-radius-card); overflow: hidden;
+}
+#xenarch-admin .tx-row {
+  display: grid;
+  grid-template-columns: 88px 1fr 240px 110px 100px;
+  gap: 14px; align-items: center;
+  padding: 11px 18px;
+  border-bottom: 1px solid var(--xn-surface-border);
+  font-size: 12.5px;
+}
+#xenarch-admin .tx-row:last-child { border-bottom: 0; }
+#xenarch-admin .tx-row.head {
   font-family: 'JetBrains Mono', monospace; font-size: 10px;
   color: var(--xn-muted); text-transform: uppercase; letter-spacing: 0.08em;
-  border-bottom: 1px solid var(--xn-card-border);
+  padding-top: 14px; padding-bottom: 12px;
 }
-#xenarch-admin .activity-table tbody td {
-  padding: 12px 8px; border-bottom: 1px solid var(--xn-card-border);
-  color: var(--xn-fg);
+#xenarch-admin .tx-table.activity {
+  background: var(--xn-surface); border: 1px solid var(--xn-surface-border);
 }
-#xenarch-admin .activity-table tbody tr:last-child td { border-bottom: 0; }
-#xenarch-admin .activity-table .type-pill {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
-  padding: 3px 8px; border-radius: var(--xn-radius-pill);
-  background: var(--xn-success-bg); color: var(--xn-success);
+#xenarch-admin .tx-table.activity .tx-row.head { background: transparent; }
+
+#xenarch-admin .tx-type {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  padding: 4px 8px; border-radius: var(--xn-radius-sm);
+  font-weight: 400; justify-self: start;
 }
-#xenarch-admin .activity-table .type-pill.block {
-  background: var(--xn-error-bg); color: var(--xn-error);
+#xenarch-admin .tx-type.pay  { color: var(--xn-success); background: var(--xn-success-bg); }
+#xenarch-admin .tx-type.cash { color: var(--xn-error);   background: var(--xn-error-bg); }
+#xenarch-admin .tx-type.gate { color: var(--xn-warning); background: var(--xn-warning-bg); }
+#xenarch-admin .tx-type.free { color: var(--xn-muted);   background: var(--xn-surface); }
+
+#xenarch-admin .tx-path {
+  font-family: 'JetBrains Mono', monospace; color: var(--xn-fg);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-#xenarch-admin .activity-table .type-pill.withdraw {
-  background: var(--xn-warning-bg); color: var(--xn-warning);
+#xenarch-admin .tx-agent {
+  font-family: 'JetBrains Mono', monospace; color: var(--xn-secondary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-#xenarch-admin .activity-table .mono {
-  font-family: 'JetBrains Mono', monospace;
+#xenarch-admin .tx-amt {
+  font-family: 'JetBrains Mono', monospace; color: var(--xn-fg);
+  text-align: right; font-weight: 500;
 }
-#xenarch-admin .activity-table .amount-paid {
-  color: var(--xn-success); text-align: right; font-family: 'JetBrains Mono', monospace;
-}
-#xenarch-admin .activity-table .amount-block {
-  color: var(--xn-muted); text-align: right; font-family: 'JetBrains Mono', monospace;
-}
-#xenarch-admin .activity-table .time {
-  color: var(--xn-muted); text-align: right; white-space: nowrap;
+#xenarch-admin .tx-amt.zero { color: var(--xn-muted); }
+#xenarch-admin .tx-time {
+  font-family: 'JetBrains Mono', monospace; color: var(--xn-muted);
+  font-size: 11px; text-align: right;
 }
 
 /* ─────────────────────────────────────────────────────────────────
