@@ -185,6 +185,9 @@ Xenarch complements Cloudflare's x402 pay-per-crawl tooling. Both use the same x
 
 == Changelog ==
 
+= 1.7.3 =
+* Fix: page-cache plugins (W3 Total Cache, WP Super Cache, LiteSpeed, Comet, etc.) were serving cached HTML responses on x402 payment-proof replays, so the Xenarch middleware never ran → publisher's earnings feed missed payments that the agent's CLI/SDK had already settled on-chain. Plugin now sets `DONOTCACHEPAGE` and sends `Cache-Control: no-store` + `Vary: X-Xenarch-Tx-Hash` headers whenever a request carries the canonical Xenarch replay headers, forcing the cache layer to pass the request through to our middleware. (XEN-384)
+
 = 1.7.2 =
 * Fix: Earnings tab now matches the dashboard's `/sites/[id]/activity` defaults — Earned filter on a 30d period (XEN-366), so the merchant doesn't open to a screen full of unpaid-bot noise. Added the two filter-pill rows (Earned/Gated/All + 24h/7d/30d/All) the dashboard ships.
 * Fix: replaced the HTML `<table>` activity feed with the dashboard's grid-based `.tx-table > .tx-row` layout. Type pills now use `.tx-type.pay / .gate / .cash / .free` colors (success / warning / error / muted) — identical to dashboard.
