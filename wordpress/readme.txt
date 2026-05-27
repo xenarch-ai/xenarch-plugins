@@ -4,7 +4,7 @@ Tags: ai bot detection, ai scraping, ai crawlers, paywall, micropayments
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.2.1
+Stable tag: 1.7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -184,6 +184,35 @@ Xenarch complements Cloudflare's x402 pay-per-crawl tooling. Both use the same x
 7. Terminal showing HTTP 402 response with x-payment headers and JSON gate payload.
 
 == Changelog ==
+
+= 1.7.2 =
+* Fix: Earnings tab now matches the dashboard's `/sites/[id]/activity` defaults — Earned filter on a 30d period (XEN-366), so the merchant doesn't open to a screen full of unpaid-bot noise. Added the two filter-pill rows (Earned/Gated/All + 24h/7d/30d/All) the dashboard ships.
+* Fix: replaced the HTML `<table>` activity feed with the dashboard's grid-based `.tx-table > .tx-row` layout. Type pills now use `.tx-type.pay / .gate / .cash / .free` colors (success / warning / error / muted) — identical to dashboard.
+* Fix: amount formatting now matches dashboard — "+$X.XX" prefix for positive, "—" for zero, four-decimal precision below $0.01.
+* Added prev/next pagination matching the dashboard's pattern.
+
+= 1.7.1 =
+* Fix: Status tab was rendering with the old `xn-*` class names (data-row, data-key, data-val, status-card) that v1.7.0 had removed from the CSS — text collapsed inline, status pill / disconnect button were unstyled. Tab now uses the dashboard's class system the same way Settings + Earnings already did.
+
+= 1.7.0 =
+* Visual catch-up: plugin admin UI is now a near-1:1 port of dash.xenarch.dev. Same tokens, same component classes (.section / .toggle / .cat-toggle / .bot-type / .stat / .fpills / .rule / .action-seg), same fonts (Inter + JetBrains Mono + Space Grotesk), same rhythm. CSS scoped under #xenarch-admin so WordPress admin's own .btn / .row / .section don't collide. The inherit/customize banner now matches the dashboard's gating page exactly (XEN-369 pattern). (XEN-380)
+
+= 1.6.0 =
+* Plugin admin is now a real mirror of dash.xenarch.dev: Earnings tab shows live stats (today / month / all-time), category breakdown, and the recent paid-requests table fetched from the platform. Settings tab lets you edit gating toggles + per-path pricing rules; saves write straight back to the platform via site-token-authed endpoints, and the same state shows up on the dashboard immediately. (XEN-380, XEN-383)
+* Wallet card is read-only with a "Change in dashboard →" link, because payout changes go through the email-confirm flow that lives on dash.xenarch.dev.
+* New platform endpoints (X-Site-Token authed): GET /v1/sites/me, PUT /v1/sites/me/gating, PUT /v1/sites/me/pricing, GET /v1/sites/me/stats, GET /v1/sites/me/transactions, GET /v1/sites/me/category-breakdown.
+
+= 1.5.0 =
+* Plugin is now a thin window into the Xenarch platform. Payout wallet, pricing rules, gating, bot category overrides, earnings, transactions — all live on the backend and are managed in dash.xenarch.dev. WordPress MySQL only stores the site token (the credential pointing at the platform) and a per-server bot detection log.
+* Onboarding rewritten: click "Connect with Xenarch", confirm the site on dash.xenarch.dev (no token to copy, no wallet question), come back done. (XEN-380)
+* Removed all platform-owned `xenarch_*` options from activation (payout wallet, pricing rules, default price, bot categories/overrides, gate toggles, API key, email, wallet type/network).
+* Removed dead REST endpoints (/register, /add-site, the legacy pricing/bot proxy surface) and the unused Reown/WalletConnect bundle. Admin bundle ~152 KB vs. ~250 KB pre-rewrite.
+* Settings + Earnings tabs deep-link to the dashboard for now; a follow-up wires the dashboard's editing surface into the plugin admin via site-token-authed reads/writes.
+
+= 1.4.0 =
+* Dashboard-first onboarding: the plugin's only first-run question is to paste a site token issued by dash.xenarch.dev. Wallet, pricing rules, gating defaults and bot category overrides are managed in the dashboard — the plugin reads them from the platform. (XEN-380)
+* Removed dead `/register` + `/add-site` REST endpoints and the unused WP options (`xenarch_api_key`, `xenarch_email`, `xenarch_wallet_type`, `xenarch_wallet_network`).
+* Wallet section in Settings is now read-only with a "Change in dashboard →" link. Plugin no longer asks for a wallet during setup.
 
 = 1.2.1 =
 * When the merchant picks "Connect wallet" during onboarding, the plugin registers the connected address as an identity auth method on the Xenarch platform. The same wallet signing in on the dashboard (dash.xenarch.dev) then resolves to the same merchant account, so plugin-created sites appear in the dashboard immediately. (XEN-365)

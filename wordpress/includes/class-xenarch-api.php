@@ -1,44 +1,42 @@
 <?php
 /**
- * Xenarch API client.
+ * Xenarch platform API client.
  *
- * Wraps all communication with the xenarch.dev REST API using the
- * WordPress HTTP API (wp_remote_post / wp_remote_get).
+ * Post-XEN-380 the plugin is a thin window into the platform — the only
+ * things this client does are:
+ *
+ *   1. talk to the gate hot-path (create gate, verify on-chain payment,
+ *      read dashboard-managed gating config),
+ *   2. complete the claim handshake that boots a fresh install
+ *      (``exchange_claim_token``),
+ *   3. read a few public config knobs (``get_config``) that the admin UI
+ *      occasionally needs.
+ *
+ * All Bearer-API-key endpoints are gone — pricing, payouts, identity
+ * wallet linking, transactions, balances are managed in the dashboard
+ * and the plugin reads/writes them through site_token-authed surfaces
+ * (not in this rewrite — Phase B).
  *
  * @package Xenarch
  */
 
-// Prevent direct file access.
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/**
- * Class Xenarch_Api
- */
 class Xenarch_Api {
 
-	/**
-	 * Base URL for the Xenarch API.
-	 *
-	 * @var string
-	 */
+	/** @var string */
 	private $base_url;
 
-	/**
-	 * Constructor.
-	 */
 	public function __construct() {
-		/**
-		 * Filter the Xenarch API base URL.
-		 *
-		 * @param string $base_url Default API base URL.
-		 */
 		$this->base_url = apply_filters( 'xenarch_api_base', 'https://api.xenarch.dev' );
 	}
 
 	/**
-	 * Get public platform configuration (WalletConnect project ID, etc.).
+	 * Public-config endpoint. Today the plugin doesn't actively use any
+	 * of the values it returns, but the call is harmless and the hook
+	 * is kept so other code (e.g. status checks) can ping it cheaply.
 	 *
 	 * @return array|WP_Error
 	 */
@@ -47,50 +45,15 @@ class Xenarch_Api {
 	}
 
 	/**
-	 * Register a new publisher account.
+	 * Verify an on-chain payment for a gate. Stateless — the platform
+	 * re-derives everything from the tx hash on each call.
 	 *
-	 * @param string $email    Publisher email address.
-	 * @param string $password Publisher password.
-	 * @return array|WP_Error  Response body array on success, WP_Error on failure.
-	 */
-	public function register( $email, $password ) {
-		return $this->post(
-			'/v1/publishers',
-			array(
-				'email'    => $email,
-				'password' => $password,
-			)
-		);
-	}
-
-	/**
-	 * Add a site for the authenticated publisher.
-	 *
-	 * @param string $domain Site domain (e.g. "myblog.com").
+	 * @param string $gate_id Gate UUID returned in the 402 envelope.
+	 * @param string $tx_hash 0x-prefixed transaction hash.
 	 * @return array|WP_Error
-	 */
-	public function add_site( $domain ) {
-		return $this->post(
-			'/v1/sites',
-			array( 'domain' => $domain ),
-			$this->auth_headers()
-		);
-	}
-
-	/**
-	 * Verify an on-chain payment against a gate.
-	 *
-	 * Posts the tx hash to the platform, which re-checks the transaction
-	 * on Base and confirms it satisfies the gate's price + recipient.
-	 * No JWT, no cached session — verification is stateless per call.
-	 *
-	 * @param string $gate_id Gate UUID returned from create_gate().
-	 * @param string $tx_hash On-chain transaction hash (0x-prefixed).
-	 * @return array|WP_Error Response with 'verified' boolean, or WP_Error on failure.
 	 */
 	public function verify_payment( $gate_id, $tx_hash ) {
 		$site_token = get_option( 'xenarch_site_token', '' );
-
 		return $this->post(
 			'/v1/gates/' . urlencode( $gate_id ) . '/verify',
 			array( 'tx_hash' => $tx_hash ),
@@ -99,48 +62,9 @@ class Xenarch_Api {
 	}
 
 	/**
-	 * List sites for the authenticated publisher.
-	 *
-	 * @return array|WP_Error
-	 */
-	public function list_sites() {
-		return $this->get( '/v1/sites', $this->auth_headers() );
-	}
-
-	/**
-	 * Link a wallet to the API-key holder's identity (XEN-365).
-	 *
-	 * The plugin calls this when the merchant picks "Connect wallet"
-	 * during onboarding. The wallet then doubles as an auth method
-	 * for dashboard SIWE — the same human signing in at
-	 * dash.xenarch.dev resolves to the same identity → same publisher
-	 * → sees the WP-installed sites.
-	 *
-	 * Idempotent on the same identity. 409 if the wallet is already
-	 * attached to a different identity (e.g. merchant SIWE'd with the
-	 * wallet on a different account first).
-	 *
-	 * @param string $wallet 0x-prefixed address (any case).
-	 * @return array|WP_Error
-	 */
-	public function link_identity_wallet( $wallet ) {
-		return $this->post(
-			'/v1/publishers/me/identity/wallets',
-			array( 'wallet' => $wallet ),
-			$this->auth_headers()
-		);
-	}
-
-	/**
-	 * Fetch the dashboard-managed gating config for the site this
-	 * plugin is bound to (XEN-364).
-	 *
-	 * Returns { gating_enabled: bool, gated_categories: {<key>: bool} }
-	 * on success. Plugin caches the result in a transient — see
-	 * Xenarch_Gate::get_gating_config().
-	 *
-	 * X-Site-Token authed so the dashboard remains the source of
-	 * truth for what gets gated and the plugin just enforces.
+	 * Read the dashboard-managed gating state for this site. Returns
+	 * ``{gating_enabled, gated_categories}``. Cached by the caller via
+	 * a WP transient (see Xenarch_Gate::get_gating_config).
 	 *
 	 * @return array|WP_Error
 	 */
@@ -149,7 +73,6 @@ class Xenarch_Api {
 		if ( empty( $site_token ) ) {
 			return new WP_Error( 'no_site_token', 'site token not configured' );
 		}
-
 		return $this->get(
 			'/v1/sites/me/gating-config',
 			array( 'X-Site-Token' => $site_token )
@@ -157,263 +80,142 @@ class Xenarch_Api {
 	}
 
 	/**
-	 * Update pricing rules for a site.
+	 * Create a gate on the platform for a freshly detected bot request.
+	 * Returns the full x402 envelope (with ``accepts`` + ``facilitators``)
+	 * which the plugin echoes back as the 402 body.
 	 *
-	 * @param string $site_id          Site UUID.
-	 * @param float  $default_price    Default price in USD.
-	 * @param array  $rules            Optional pricing rules array.
+	 * @param string $url              Request path being protected.
+	 * @param string $detection_method Detection label for the audit trail.
 	 * @return array|WP_Error
-	 */
-	public function update_pricing( $site_id, $default_price, $rules = array() ) {
-		$body = array( 'default_price_usd' => (float) $default_price );
-
-		if ( ! empty( $rules ) ) {
-			$body['rules'] = $rules;
-		}
-
-		return $this->post(
-			'/v1/sites/' . urlencode( $site_id ) . '/pricing',
-			$body,
-			$this->auth_headers(),
-			'PUT'
-		);
-	}
-
-	/**
-	 * Update payout wallet for the authenticated publisher.
-	 *
-	 * @param string $wallet  Wallet address (0x...).
-	 * @param string $network Network name (default: value from wp_options, fallback: 'base').
-	 * @return array|WP_Error
-	 */
-	public function update_payout( $wallet, $network = '' ) {
-		if ( empty( $network ) ) {
-			$network = get_option( 'xenarch_wallet_network', 'base' );
-		}
-
-		return $this->post(
-			'/v1/publishers/me/payout',
-			array(
-				'wallet'  => $wallet,
-				'network' => $network,
-			),
-			$this->auth_headers(),
-			'PUT'
-		);
-	}
-
-	/**
-	 * Get publisher profile.
-	 *
-	 * @return array|WP_Error
-	 */
-	public function get_profile() {
-		return $this->get( '/v1/publishers/me', $this->auth_headers() );
-	}
-
-	/**
-	 * Create a gate for a URL path.
-	 *
-	 * @param string $url              URL path (e.g. "/article/xyz").
-	 * @param string $detection_method Detection method (e.g. "ua_match").
-	 * @return array|WP_Error Gate data on success, WP_Error on failure.
 	 */
 	public function create_gate( $url, $detection_method = 'ua_match' ) {
 		$site_token = get_option( 'xenarch_site_token', '' );
-
-		$headers = array(
-			'X-Site-Token' => $site_token,
-		);
-
 		return $this->post(
 			'/v1/gates',
 			array(
 				'url'              => $url,
 				'detection_method' => $detection_method,
 			),
-			$headers,
+			array( 'X-Site-Token' => $site_token ),
 			'POST',
-			true // Allow 402 as success.
+			true  // allow 402 as success
 		);
 	}
 
 	/**
-	 * Get time-bucketed stats for a site.
+	 * Swap a one-time claim_token (issued by dash.xenarch.dev) for the
+	 * long-lived ``site_token``. Server-to-server only — the claim_token
+	 * never lives anywhere except its single trip through the redirect
+	 * URL and this request.
 	 *
-	 * @param string $site_id Site UUID.
-	 * @return array|WP_Error
+	 * @param string $claim_token
+	 * @return array|WP_Error  ``{site_id, site_token, domain, integration_type}``
 	 */
-	/**
-	 * Get wallet balance for a site.
-	 *
-	 * @param string $site_id Site UUID.
-	 * @return array|WP_Error
-	 */
-	public function get_balance( $site_id ) {
-		return $this->get( '/v1/sites/' . urlencode( $site_id ) . '/balance', $this->auth_headers() );
-	}
-
-	/**
-	 * Get earnings by category for a site.
-	 *
-	 * @param string $site_id Site UUID.
-	 * @return array|WP_Error
-	 */
-	public function get_category_breakdown( $site_id ) {
-		return $this->get( '/v1/sites/' . urlencode( $site_id ) . '/category-breakdown', $this->auth_headers() );
-	}
-
-	/**
-	 * Get offramp sell options for a country.
-	 *
-	 * @param string $country Two-letter country code (e.g. "US").
-	 * @return array|WP_Error
-	 */
-	public function get_sell_config() {
-		return $this->get(
-			'/v1/offramp/sell-config',
-			$this->auth_headers()
-		);
-	}
-
-	public function get_sell_options( $country ) {
-		return $this->get(
-			'/v1/offramp/sell-options?country=' . urlencode( $country ),
-			$this->auth_headers()
-		);
-	}
-
-	/**
-	 * Create a Coinbase sell quote for offramp (USDC → fiat).
-	 *
-	 * @param string $site_id    Site UUID.
-	 * @param string $amount_usd Amount in USD (e.g. "50.00").
-	 * @param string $country    Two-letter country code.
-	 * @return array|WP_Error
-	 */
-	public function create_sell_quote( $site_id, $amount_usd, $country, $payment_method = 'FIAT_WALLET' ) {
+	public function exchange_claim_token( $claim_token ) {
 		return $this->post(
-			'/v1/offramp/sell-quote',
-			array(
-				'site_id'        => $site_id,
-				'amount_usd'     => $amount_usd,
-				'country'        => $country,
-				'payment_method' => $payment_method,
-			),
-			$this->auth_headers()
+			'/v1/site-claims/' . urlencode( $claim_token ) . '/exchange',
+			array()
 		);
 	}
 
-	public function get_stats( $site_id ) {
-		return $this->get(
-			'/v1/sites/' . urlencode( $site_id ) . '/stats',
-			$this->auth_headers()
-		);
+	// ------------------------------------------------------------------
+	// XEN-380 / XEN-383 — thin-window mirror of /me/sites/{id}/*
+	// All X-Site-Token authed.
+	// ------------------------------------------------------------------
+
+	private function site_token_headers() {
+		$site_token = get_option( 'xenarch_site_token', '' );
+		return array( 'X-Site-Token' => $site_token );
 	}
 
-	/**
-	 * Get paginated transactions for a site.
-	 *
-	 * @param string $site_id Site UUID.
-	 * @param array  $params  Query params (period, page, per_page).
-	 * @return array|WP_Error
-	 */
-	public function get_transactions( $site_id, $params = array() ) {
-		$query = http_build_query( $params );
-		$endpoint = '/v1/sites/' . urlencode( $site_id ) . '/transactions';
-		if ( ! empty( $query ) ) {
-			$endpoint .= '?' . $query;
+	/** Full site detail (mirror of dashboard /sites/[id]). */
+	public function get_my_site() {
+		$site_token = get_option( 'xenarch_site_token', '' );
+		if ( empty( $site_token ) ) {
+			return new WP_Error( 'no_site_token', 'site token not configured' );
 		}
-
-		return $this->get( $endpoint, $this->auth_headers() );
+		return $this->get( '/v1/sites/me', $this->site_token_headers() );
 	}
 
-	/**
-	 * Record a completed cash-out.
-	 *
-	 * @param string $site_id    Site UUID.
-	 * @param string $amount_usd Amount cashed out.
-	 * @return array|WP_Error
-	 */
-	public function record_cash_out( $site_id, $amount_usd ) {
+	/** PUT gating — full replace of gating_enabled + gated_categories + use_publisher_defaults. */
+	public function put_my_site_gating( $gating_enabled, $gated_categories, $use_publisher_defaults ) {
 		return $this->post(
-			'/v1/sites/' . urlencode( $site_id ) . '/cash-outs',
-			array( 'amount_usd' => $amount_usd ),
-			$this->auth_headers()
+			'/v1/sites/me/gating',
+			array(
+				'gating_enabled'         => (bool) $gating_enabled,
+				'gated_categories'       => $gated_categories,
+				'use_publisher_defaults' => (bool) $use_publisher_defaults,
+			),
+			$this->site_token_headers(),
+			'PUT'
+		);
+	}
+
+	/** PUT pricing — default + per-path rules. */
+	public function put_my_site_pricing( $default_price_usd, $rules, $default_billing_scope = 'page' ) {
+		return $this->post(
+			'/v1/sites/me/pricing',
+			array(
+				'default_price_usd'     => (float) $default_price_usd,
+				'default_billing_scope' => $default_billing_scope,
+				'rules'                 => $rules,
+			),
+			$this->site_token_headers(),
+			'PUT'
+		);
+	}
+
+	/** Today / month / all-time stats. */
+	public function get_my_site_stats() {
+		return $this->get( '/v1/sites/me/stats', $this->site_token_headers() );
+	}
+
+	/** Paginated transactions feed. */
+	public function get_my_site_transactions( $params = array() ) {
+		$qs = http_build_query( $params );
+		return $this->get(
+			'/v1/sites/me/transactions' . ( $qs ? '?' . $qs : '' ),
+			$this->site_token_headers()
+		);
+	}
+
+	/** Earnings grouped by detected bot category. */
+	public function get_my_site_category_breakdown() {
+		return $this->get(
+			'/v1/sites/me/category-breakdown',
+			$this->site_token_headers()
 		);
 	}
 
 	// ------------------------------------------------------------------
-	// Internal helpers
+	// Internal HTTP helpers
 	// ------------------------------------------------------------------
 
-	/**
-	 * Build authorisation headers from stored API key.
-	 *
-	 * @return array
-	 */
-	private function auth_headers() {
-		$api_key = get_option( 'xenarch_api_key', '' );
-
-		return array(
-			'Authorization' => 'Bearer ' . $api_key,
-		);
-	}
-
-	/**
-	 * Perform a POST (or PUT) request.
-	 *
-	 * @param string $endpoint  API endpoint path (e.g. "/v1/publishers").
-	 * @param array  $body      Request body (will be JSON-encoded).
-	 * @param array  $headers   Additional headers.
-	 * @param string $method    HTTP method (POST or PUT).
-	 * @param bool   $allow_402 Whether to treat HTTP 402 as a success (for gate creation).
-	 * @return array|WP_Error
-	 */
 	private function post( $endpoint, $body = array(), $headers = array(), $method = 'POST', $allow_402 = false ) {
-		$url = $this->base_url . $endpoint;
-
 		$headers['Content-Type'] = 'application/json';
-
-		$args = array(
-			'method'  => $method,
-			'headers' => $headers,
-			'body'    => wp_json_encode( $body ),
-			'timeout' => 30,
+		$response = wp_remote_post(
+			$this->base_url . $endpoint,
+			array(
+				'method'  => $method,
+				'headers' => $headers,
+				'body'    => wp_json_encode( $body ),
+				'timeout' => 30,
+			)
 		);
-
-		$response = wp_remote_post( $url, $args );
-
 		return $this->handle_response( $response, $allow_402 );
 	}
 
-	/**
-	 * Perform a GET request.
-	 *
-	 * @param string $endpoint API endpoint path.
-	 * @param array  $headers  Additional headers.
-	 * @return array|WP_Error
-	 */
 	private function get( $endpoint, $headers = array() ) {
-		$url = $this->base_url . $endpoint;
-
-		$args = array(
-			'headers' => $headers,
-			'timeout' => 30,
+		$response = wp_remote_get(
+			$this->base_url . $endpoint,
+			array(
+				'headers' => $headers,
+				'timeout' => 30,
+			)
 		);
-
-		$response = wp_remote_get( $url, $args );
-
 		return $this->handle_response( $response );
 	}
 
-	/**
-	 * Parse and validate an API response.
-	 *
-	 * @param array|WP_Error $response  wp_remote_* response.
-	 * @param bool           $allow_402 Whether to treat HTTP 402 as success.
-	 * @return array|WP_Error
-	 */
 	private function handle_response( $response, $allow_402 = false ) {
 		if ( is_wp_error( $response ) ) {
 			return $response;
@@ -426,17 +228,22 @@ class Xenarch_Api {
 		if ( $code >= 200 && $code < 300 ) {
 			return is_array( $data ) ? $data : array();
 		}
-
-		// Gate creation returns 402 with the gate data — treat as success.
 		if ( $allow_402 && 402 === $code && is_array( $data ) ) {
 			return $data;
 		}
 
-		$message = isset( $data['message'] ) ? $data['message'] : ( isset( $data['detail'] ) ? $data['detail'] : 'Unknown API error' );
-		$error   = isset( $data['error'] ) ? $data['error'] : 'api_error';
+		$message = '';
+		if ( is_array( $data ) ) {
+			$message = isset( $data['message'] ) ? $data['message']
+				: ( isset( $data['detail'] ) ? ( is_array( $data['detail'] ) ? wp_json_encode( $data['detail'] ) : (string) $data['detail'] )
+				: '' );
+		}
+		if ( '' === $message ) {
+			$message = 'API call failed (HTTP ' . (int) $code . ')';
+		}
 
 		return new WP_Error(
-			'xenarch_' . $error,
+			'xenarch_api_error',
 			$message,
 			array( 'status' => $code )
 		);

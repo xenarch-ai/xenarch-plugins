@@ -1,114 +1,117 @@
+import { useState, useCallback } from 'react'
 import type { Settings } from '../types'
+import * as api from '../api'
 
 interface Props {
   settings: Settings
+  onSettingsChange: (s: Settings) => void
 }
 
-type ConnectionState = 'connected' | 'pending' | 'disconnected'
-
-function deriveState(settings: Settings): ConnectionState {
-  if (settings.has_site) return 'connected'
-  if (settings.has_wallet) return 'pending'
-  return 'disconnected'
-}
-
-export function StatusTab({ settings }: Props) {
-  const state = deriveState(settings)
-
+export function StatusTab({ settings, onSettingsChange }: Props) {
+  const connected = settings.has_site
   const tokenPreview = settings.site_token
-    ? `${settings.site_token.slice(0, 8)}...${settings.site_token.slice(-4)}`
+    ? `${settings.site_token.slice(0, 8)}…${settings.site_token.slice(-4)}`
     : ''
 
-  const pillClass =
-    state === 'connected' ? 'xn-status-pill--ok' :
-    state === 'pending'   ? 'xn-status-pill--pending' :
-                            'xn-status-pill--err'
+  const [disconnecting, setDisconnecting] = useState(false)
+  const [disconnectError, setDisconnectError] = useState('')
 
-  const pillLabel =
-    state === 'connected' ? 'connected' :
-    state === 'pending'   ? 'pending' :
-                            'disconnected'
-
-  /* Server-side detection: check actual gate toggle, not just connection state */
-  const gateEnabled = settings.gate_enabled === '1'
-  const serverSideActive = (state === 'connected' || state === 'pending') && gateEnabled
-
-  /* URLs only available when fully connected */
-  const hasUrls = state === 'connected'
+  const disconnect = useCallback(async () => {
+    if (disconnecting) return
+    setDisconnecting(true)
+    setDisconnectError('')
+    try {
+      const updated = await api.disconnect()
+      onSettingsChange(updated)
+    } catch (err) {
+      setDisconnectError(err instanceof Error ? err.message : 'Could not disconnect.')
+      setDisconnecting(false)
+    }
+  }, [disconnecting, onSettingsChange])
 
   return (
-    <div className="xn-status-card">
-      {/* status */}
-      <div className="xn-data-row">
-        <span className="xn-data-key">status</span>
-        <span className="xn-data-val">
-          <span className={`xn-status-pill ${pillClass}`}><span className="xn-status-pill-dot"></span>{pillLabel}</span>
-        </span>
+    <>
+      <div className="status-card">
+        <div className="data-row">
+          <span className="data-key">status</span>
+          <span className="data-val">
+            <span className={`status-pill ${connected ? 'ok' : 'err'}`}>
+              <span className="pill-dot" />
+              {connected ? 'connected' : 'disconnected'}
+            </span>
+          </span>
+        </div>
+
+        <div className="data-row">
+          <span className="data-key">site token</span>
+          <span className="data-val">
+            {connected ? tokenPreview : <span className="muted">—</span>}
+          </span>
+        </div>
+
+        <div className="data-row">
+          <span className="data-key">domain</span>
+          <span className="data-val">{settings.domain || <span className="muted">—</span>}</span>
+        </div>
+
+        <div className="data-row">
+          <span className="data-key">server-side</span>
+          <span className="data-val">
+            {connected ? (
+              <>
+                <span
+                  className="dot-ok"
+                  style={{ width: 6, height: 6, borderRadius: '50%', display: 'inline-block' }}
+                />
+                Active — {settings.bot_signature_count} bot signatures
+              </>
+            ) : (
+              <>
+                <span
+                  className="dot-err"
+                  style={{ width: 6, height: 6, borderRadius: '50%', display: 'inline-block' }}
+                />
+                Inactive
+              </>
+            )}
+          </span>
+        </div>
+
+        <div className="data-row">
+          <span className="data-key">pay.json</span>
+          <span className="data-val">
+            {connected && settings.pay_json_url ? (
+              <a href={settings.pay_json_url} target="_blank" rel="noopener noreferrer">
+                {settings.pay_json_url}
+              </a>
+            ) : (
+              <span className="muted">—</span>
+            )}
+          </span>
+        </div>
+
+        <div className="data-row">
+          <span className="data-key">xenarch.md</span>
+          <span className="data-val">
+            {connected && settings.xenarch_md_url ? (
+              <a href={settings.xenarch_md_url} target="_blank" rel="noopener noreferrer">
+                {settings.xenarch_md_url}
+              </a>
+            ) : (
+              <span className="muted">—</span>
+            )}
+          </span>
+        </div>
       </div>
 
-      {/* site token */}
-      <div className="xn-data-row">
-        <span className="xn-data-key">site token</span>
-        <span className="xn-data-val">
-          {state === 'connected' && tokenPreview
-            ? tokenPreview
-            : state === 'pending'
-              ? <span className="xn-dash">registering...</span>
-              : <span className="xn-dash">&mdash;</span>
-          }
-        </span>
-      </div>
-
-      {/* server-side */}
-      <div className="xn-data-row">
-        <span className="xn-data-key">server-side</span>
-        <span className="xn-data-val">
-          {serverSideActive ? (
-            <>
-              <span className="xn-dot xn-dot--green" />
-              Active &mdash; {settings.bot_signature_count} bot signatures
-            </>
-          ) : (state === 'connected' || state === 'pending') && !gateEnabled ? (
-            <>
-              <span className="xn-dot xn-dot--red" />
-              Disabled
-            </>
-          ) : (
-            <>
-              <span className="xn-dot xn-dot--red" />
-              Inactive
-            </>
-          )}
-        </span>
-      </div>
-
-      {/* pay.json */}
-      <div className="xn-data-row">
-        <span className="xn-data-key">pay.json</span>
-        <span className="xn-data-val">
-          {hasUrls && settings.pay_json_url ? (
-            <a href={settings.pay_json_url} target="_blank" rel="noopener noreferrer">
-              {settings.pay_json_url}
-            </a>
-          ) : (
-            <span className="xn-dash">&mdash;</span>
-          )}
-        </span>
-      </div>
-
-      {/* xenarch.md */}
-      <div className="xn-data-row xn-data-row--last">
-        <span className="xn-data-key">xenarch.md</span>
-        <span className="xn-data-val">
-          {hasUrls && settings.xenarch_md_url ? (
-            <a href={settings.xenarch_md_url} target="_blank" rel="noopener noreferrer">
-              {settings.xenarch_md_url}
-            </a>
-          ) : (
-            <span className="xn-dash">&mdash;</span>
-          )}
-        </span>
-      </div>
-    </div>
+      {connected ? (
+        <div className="actions" style={{ marginTop: 24 }}>
+          <button className="btn secondary" onClick={disconnect} disabled={disconnecting}>
+            {disconnecting ? 'Disconnecting…' : 'Disconnect from Xenarch'}
+          </button>
+          {disconnectError ? <span className="muted">{disconnectError}</span> : null}
+        </div>
+      ) : null}
+    </>
   )
 }
