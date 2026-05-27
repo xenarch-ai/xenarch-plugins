@@ -19,7 +19,7 @@ function dollars(s: string | number | null | undefined): string {
   if (s == null) return '$0.00'
   const n = typeof s === 'number' ? s : parseFloat(s)
   if (!isFinite(n)) return '$0.00'
-  return '$' + n.toFixed(n < 1 ? 4 : 2)
+  return '$' + (n < 1 ? n.toFixed(4) : n.toFixed(2))
 }
 
 function truncate(addr: string | null | undefined): string {
@@ -47,19 +47,11 @@ export function EarningsTab({ settings }: Props) {
   const [txLoading, setTxLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Initial load: site detail + stats + category breakdown in parallel.
   useEffect(() => {
     setLoading(true)
-    Promise.all([
-      api.fetchSite(),
-      api.fetchStats(),
-      api.fetchCategoryBreakdown(),
-    ])
+    Promise.all([api.fetchSite(), api.fetchStats(), api.fetchCategoryBreakdown()])
       .then(([s, st, cb]) => {
-        setSite(s)
-        setStats(st)
-        setCategories(cb.categories)
-        setLoading(false)
+        setSite(s); setStats(st); setCategories(cb.categories); setLoading(false)
       })
       .catch((err) => {
         setError(err instanceof Error ? err.message : 'Failed to load earnings.')
@@ -67,16 +59,11 @@ export function EarningsTab({ settings }: Props) {
       })
   }, [])
 
-  // Transaction list refetches on period change.
   useEffect(() => {
     setTxLoading(true)
     api
       .fetchTransactions(period, 1, 25, 'all')
-      .then((r) => {
-        setTxs(r.transactions)
-        setTxTotal(r.total)
-        setTxLoading(false)
-      })
+      .then((r) => { setTxs(r.transactions); setTxTotal(r.total); setTxLoading(false) })
       .catch(() => setTxLoading(false))
   }, [period])
 
@@ -84,145 +71,137 @@ export function EarningsTab({ settings }: Props) {
     ? `https://dash.xenarch.dev/sites/${encodeURIComponent(settings.site_id)}`
     : 'https://dash.xenarch.dev/sites'
 
-  const wallet = site?.payout_wallet ?? null
-
   const sortedCategories = useMemo(
     () => [...categories].sort((a, b) => parseFloat(b.earned_usd) - parseFloat(a.earned_usd)),
     [categories],
   )
 
-  if (loading) {
-    return (
-      <div className="xenarch-section">
-        <p className="xenarch-section-desc">Loading earnings…</p>
-      </div>
-    )
-  }
-
+  if (loading) return <div className="empty">Loading earnings…</div>
   if (error) {
     return (
-      <div className="xenarch-section">
-        <h2 className="xenarch-section-title">Earnings</h2>
-        <div className="xenarch-onboarding-error">{error}</div>
+      <div className="section">
+        <div className="section-head">
+          <div className="section-title">Earnings</div>
+          <div className="section-desc">Couldn't reach the platform.</div>
+        </div>
+        <div className="onboarding-error">{error}</div>
       </div>
     )
   }
 
   return (
     <>
-      {/* Wallet bar */}
-      <div className="xenarch-wallet-bar" style={{ marginBottom: '1rem' }}>
-        <span className="xenarch-dot xenarch-dot--green" />
-        <span className="xenarch-wallet-address" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-          {truncate(wallet)}
-        </span>
-        <span className="xenarch-wallet-label">
-          {site?.payout_network || 'base'}
-        </span>
+      {/* Wallet bar — payout destination */}
+      <div className="wallet-card">
+        <span className="dot" />
+        <span className="addr">{truncate(site?.payout_wallet)}</span>
+        <span className="label">{site?.payout_network ?? 'base'}</span>
         <a
+          className="change"
           href="https://dash.xenarch.dev/account/wallet"
           target="_blank"
           rel="noopener noreferrer"
-          style={{ marginLeft: 'auto', fontSize: '12px' }}
         >
           Change in dashboard →
         </a>
       </div>
 
-      {/* Stats cards */}
-      <div className="xenarch-stats-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
-        {stats &&
-          [
+      {/* Stat cards — today / month / all-time */}
+      {stats && (
+        <div className="stats">
+          {[
             { label: 'Today', b: stats.today },
             { label: 'This month', b: stats.month },
             { label: 'All time', b: stats.all_time },
           ].map((c) => (
-            <div key={c.label} className="xenarch-stats-card" style={{ padding: '1rem', borderRadius: '8px', background: 'var(--xn-surface, rgba(255,255,255,0.04))' }}>
-              <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase' }}>{c.label}</div>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '24px', marginTop: '0.25rem' }}>
-                {dollars(c.b.earned_usd)}
-              </div>
-              <div style={{ fontSize: '11px', opacity: 0.6, marginTop: '0.25rem' }}>
-                {c.b.paid} paid · {c.b.requests} total
-              </div>
+            <div key={c.label} className="stat">
+              <div className="lbl">{c.label}</div>
+              <div className="val">{dollars(c.b.earned_usd)}</div>
+              <div className="sub">{c.b.paid} paid · {c.b.requests} total</div>
             </div>
           ))}
-      </div>
+        </div>
+      )}
 
       {/* Category breakdown */}
       {sortedCategories.length > 0 && (
-        <div className="xenarch-section">
-          <h2 className="xenarch-section-title" style={{ fontSize: '14px' }}>Earnings by bot category</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginTop: '0.5rem' }}>
+        <div className="section">
+          <div className="section-head">
+            <div className="section-title">Earnings by bot category</div>
+            <div className="section-desc">Live, since this site started gating.</div>
+          </div>
+          <div className="agg">
             {sortedCategories.map((c) => (
-              <div key={c.category} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderRadius: '6px', background: 'var(--xn-surface, rgba(255,255,255,0.03))' }}>
-                <span style={{ fontSize: '12px', opacity: 0.7 }}>{c.category.replace(/_/g, ' ')}</span>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '12px' }}>{dollars(c.earned_usd)}</span>
+              <div key={c.category} className="agg-cell">
+                <div className="agg-label">{c.category.replace(/_/g, ' ')}</div>
+                <div className="agg-value">{dollars(c.earned_usd)}</div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Transactions table */}
-      <div className="xenarch-section">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-          <h2 className="xenarch-section-title" style={{ fontSize: '14px', margin: 0 }}>Recent activity</h2>
-          <div className="xenarch-period-pills" style={{ display: 'flex', gap: '0.25rem' }}>
+      {/* Activity table */}
+      <div className="section">
+        <div className="filter-strip">
+          <div className="section-title" style={{ margin: 0 }}>Recent activity</div>
+          <div className="fpills" style={{ marginLeft: 'auto' }}>
             {PERIODS.map((p) => (
-              <button
+              <span
                 key={p}
+                className={`fpill${period === p ? ' on' : ''}`}
                 onClick={() => setPeriod(p)}
-                className={period === p ? 'xenarch-btn xenarch-btn--primary' : 'xenarch-btn'}
-                style={{ padding: '0.25rem 0.5rem', fontSize: '11px' }}
-              >
-                {p}
-              </button>
+              >{p}</span>
             ))}
           </div>
         </div>
+
         {txLoading ? (
-          <p className="xenarch-section-desc">Loading…</p>
+          <div className="empty">Loading…</div>
         ) : txs.length === 0 ? (
-          <p className="xenarch-section-desc">No activity in this period yet.</p>
+          <div className="empty">No activity in this period yet.</div>
         ) : (
-          <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}>
+          <table className="activity-table">
             <thead>
-              <tr style={{ opacity: 0.6, textAlign: 'left' }}>
-                <th style={{ padding: '0.5rem 0.25rem' }}>Type</th>
-                <th style={{ padding: '0.5rem 0.25rem' }}>Page</th>
-                <th style={{ padding: '0.5rem 0.25rem' }}>Agent</th>
-                <th style={{ padding: '0.5rem 0.25rem', textAlign: 'right' }}>Amount</th>
-                <th style={{ padding: '0.5rem 0.25rem', textAlign: 'right' }}>Time</th>
+              <tr>
+                <th>Type</th>
+                <th>Page</th>
+                <th>Agent</th>
+                <th style={{ textAlign: 'right' }}>Amount</th>
+                <th style={{ textAlign: 'right' }}>Time</th>
               </tr>
             </thead>
             <tbody>
-              {txs.map((t) => (
-                <tr key={t.id} style={{ borderTop: '1px solid var(--xn-border, rgba(255,255,255,0.06))' }}>
-                  <td style={{ padding: '0.5rem 0.25rem' }}>
-                    <span style={{ fontSize: '10px', opacity: 0.7 }}>
-                      {t.type === 'gate' ? (t.status === 'paid' ? 'earn' : 'block') : t.type}
-                    </span>
-                  </td>
-                  <td style={{ padding: '0.5rem 0.25rem', fontFamily: "'JetBrains Mono', monospace" }}>{t.path}</td>
-                  <td style={{ padding: '0.5rem 0.25rem' }}>{t.agent_name || '—'}</td>
-                  <td style={{
-                    padding: '0.5rem 0.25rem',
-                    textAlign: 'right',
-                    fontFamily: "'JetBrains Mono', monospace",
-                    color: t.type === 'withdraw' ? 'var(--xn-error, #d33)' : (t.status === 'paid' ? 'var(--xn-success, #2a8)' : undefined),
-                  }}>
-                    {dollars(t.amount_usd)}
-                  </td>
-                  <td style={{ padding: '0.5rem 0.25rem', textAlign: 'right', opacity: 0.6 }}>{relative(t.created_at)}</td>
-                </tr>
-              ))}
+              {txs.map((t) => {
+                const kind = t.type === 'withdraw'
+                  ? 'withdraw'
+                  : t.status === 'paid' ? 'paid' : 'block'
+                return (
+                  <tr key={t.id}>
+                    <td>
+                      <span className={`type-pill${kind === 'block' ? ' block' : kind === 'withdraw' ? ' withdraw' : ''}`}>
+                        {kind === 'withdraw' ? 'cash' : kind === 'block' ? 'block' : 'earn'}
+                      </span>
+                    </td>
+                    <td className="mono">{t.path}</td>
+                    <td>{t.agent_name ?? '—'}</td>
+                    <td className={kind === 'block' ? 'amount-block' : 'amount-paid'}>
+                      {dollars(t.amount_usd)}
+                    </td>
+                    <td className="time">{relative(t.created_at)}</td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         )}
+
         {txTotal > txs.length && (
-          <div style={{ marginTop: '0.75rem', fontSize: '11px', opacity: 0.6 }}>
-            Showing {txs.length} of {txTotal} · <a href={dashboardSiteUrl} target="_blank" rel="noopener noreferrer">see full history in dashboard →</a>
+          <div className="muted" style={{ marginTop: 12 }}>
+            Showing {txs.length} of {txTotal} ·{' '}
+            <a href={dashboardSiteUrl} target="_blank" rel="noopener noreferrer">
+              see full history in dashboard →
+            </a>
           </div>
         )}
       </div>

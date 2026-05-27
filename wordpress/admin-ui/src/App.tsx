@@ -67,9 +67,9 @@ export function App() {
   if (claim.kind === 'exchanging') {
     return (
       <div className="xenarch-app">
-        <div className="xenarch-onboarding">
-          <div className="xenarch-onboarding-title">Finishing the connection…</div>
-          <div className="xenarch-onboarding-desc">Pairing this site with your Xenarch account.</div>
+        <div className="onboarding">
+          <div className="onboarding-title">Finishing the connection…</div>
+          <div className="onboarding-desc">Pairing this site with your Xenarch account.</div>
         </div>
       </div>
     )
@@ -78,12 +78,11 @@ export function App() {
   if (!settings.has_site) {
     return (
       <div className="xenarch-app">
-        {claim.kind === 'error' ? (
-          <div className="xenarch-onboarding-error" style={{ marginBottom: '1rem' }}>
-            {claim.message}
-          </div>
-        ) : null}
-        <Onboarding domain={settings.domain} pluginAdminUrl={window.location.href.split('?')[0] + '?page=xenarch'} />
+        <Onboarding
+          domain={settings.domain}
+          pluginAdminUrl={window.location.href.split('?')[0] + '?page=xenarch'}
+          errorMessage={claim.kind === 'error' ? claim.message : null}
+        />
       </div>
     )
   }

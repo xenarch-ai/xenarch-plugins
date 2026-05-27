@@ -4,7 +4,7 @@ Tags: ai bot detection, ai scraping, ai crawlers, paywall, micropayments
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.6.0
+Stable tag: 1.7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -184,6 +184,9 @@ Xenarch complements Cloudflare's x402 pay-per-crawl tooling. Both use the same x
 7. Terminal showing HTTP 402 response with x-payment headers and JSON gate payload.
 
 == Changelog ==
+
+= 1.7.0 =
+* Visual catch-up: plugin admin UI is now a near-1:1 port of dash.xenarch.dev. Same tokens, same component classes (.section / .toggle / .cat-toggle / .bot-type / .stat / .fpills / .rule / .action-seg), same fonts (Inter + JetBrains Mono + Space Grotesk), same rhythm. CSS scoped under #xenarch-admin so WordPress admin's own .btn / .row / .section don't collide. The inherit/customize banner now matches the dashboard's gating page exactly (XEN-369 pattern). (XEN-380)
 
 = 1.6.0 =
 * Plugin admin is now a real mirror of dash.xenarch.dev: Earnings tab shows live stats (today / month / all-time), category breakdown, and the recent paid-requests table fetched from the platform. Settings tab lets you edit gating toggles + per-path pricing rules; saves write straight back to the platform via site-token-authed endpoints, and the same state shows up on the dashboard immediately. (XEN-380, XEN-383)

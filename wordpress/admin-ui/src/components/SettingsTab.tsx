@@ -1,71 +1,74 @@
 import { useEffect, useState, useCallback } from 'react'
-import type { Settings, SiteDetail, GatedCategories, PricingRule, BotCategoryKey } from '../types'
+import type {
+  Settings,
+  SiteDetail,
+  GatedCategories,
+  PricingRule,
+  BotCategoryKey,
+} from '../types'
 import * as api from '../api'
 
 interface Props {
-  // Plugin-local snapshot — only used for the dashboard deep-link.
-  // Live data on this tab comes from /xenarch/v1/site/* via fetchSite.
   settings: Settings
   onSettingsChange: (s: Settings) => void
 }
 
-// Silence "declared but never read" — onSettingsChange is part of the
-// stable prop contract App.tsx hands every tab, even when this tab
-// happens not to mutate the plugin-local snapshot.
-function useUnused(..._args: unknown[]): void {}
-
-const CATEGORY_LABEL: Record<BotCategoryKey, string> = {
-  ai_search:     'AI Search',
-  ai_assistants: 'AI Assistants',
-  ai_agents:     'AI Agents',
-  ai_training:   'AI Training',
-  scrapers:      'Scrapers',
-  general_ai:    'General AI',
-}
-
-const CATEGORY_DESC: Record<BotCategoryKey, string> = {
-  ai_search:     'Search engines that index your content so AI can find it.',
-  ai_assistants: 'Chatbots asking questions on behalf of a user.',
-  ai_agents:     'Autonomous agents performing tasks on your site.',
-  ai_training:   'Crawlers harvesting data for model training.',
-  scrapers:      'Generic data-extraction bots.',
-  general_ai:    'AI crawlers with mixed or unclear intent.',
-}
-
-const CATEGORY_ORDER: BotCategoryKey[] = [
-  'ai_search', 'ai_assistants', 'ai_agents', 'ai_training', 'scrapers', 'general_ai',
+const CATEGORY_META: { key: BotCategoryKey; name: string; desc: string }[] = [
+  { key: 'ai_search',     name: 'AI Search',     desc: 'Index your site so AI can recommend it' },
+  { key: 'ai_assistants', name: 'AI Assistants', desc: 'Users asking AI about your content' },
+  { key: 'ai_agents',     name: 'AI Agents',     desc: 'Autonomous AI performing tasks on your site' },
+  { key: 'ai_training',   name: 'AI Training',   desc: 'Crawlers collecting data for model training' },
+  { key: 'scrapers',      name: 'Scrapers',      desc: 'Automated data extraction tools' },
+  { key: 'general_ai',    name: 'General AI',    desc: 'Other AI crawlers with mixed or unclear intent' },
 ]
 
-const DASHBOARD_WALLET_URL = 'https://dash.xenarch.dev/account/wallet'
+const DEFAULT_CATEGORIES: GatedCategories = {
+  ai_search: false,
+  ai_assistants: true,
+  ai_agents: true,
+  ai_training: true,
+  scrapers: true,
+  general_ai: true,
+}
+
+// Silence "unused" — onSettingsChange is part of the stable tab prop
+// contract App hands every tab even when not mutated.
+function noop(..._args: unknown[]): void {}
 
 export function SettingsTab({ settings, onSettingsChange }: Props) {
-  useUnused(settings, onSettingsChange)
+  noop(settings, onSettingsChange)
+
   const [site, setSite] = useState<SiteDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [savingSection, setSavingSection] = useState<'gating' | 'pricing' | null>(null)
-  const [saveError, setSaveError] = useState<string | null>(null)
+  const [savingGating, setSavingGating] = useState(false)
+  const [savingPricing, setSavingPricing] = useState(false)
+  const [gatingMsg, setGatingMsg] = useState<string | null>(null)
+  const [pricingMsg, setPricingMsg] = useState<string | null>(null)
 
-  // Editable local copies of the live state.
-  const [gateEnabled, setGateEnabled] = useState(true)
-  const [usePubDefaults, setUsePubDefaults] = useState(false)
-  const [cats, setCats] = useState<GatedCategories | null>(null)
+  const [useInherit, setUseInherit] = useState(true)
+  const [masterOn, setMasterOn] = useState(true)
+  const [cats, setCats] = useState<GatedCategories>(DEFAULT_CATEGORIES)
+  const [gatingDirty, setGatingDirty] = useState(false)
 
   const [defaultPrice, setDefaultPrice] = useState('0.003')
-  const [rules, setRules] = useState<PricingRule[]>([])
+  const [defaultScope, setDefaultScope] = useState<'page' | 'path'>('page')
+  const [rules, setRules] = useState<(PricingRule & { id: number })[]>([])
+  const [pricingDirty, setPricingDirty] = useState(false)
 
-  // Hydrate from platform on mount.
+  // Hydrate.
   useEffect(() => {
     setLoading(true)
     api
       .fetchSite()
       .then((s) => {
         setSite(s)
-        setGateEnabled(s.gating_enabled)
-        setUsePubDefaults(s.use_publisher_defaults)
-        setCats(s.gated_categories)
+        setUseInherit(s.use_publisher_defaults)
+        setMasterOn(s.gating_enabled)
+        setCats({ ...DEFAULT_CATEGORIES, ...s.gated_categories })
         setDefaultPrice(s.default_price_usd)
-        setRules(s.rules)
+        setDefaultScope(s.default_billing_scope)
+        setRules(s.rules.map((r, i) => ({ ...r, id: Date.now() + i })))
         setLoading(false)
       })
       .catch((err) => {
@@ -74,238 +77,308 @@ export function SettingsTab({ settings, onSettingsChange }: Props) {
       })
   }, [])
 
+  // Gating: master toggle + per-cat.
+  const toggleMaster = useCallback(() => {
+    if (useInherit) return
+    setMasterOn((v) => !v)
+    setGatingDirty(true); setGatingMsg(null)
+  }, [useInherit])
+
   const toggleCat = useCallback(
     (k: BotCategoryKey) => {
-      if (!cats || usePubDefaults) return
-      setCats({ ...cats, [k]: !cats[k] })
+      if (useInherit) return
+      setCats((c) => ({ ...c, [k]: !c[k] }))
+      setGatingDirty(true); setGatingMsg(null)
     },
-    [cats, usePubDefaults],
+    [useInherit],
   )
 
   const saveGating = useCallback(async () => {
-    if (!cats) return
-    setSavingSection('gating')
-    setSaveError(null)
+    setSavingGating(true); setGatingMsg(null)
     try {
       const next = await api.putGating({
-        gating_enabled: gateEnabled,
+        gating_enabled: masterOn,
         gated_categories: cats,
-        use_publisher_defaults: usePubDefaults,
+        use_publisher_defaults: useInherit,
       })
-      setGateEnabled(next.gating_enabled)
-      setCats(next.gated_categories)
-      setUsePubDefaults(next.use_publisher_defaults)
+      setMasterOn(next.gating_enabled)
+      setCats({ ...DEFAULT_CATEGORIES, ...next.gated_categories })
+      setUseInherit(next.use_publisher_defaults)
+      setGatingDirty(false)
+      setGatingMsg('Saved.')
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Save failed.')
+      setGatingMsg(err instanceof Error ? err.message : 'Save failed.')
     }
-    setSavingSection(null)
-  }, [gateEnabled, cats, usePubDefaults])
+    setSavingGating(false)
+  }, [masterOn, cats, useInherit])
 
-  const savePricing = useCallback(async () => {
-    setSavingSection('pricing')
-    setSaveError(null)
+  const flipInherit = useCallback(async () => {
+    setSavingGating(true); setGatingMsg(null)
     try {
-      const cleanRules = rules.filter((r) => r.path && r.path.trim().length > 0)
+      const next = await api.putGating({
+        gating_enabled: masterOn,
+        gated_categories: cats,
+        use_publisher_defaults: !useInherit,
+      })
+      setUseInherit(next.use_publisher_defaults)
+      setMasterOn(next.gating_enabled)
+      setCats({ ...DEFAULT_CATEGORIES, ...next.gated_categories })
+      setGatingDirty(false)
+    } catch (err) {
+      setGatingMsg(err instanceof Error ? err.message : 'Could not switch.')
+    }
+    setSavingGating(false)
+  }, [masterOn, cats, useInherit])
+
+  // Pricing.
+  const savePricing = useCallback(async () => {
+    setSavingPricing(true); setPricingMsg(null)
+    try {
+      const cleaned: PricingRule[] = rules
+        .filter((r) => r.path && r.path.trim())
+        .map((r) => ({ path: r.path, price_usd: r.price_usd, billing_scope: r.billing_scope }))
       await api.putPricing({
         default_price_usd: parseFloat(defaultPrice) || 0,
-        default_billing_scope: site?.default_billing_scope ?? 'page',
-        rules: cleanRules,
+        default_billing_scope: defaultScope,
+        rules: cleaned,
       })
-      // Refresh from server so we see normalized state.
       const refreshed = await api.fetchSite()
       setSite(refreshed)
       setDefaultPrice(refreshed.default_price_usd)
-      setRules(refreshed.rules)
+      setDefaultScope(refreshed.default_billing_scope)
+      setRules(refreshed.rules.map((r, i) => ({ ...r, id: Date.now() + i })))
+      setPricingDirty(false)
+      setPricingMsg('Saved.')
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Save failed.')
+      setPricingMsg(err instanceof Error ? err.message : 'Save failed.')
     }
-    setSavingSection(null)
-  }, [defaultPrice, rules, site])
+    setSavingPricing(false)
+  }, [defaultPrice, defaultScope, rules])
 
-  const addRule = useCallback(() => {
-    setRules([...rules, { path: '/**/example/**', price_usd: '0.01', billing_scope: 'page' }])
-  }, [rules])
-
-  const updateRule = useCallback(
-    (i: number, patch: Partial<PricingRule>) => {
-      setRules(rules.map((r, idx) => (idx === i ? { ...r, ...patch } : r)))
-    },
-    [rules],
-  )
-
-  const removeRule = useCallback(
-    (i: number) => {
-      setRules(rules.filter((_, idx) => idx !== i))
-    },
-    [rules],
-  )
-
-  if (loading) {
-    return <div className="xenarch-section"><p className="xenarch-section-desc">Loading settings…</p></div>
-  }
+  if (loading) return <div className="empty">Loading settings…</div>
   if (error) {
     return (
-      <div className="xenarch-section">
-        <h2 className="xenarch-section-title">Settings</h2>
-        <div className="xenarch-onboarding-error">{error}</div>
+      <div className="section">
+        <div className="section-head">
+          <div className="section-title">Settings</div>
+        </div>
+        <div className="onboarding-error">{error}</div>
       </div>
     )
   }
 
   return (
     <>
-      {/* Gating */}
-      <section className="xenarch-section">
-        <h2 className="xenarch-section-title">Gate</h2>
-        <p className="xenarch-section-desc">
-          What gets charged. Toggles save to your Xenarch account — the same
-          state shows on dash.xenarch.dev/sites/{site?.id?.slice(0, 8) ?? '…'}.
-        </p>
+      {/* Inherit/customize banner — XEN-369 */}
+      <div className="inherit-banner">
+        <div>
+          <div className="b-title">
+            {useInherit ? 'Inheriting global gating settings' : 'Custom gating for this site'}
+          </div>
+          <div className="b-desc">
+            {useInherit
+              ? 'This site uses your account-wide defaults. Toggling them on dash.xenarch.dev cascades here.'
+              : "This site has its own gating settings. Click 'Use global settings' to revert to your account defaults."}
+          </div>
+        </div>
+        <button className="btn secondary" disabled={savingGating} onClick={flipInherit}>
+          {savingGating ? 'Switching…' : useInherit ? 'Customise for this site' : 'Use global settings'}
+        </button>
+      </div>
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0.75rem 0' }}>
-          <input
-            type="checkbox"
-            checked={gateEnabled}
-            onChange={(e) => setGateEnabled(e.target.checked)}
-          />
-          <span><b>Gate AI bots</b> — master toggle. Off = let everything through.</span>
-        </label>
+      {/* Gate */}
+      <div className="section">
+        <div className="section-head">
+          <div className="section-title">Gate</div>
+          <div className="section-desc">
+            {useInherit
+              ? 'Read-only view of your global gating. Edit on dash.xenarch.dev.'
+              : 'What gets gated on this site.'}
+          </div>
+        </div>
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0.75rem 0', opacity: 0.85 }}>
-          <input
-            type="checkbox"
-            checked={usePubDefaults}
-            onChange={(e) => setUsePubDefaults(e.target.checked)}
-          />
-          <span>Inherit category toggles from your account-wide defaults.</span>
-        </label>
+        <div className="master" style={useInherit ? { opacity: 0.65 } : undefined}>
+          <div className="left">
+            <div className="master-label">Gate AI bots</div>
+            <div className="master-desc">All non-human traffic must pay unless allowed below.</div>
+          </div>
+          <div
+            className={`toggle${masterOn ? '' : ' off'}`}
+            onClick={toggleMaster}
+            style={useInherit ? { cursor: 'not-allowed' } : undefined}
+          >
+            <div className="dot" />
+          </div>
+        </div>
 
-        <div style={{ marginTop: '0.75rem', opacity: usePubDefaults ? 0.5 : 1 }}>
-          {CATEGORY_ORDER.map((k) => (
-            <div key={k} style={{ display: 'flex', alignItems: 'center', padding: '0.5rem 0', borderTop: '1px solid var(--xn-border, rgba(255,255,255,0.06))' }}>
-              <input
-                type="checkbox"
-                checked={!!cats?.[k]}
-                onChange={() => toggleCat(k)}
-                disabled={usePubDefaults}
-                style={{ marginRight: '0.75rem' }}
-              />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', fontWeight: 500 }}>{CATEGORY_LABEL[k]}</div>
-                <div style={{ fontSize: '11px', opacity: 0.6 }}>{CATEGORY_DESC[k]}</div>
+        <div className="bot-types" style={useInherit ? { opacity: 0.65 } : undefined}>
+          {CATEGORY_META.map((c) => (
+            <div key={c.key} className="bot-type">
+              <div
+                className={`cat-toggle ${cats[c.key] ? 'on' : 'off'}`}
+                onClick={() => toggleCat(c.key)}
+                style={useInherit ? { cursor: 'not-allowed' } : undefined}
+              >
+                <div className="dot" />
               </div>
-              <span style={{ fontSize: '11px', opacity: 0.6, fontFamily: "'JetBrains Mono', monospace" }}>
-                {cats?.[k] ? 'charge' : 'allow'}
-              </span>
+              <div className="cat-info">
+                <div className="cat-name">{c.name}</div>
+                <div className="cat-desc">{c.desc}</div>
+              </div>
+              <div className={`cat-stat ${cats[c.key] ? 'on' : 'off'}`}>
+                {cats[c.key] ? 'gated' : 'allowed'}
+              </div>
             </div>
           ))}
         </div>
 
-        <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <button
-            className="xenarch-btn xenarch-btn--primary"
-            onClick={saveGating}
-            disabled={savingSection === 'gating'}
-          >
-            {savingSection === 'gating' ? 'Saving…' : 'Save gating'}
-          </button>
-          {saveError && savingSection === null && (
-            <span className="xenarch-onboarding-error" style={{ marginLeft: '0.5rem' }}>{saveError}</span>
-          )}
+        <div className="always-note">
+          Search engines (Google, Bing) and social previews always pass through free.
         </div>
-      </section>
+
+        <div className="actions">
+          {!useInherit ? (
+            <button
+              className="btn primary"
+              onClick={saveGating}
+              disabled={!gatingDirty || savingGating}
+            >
+              {savingGating ? 'Saving…' : 'Save gating'}
+            </button>
+          ) : null}
+          {gatingMsg ? <span className="muted">{gatingMsg}</span> : null}
+        </div>
+      </div>
 
       {/* Pricing */}
-      <section className="xenarch-section">
-        <h2 className="xenarch-section-title">Pricing</h2>
-        <p className="xenarch-section-desc">
-          What gated bots pay per request. Rules match first-wins by path
-          pattern; anything unmatched falls through to the default.
-        </p>
+      <div className="section">
+        <div className="section-head">
+          <div className="section-title">Pricing</div>
+          <div className="section-desc">Default price for any gated request. Per-path rules override the default.</div>
+        </div>
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0.75rem 0' }}>
-          <span style={{ minWidth: '120px' }}>Default price</span>
-          <span>$</span>
+        <div className="row">
+          <label>Default price</label>
+          <span className="symbol">$</span>
           <input
-            type="number"
-            step="0.001"
-            min="0"
-            max="1"
+            type="text"
+            className="price"
             value={defaultPrice}
-            onChange={(e) => setDefaultPrice(e.target.value)}
-            style={{ width: '6rem', fontFamily: "'JetBrains Mono', monospace" }}
+            onChange={(e) => { setDefaultPrice(e.target.value); setPricingDirty(true); setPricingMsg(null) }}
           />
-          <span style={{ opacity: 0.6 }}>per page</span>
-        </label>
+          <div className="action-seg">
+            <button
+              className={`action-btn${defaultScope === 'page' ? ' active' : ''}`}
+              onClick={() => { setDefaultScope('page'); setPricingDirty(true); setPricingMsg(null) }}
+            >per page</button>
+            <button
+              className={`action-btn${defaultScope === 'path' ? ' active' : ''}`}
+              onClick={() => { setDefaultScope('path'); setPricingDirty(true); setPricingMsg(null) }}
+            >per path</button>
+          </div>
+        </div>
 
-        <div style={{ marginTop: '0.75rem' }}>
-          <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', marginBottom: '0.5rem' }}>URL rules</div>
-          {rules.length === 0 && (
-            <div style={{ fontSize: '12px', opacity: 0.6 }}>No path rules. All paths use the default price.</div>
-          )}
-          {rules.map((r, i) => (
-            <div key={i} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+        <div style={{ marginTop: 12 }}>
+          {rules.map((r) => (
+            <div key={r.id} className="rule">
+              <span className="grip">⠇</span>
+              <span className="match">URL contains</span>
               <input
                 type="text"
+                className="path"
                 value={r.path}
-                onChange={(e) => updateRule(i, { path: e.target.value })}
-                placeholder="/**/docs/**"
-                style={{ flex: 1, fontFamily: "'JetBrains Mono', monospace" }}
+                onChange={(e) => {
+                  setRules((prev) => prev.map((x) => (x.id === r.id ? { ...x, path: e.target.value } : x)))
+                  setPricingDirty(true)
+                }}
               />
-              <span>→ $</span>
+              <span className="arrow">→</span>
+              <span className="dollar">$</span>
               <input
-                type="number"
-                step="0.001"
-                min="0"
-                max="1"
+                type="text"
+                className="price"
                 value={r.price_usd}
-                onChange={(e) => updateRule(i, { price_usd: e.target.value })}
-                style={{ width: '5rem', fontFamily: "'JetBrains Mono', monospace" }}
+                onChange={(e) => {
+                  setRules((prev) => prev.map((x) => (x.id === r.id ? { ...x, price_usd: e.target.value } : x)))
+                  setPricingDirty(true)
+                }}
               />
-              <button className="xenarch-btn" onClick={() => removeRule(i)}>×</button>
+              <div className="action-seg">
+                <button
+                  className={`action-btn${r.billing_scope === 'page' ? ' active' : ''}`}
+                  onClick={() => {
+                    setRules((prev) => prev.map((x) => (x.id === r.id ? { ...x, billing_scope: 'page' } : x)))
+                    setPricingDirty(true)
+                  }}
+                >per page</button>
+                <button
+                  className={`action-btn${r.billing_scope === 'path' ? ' active' : ''}`}
+                  onClick={() => {
+                    setRules((prev) => prev.map((x) => (x.id === r.id ? { ...x, billing_scope: 'path' } : x)))
+                    setPricingDirty(true)
+                  }}
+                >per path</button>
+              </div>
+              <button
+                className="remove"
+                onClick={() => {
+                  setRules((prev) => prev.filter((x) => x.id !== r.id))
+                  setPricingDirty(true)
+                }}
+              >×</button>
             </div>
           ))}
-          <button className="xenarch-btn" onClick={addRule} style={{ marginTop: '0.25rem' }}>
-            + add rule
-          </button>
-        </div>
-
-        <div style={{ marginTop: '1rem' }}>
           <button
-            className="xenarch-btn xenarch-btn--primary"
-            onClick={savePricing}
-            disabled={savingSection === 'pricing'}
-          >
-            {savingSection === 'pricing' ? 'Saving…' : 'Save pricing'}
-          </button>
+            className="btn secondary"
+            onClick={() => {
+              setRules((prev) => [
+                ...prev,
+                { id: Date.now(), path: '', price_usd: '0.01', billing_scope: 'page' },
+              ])
+              setPricingDirty(true)
+            }}
+          >+ add rule</button>
         </div>
-      </section>
 
-      {/* Wallet */}
-      <section className="xenarch-section">
-        <h2 className="xenarch-section-title">Wallet</h2>
-        <p className="xenarch-section-desc">
-          Where your earnings land. Managed in the dashboard so the email
-          confirm-by-link flow only lives in one place.
-        </p>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.75rem' }}>
-          <span className="xenarch-dot xenarch-dot--green" />
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '13px' }}>
+        <div className="actions">
+          <button
+            className="btn primary"
+            onClick={savePricing}
+            disabled={!pricingDirty || savingPricing}
+          >
+            {savingPricing ? 'Saving…' : 'Save pricing'}
+          </button>
+          {pricingMsg ? <span className="muted">{pricingMsg}</span> : null}
+        </div>
+      </div>
+
+      {/* Wallet — read-only deeplink */}
+      <div className="section">
+        <div className="section-head">
+          <div className="section-title">Wallet</div>
+          <div className="section-desc">
+            Where your earnings land. Managed in the dashboard so the email-confirm
+            flow only lives in one place.
+          </div>
+        </div>
+        <div className="wallet-card" style={{ marginBottom: 0 }}>
+          <span className="dot" />
+          <span className="addr">
             {site?.payout_wallet
               ? `${site.payout_wallet.slice(0, 6)}…${site.payout_wallet.slice(-4)}`
               : 'not set'}
           </span>
-          <span style={{ fontSize: '11px', opacity: 0.6 }}>{site?.payout_network ?? 'base'}</span>
+          <span className="label">{site?.payout_network ?? 'base'}</span>
           <a
-            href={DASHBOARD_WALLET_URL}
+            className="change"
+            href="https://dash.xenarch.dev/account/wallet"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ marginLeft: 'auto', fontSize: '12px' }}
           >
             Change in dashboard →
           </a>
         </div>
-      </section>
+      </div>
     </>
   )
 }
