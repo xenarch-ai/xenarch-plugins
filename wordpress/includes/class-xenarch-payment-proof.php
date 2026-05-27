@@ -128,8 +128,30 @@ class Xenarch_Payment_Proof {
 		$result = $api->verify_payment( $gate_id, $tx_hash );
 
 		if ( is_wp_error( $result ) ) {
-			// Platform unreachable — fail open briefly to avoid blocking legitimate
-			// paid requests during platform downtime. Short cache to recover quickly.
+			// XEN-386: only fail-open on transport errors (timeout, DNS,
+			// connection refused). The Xenarch_Api wraps non-2xx platform
+			// responses as a WP_Error too — those are deliberate "no"
+			// answers and must NOT fail open, otherwise a 4xx (e.g. the
+			// platform rejecting a forged tx hash) would silently serve
+			// content. We tell them apart by the ``status`` data key the
+			// API helper attaches when it received a response:
+			//   - no status key → transport error → fail open (60s cache).
+			//   - 5xx          → platform is up but erroring → fail open.
+			//   - 4xx          → platform said no → fail closed.
+			$error_data   = $result->get_error_data();
+			$status_code  = is_array( $error_data ) && isset( $error_data['status'] )
+				? (int) $error_data['status']
+				: 0;
+			if ( $status_code >= 400 && $status_code < 500 ) {
+				// Platform deliberately rejected this (gate, tx) pair.
+				// Cache 'invalid' briefly so we don't hammer the platform,
+				// but short enough that an operator fix takes effect fast.
+				set_transient( $cache_key, 'invalid', 60 );
+				return false;
+			}
+			// Transport error or 5xx — fail open so the platform's brief
+			// outage doesn't block real paid agents. Short cache TTL so
+			// we recover the moment the platform is back.
 			set_transient( $cache_key, 'valid', 60 );
 			return true;
 		}
