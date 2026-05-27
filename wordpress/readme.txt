@@ -4,7 +4,7 @@ Tags: ai bot detection, ai scraping, ai crawlers, paywall, micropayments
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.7.3
+Stable tag: 1.7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -184,6 +184,9 @@ Xenarch complements Cloudflare's x402 pay-per-crawl tooling. Both use the same x
 7. Terminal showing HTTP 402 response with x-payment headers and JSON gate payload.
 
 == Changelog ==
+
+= 1.7.4 =
+* Fix: payment-proof verify() now distinguishes transport errors from 4xx platform responses. Previously any wp_error path was treated as "platform unreachable, fail open" — but the Xenarch API helper also returns a wp_error for legitimate 4xx rejections (e.g. duplicate gate-tx pair pre-XEN-386). Fail-open on 4xx silently served content without the platform recording the payment, causing the seller-side activity feed to under-report real revenue. Now: 4xx → fail closed (cache 'invalid' for 60s); 5xx / transport → fail open (cache 'valid' for 60s). (XEN-386)
 
 = 1.7.3 =
 * Fix: page-cache plugins (W3 Total Cache, WP Super Cache, LiteSpeed, Comet, etc.) were serving cached HTML responses on x402 payment-proof replays, so the Xenarch middleware never ran → publisher's earnings feed missed payments that the agent's CLI/SDK had already settled on-chain. Plugin now sets `DONOTCACHEPAGE` and sends `Cache-Control: no-store` + `Vary: X-Xenarch-Tx-Hash` headers whenever a request carries the canonical Xenarch replay headers, forcing the cache layer to pass the request through to our middleware. (XEN-384)
