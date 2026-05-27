@@ -3,7 +3,7 @@
  * Plugin Name: Xenarch
  * Plugin URI:  https://xenarch.com/wordpress
  * Description: Monetize AI bot traffic on your WordPress site. Xenarch detects AI agents and charges micropayments for content access via the x402 protocol.
- * Version:     1.7.2
+ * Version:     1.7.3
  * Author:      Xenarch
  * Author URI:  https://xenarch.com
  * License:     GPL-2.0+
@@ -18,10 +18,57 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'XENARCH_VERSION', '1.7.2' );
+define( 'XENARCH_VERSION', '1.7.3' );
 define( 'XENARCH_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'XENARCH_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'XENARCH_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
+
+/**
+ * XEN-384: short-circuit page caches for x402 payment-proof replays.
+ *
+ * When an agent re-fetches a gated URL carrying the canonical Xenarch
+ * replay headers (``X-Xenarch-Tx-Hash`` + ``X-Xenarch-Gate-Id``), our
+ * middleware MUST run so it can verify the on-chain tx and call the
+ * platform's /v1/gates/<id>/verify endpoint. If a WordPress page-cache
+ * plugin (W3 Total Cache, WP Super Cache, LiteSpeed, Comet, etc.)
+ * intercepts the request first and serves a cached HTML response, the
+ * middleware never runs → no verify → publisher's earnings feed misses
+ * the payment.
+ *
+ * Defined as early as possible (before any class file is required) so
+ * the DONOTCACHEPAGE / DONOTCACHCEOBJECT constants take effect before
+ * cache plugins make their serve-or-pass decision. Most full-page
+ * cache plugins look for these constants at the ``plugins_loaded``
+ * boundary; advanced-cache.php-based intercepts that run earlier
+ * still get the ``Cache-Control: no-store`` header echoed back.
+ *
+ * Cheap: a couple of $_SERVER reads + a couple of define()s. Runs on
+ * every WP request, but only fires when these headers are present
+ * (which is rare — only the agent replay path).
+ */
+if ( ! function_exists( 'xenarch_bypass_cache_for_payment_replay' ) ) {
+	function xenarch_bypass_cache_for_payment_replay() {
+		if ( empty( $_SERVER['HTTP_X_XENARCH_TX_HASH'] )
+			&& empty( $_SERVER['HTTP_X_XENARCH_GATE_ID'] ) ) {
+			return;
+		}
+		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			define( 'DONOTCACHEPAGE', true );
+		}
+		if ( ! defined( 'DONOTCACHEDB' ) ) {
+			define( 'DONOTCACHEDB', true );
+		}
+		if ( ! defined( 'DONOTCACHCEOBJECT' ) ) {
+			define( 'DONOTCACHCEOBJECT', true );
+		}
+		if ( ! headers_sent() ) {
+			header( 'Cache-Control: no-store, no-cache, must-revalidate, max-age=0', true );
+			header( 'Pragma: no-cache', true );
+			header( 'Vary: X-Xenarch-Tx-Hash, X-Xenarch-Gate-Id', false );
+		}
+	}
+	xenarch_bypass_cache_for_payment_replay();
+}
 
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-api.php';
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-payment-proof.php';
