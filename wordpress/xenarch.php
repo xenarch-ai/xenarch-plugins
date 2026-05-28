@@ -3,7 +3,7 @@
  * Plugin Name: Xenarch
  * Plugin URI:  https://xenarch.com/wordpress
  * Description: Monetize AI bot traffic on your WordPress site. Xenarch detects AI agents and charges micropayments for content access via the x402 protocol.
- * Version:     1.7.4
+ * Version:     1.9.0
  * Author:      Xenarch
  * Author URI:  https://xenarch.com
  * License:     GPL-2.0+
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'XENARCH_VERSION', '1.7.4' );
+define( 'XENARCH_VERSION', '1.9.0' );
 define( 'XENARCH_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'XENARCH_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'XENARCH_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
@@ -84,10 +84,11 @@ require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-rest.php';
 /**
  * Activation hook. Post-XEN-380 the plugin is a thin window into the
  * platform: payout wallet, pricing rules, gating defaults, bot category
- * toggles all live in the Xenarch backend. The only persistent state
- * this plugin owns is the ``site_token`` (its credential pointing back
- * at the platform) and a local bot-detection log table that records
- * traffic hitting *this* WP server in particular.
+ * toggles, per-bot overrides, and detection telemetry all live in the
+ * Xenarch backend. The only persistent state this plugin owns is the
+ * ``site_token`` (its credential pointing back at the platform) and an
+ * HMAC secret for the browser-challenge cookie. Both have to be local
+ * by definition.
  */
 function xenarch_activate() {
 	// Plugin-local credential. Empty until the merchant runs the claim
@@ -106,11 +107,11 @@ function xenarch_activate() {
 		add_option( Xenarch_Browser_Proof::SECRET_OPTION, wp_generate_password( 64, true, true ) );
 	}
 
-	// Per-server bot detection log. Lives locally because the events
-	// happen on *this* server — the platform doesn't see free-page hits
-	// directly, only paid ones. (A future ticket pushes a summary to
-	// the platform so the dashboard can show it; not in scope here.)
-	xenarch_create_bot_log_table();
+	// XEN-394 v2: detection events POST directly to the platform per
+	// request (Xenarch_Gate::log_bot_detection → Xenarch_Api::post_bot_detections,
+	// blocking=false). No local table to create. The legacy
+	// wp_xenarch_bot_log table from <=1.8.0 is dropped by
+	// xenarch_run_upgrade_migrations on the next plugins_loaded.
 
 	$discovery = new Xenarch_Discovery();
 	$discovery->add_rewrite_rules();
@@ -137,26 +138,35 @@ function xenarch_init() {
 }
 add_action( 'plugins_loaded', 'xenarch_init' );
 
-function xenarch_create_bot_log_table() {
+/**
+ * XEN-394 v2: on plugin upgrade, drop the local wp_xenarch_bot_log table
+ * and clean up the legacy sync state. Detection events now POST directly
+ * to the platform per-request (Xenarch_Gate::log_bot_detection) — no
+ * local table, no cron, no sync option. Platform is canonical.
+ *
+ * Idempotent: re-run safely. Uses XENARCH_VERSION + a stored option so
+ * the migration only runs once per upgrade. Per dev-phase rules (no real
+ * users yet) we hard-drop without a deprecation cycle.
+ */
+function xenarch_run_upgrade_migrations() {
+	$installed = get_option( 'xenarch_installed_version', '0.0.0' );
+	if ( version_compare( $installed, XENARCH_VERSION, '>=' ) ) {
+		return;
+	}
 	global $wpdb;
-
-	$table_name      = $wpdb->prefix . 'xenarch_bot_log';
-	$charset_collate = $wpdb->get_charset_collate();
-
-	$sql = "CREATE TABLE $table_name (
-		id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-		signature varchar(255) NOT NULL,
-		category varchar(50) NOT NULL DEFAULT '',
-		company varchar(100) NOT NULL DEFAULT '',
-		first_seen datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
-		last_seen datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
-		hit_count bigint(20) unsigned NOT NULL DEFAULT 0,
-		PRIMARY KEY (id),
-		UNIQUE KEY signature (signature),
-		KEY category (category),
-		KEY last_seen (last_seen)
-	) $charset_collate;";
-
-	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-	dbDelta( $sql );
+	$table = $wpdb->prefix . 'xenarch_bot_log';
+	$wpdb->query( "DROP TABLE IF EXISTS $table" ); // phpcs:ignore
+	delete_option( 'xenarch_bot_log_last_sync_at' );
+	// Cancel any leftover daily cron from 1.8.0 — the action no longer
+	// has a handler, but unscheduling keeps wp-cron clean.
+	$timestamp = wp_next_scheduled( 'xenarch_flush_bot_log_cron' );
+	if ( $timestamp ) {
+		wp_unschedule_event( $timestamp, 'xenarch_flush_bot_log_cron' );
+	}
+	update_option( 'xenarch_installed_version', XENARCH_VERSION );
 }
+add_action( 'plugins_loaded', 'xenarch_run_upgrade_migrations', 5 );
+
+// XEN-394 v2: xenarch_create_bot_log_table() removed — detections now
+// POST directly to the platform (no local table). The legacy table is
+// dropped by xenarch_run_upgrade_migrations on plugin upgrade.

@@ -473,39 +473,35 @@ class Xenarch_Gate {
 		if ( ! empty( $detection['signals'][0] ) ) {
 			$signature = $detection['signals'][0];
 		} elseif ( 0 === strpos( $method, 'header_score' ) ) {
-			// For header-scored bots, use the traffic class as signature.
-			$signature = 'header_scored:' . ( isset( $detection['score'] ) ? $detection['score'] : '?' );
-			return; // Don't log generic header scores — no useful signature.
+			// For header-scored bots there's no useful signature to log.
+			return;
 		}
-
 		if ( empty( $signature ) ) {
 			return;
 		}
 
-		global $wpdb;
-		$table = $wpdb->prefix . 'xenarch_bot_log';
-		$now   = current_time( 'mysql', true );
-
-		// Atomic upsert — avoids race condition when two concurrent requests
-		// try to insert the same new signature simultaneously (XEN-62).
 		$category = Xenarch_Bot_Detect::get_category_for_signature( $signature );
 		$company  = Xenarch_Bot_Detect::get_company_for_signature( $signature );
-
 		if ( empty( $category ) ) {
 			$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 			$category   = Xenarch_Bot_Detect::auto_categorize( $user_agent );
 			$company    = $signature;
 		}
 
-		$wpdb->query( $wpdb->prepare( // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $table is $wpdb->prefix constant.
-			"INSERT INTO $table (signature, category, company, first_seen, last_seen, hit_count)
-			 VALUES (%s, %s, %s, %s, %s, 1)
-			 ON DUPLICATE KEY UPDATE last_seen = VALUES(last_seen), hit_count = hit_count + 1",
-			$signature,
-			$category,
-			$company,
-			$now,
-			$now
+		// XEN-394 v2: platform is the canonical store for detection data.
+		// Fire-and-forget POST (blocking=false) — adds no measurable
+		// latency to the page response. At-most-once delivery: a dropped
+		// event reads as a slightly low count, never as a duplicate.
+		// No local table, no cron, no sync bookkeeping.
+		$api = new Xenarch_Api();
+		$api->post_bot_detections( array(
+			array(
+				'signature' => $signature,
+				'category'  => (string) $category,
+				'company'   => (string) $company,
+				// occurred_at omitted — platform fills NOW(). Saves a
+				// timestamp formatting hop and clock-skew worries.
+			),
 		) );
 	}
 
@@ -536,8 +532,21 @@ class Xenarch_Gate {
 		}
 
 		// Check per-bot override first — always wins.
-		$overrides = json_decode( get_option( 'xenarch_bot_overrides', '{}' ), true );
-		if ( is_array( $overrides ) && isset( $overrides[ $signature ] ) ) {
+		// XEN-393: platform overrides (dashboard /bots page) take precedence
+		// over the legacy local xenarch_bot_overrides option. The platform
+		// value lives on the same gating-config payload the categories
+		// arrive on, so no extra request. Local option stays as a fallback
+		// for sites that haven't been touched on the dashboard yet AND for
+		// the platform-outage case.
+		$cfg                  = $this->get_gating_config();
+		$platform_overrides   = isset( $cfg['bot_overrides'] ) && is_array( $cfg['bot_overrides'] ) ? $cfg['bot_overrides'] : array();
+		$local_overrides_json = get_option( 'xenarch_bot_overrides', '{}' );
+		$local_overrides      = json_decode( $local_overrides_json, true );
+		if ( ! is_array( $local_overrides ) ) {
+			$local_overrides = array();
+		}
+		$overrides = array_merge( $local_overrides, $platform_overrides );
+		if ( isset( $overrides[ $signature ] ) ) {
 			return 'charge' === $overrides[ $signature ];
 		}
 
@@ -554,7 +563,7 @@ class Xenarch_Gate {
 		// XEN-364: category map is now sourced from platform via
 		// get_gating_config() (cached transient). Each value is bool —
 		// true = gate this category, false = let it pass free.
-		$cfg        = $this->get_gating_config();
+		// Already resolved above (overrides path also reads $cfg).
 		$categories = $cfg['gated_categories'];
 		if ( is_array( $categories ) && array_key_exists( $category, $categories ) ) {
 			return (bool) $categories[ $category ];
@@ -598,9 +607,21 @@ class Xenarch_Gate {
 		     && isset( $resp['gating_enabled'] )
 		     && isset( $resp['gated_categories'] )
 		     && is_array( $resp['gated_categories'] ) ) {
+			$bot_overrides = array();
+			if ( isset( $resp['bot_overrides'] ) && is_array( $resp['bot_overrides'] ) ) {
+				// XEN-393: keep only string values that match the platform's
+				// allow/charge enum. Defensive — older platforms omit the
+				// field entirely (Pydantic default {}), newer ones validate.
+				foreach ( $resp['bot_overrides'] as $sig => $val ) {
+					if ( is_string( $val ) && ( 'allow' === $val || 'charge' === $val ) ) {
+						$bot_overrides[ (string) $sig ] = $val;
+					}
+				}
+			}
 			$cfg = array(
 				'gating_enabled'   => (bool) $resp['gating_enabled'],
 				'gated_categories' => array_map( 'boolval', $resp['gated_categories'] ),
+				'bot_overrides'    => $bot_overrides,
 			);
 			set_transient( self::GATING_CONFIG_TRANSIENT, $cfg, self::GATING_CONFIG_TTL );
 			$this->gating_config_request_cache = $cfg;
@@ -625,6 +646,10 @@ class Xenarch_Gate {
 		$fallback = array(
 			'gating_enabled'   => '1' === get_option( 'xenarch_gate_enabled', '1' ),
 			'gated_categories' => $normalized_cats,
+			// XEN-393: empty platform overrides in fallback path — the
+			// local xenarch_bot_overrides option still applies via the
+			// caller's array_merge.
+			'bot_overrides'    => array(),
 		);
 		$this->gating_config_request_cache = $fallback;
 		return $fallback;
