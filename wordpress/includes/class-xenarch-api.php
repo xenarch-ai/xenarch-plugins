@@ -147,11 +147,25 @@ class Xenarch_Api {
 		if ( ! is_array( $detections ) || empty( $detections ) ) {
 			return array( 'received' => 0, 'upserted' => 0 );
 		}
-		return $this->post(
-			'/v1/sites/me/bot-detections',
-			array( 'detections' => array_values( $detections ) ),
+		// XEN-394 v2: fire-and-forget. Called inline on every bot
+		// detection — adding network round-trip latency to bot page
+		// loads is unacceptable, and we don't care about the response
+		// (platform is canonical; failures show up as missing
+		// detections, not as duplicates).
+		$url     = trailingslashit( $this->base_url ) . ltrim( '/v1/sites/me/bot-detections', '/' );
+		$body    = wp_json_encode( array( 'detections' => array_values( $detections ) ) );
+		$headers = array_merge(
+			array( 'Content-Type' => 'application/json' ),
 			$this->site_token_headers()
 		);
+		wp_remote_post( $url, array(
+			'method'   => 'POST',
+			'headers'  => $headers,
+			'body'     => $body,
+			'timeout'  => 0.01,   // open the connection, don't wait
+			'blocking' => false,  // return immediately
+		) );
+		return array( 'received' => count( $detections ), 'upserted' => null );
 	}
 
 	/** Full site detail (mirror of dashboard /sites/[id]). */

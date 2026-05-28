@@ -473,39 +473,35 @@ class Xenarch_Gate {
 		if ( ! empty( $detection['signals'][0] ) ) {
 			$signature = $detection['signals'][0];
 		} elseif ( 0 === strpos( $method, 'header_score' ) ) {
-			// For header-scored bots, use the traffic class as signature.
-			$signature = 'header_scored:' . ( isset( $detection['score'] ) ? $detection['score'] : '?' );
-			return; // Don't log generic header scores — no useful signature.
+			// For header-scored bots there's no useful signature to log.
+			return;
 		}
-
 		if ( empty( $signature ) ) {
 			return;
 		}
 
-		global $wpdb;
-		$table = $wpdb->prefix . 'xenarch_bot_log';
-		$now   = current_time( 'mysql', true );
-
-		// Atomic upsert — avoids race condition when two concurrent requests
-		// try to insert the same new signature simultaneously (XEN-62).
 		$category = Xenarch_Bot_Detect::get_category_for_signature( $signature );
 		$company  = Xenarch_Bot_Detect::get_company_for_signature( $signature );
-
 		if ( empty( $category ) ) {
 			$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 			$category   = Xenarch_Bot_Detect::auto_categorize( $user_agent );
 			$company    = $signature;
 		}
 
-		$wpdb->query( $wpdb->prepare( // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $table is $wpdb->prefix constant.
-			"INSERT INTO $table (signature, category, company, first_seen, last_seen, hit_count)
-			 VALUES (%s, %s, %s, %s, %s, 1)
-			 ON DUPLICATE KEY UPDATE last_seen = VALUES(last_seen), hit_count = hit_count + 1",
-			$signature,
-			$category,
-			$company,
-			$now,
-			$now
+		// XEN-394 v2: platform is the canonical store for detection data.
+		// Fire-and-forget POST (blocking=false) — adds no measurable
+		// latency to the page response. At-most-once delivery: a dropped
+		// event reads as a slightly low count, never as a duplicate.
+		// No local table, no cron, no sync bookkeeping.
+		$api = new Xenarch_Api();
+		$api->post_bot_detections( array(
+			array(
+				'signature' => $signature,
+				'category'  => (string) $category,
+				'company'   => (string) $company,
+				// occurred_at omitted — platform fills NOW(). Saves a
+				// timestamp formatting hop and clock-skew worries.
+			),
 		) );
 	}
 
