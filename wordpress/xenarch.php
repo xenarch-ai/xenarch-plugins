@@ -108,8 +108,10 @@ function xenarch_activate() {
 
 	// Per-server bot detection log. Lives locally because the events
 	// happen on *this* server — the platform doesn't see free-page hits
-	// directly, only paid ones. (A future ticket pushes a summary to
-	// the platform so the dashboard can show it; not in scope here.)
+	// directly, only paid ones. XEN-394: a daily wp_cron flushes the
+	// table's current state to the platform's bot_detections endpoint
+	// so the dashboard /bots Cross-site activity panel can aggregate
+	// across all the publisher's sites.
 	xenarch_create_bot_log_table();
 
 	$discovery = new Xenarch_Discovery();
@@ -136,6 +138,90 @@ function xenarch_init() {
 	new Xenarch_Rest();
 }
 add_action( 'plugins_loaded', 'xenarch_init' );
+
+/**
+ * XEN-394: daily cron — flush new/updated wp_xenarch_bot_log rows to
+ * the platform so the dashboard /bots Cross-site activity panel can
+ * aggregate. The plugin sends current running totals; the platform's
+ * upsert reconciles via LEAST/GREATEST so retries are idempotent.
+ *
+ * "Updated since last sync" = rows with last_seen > xenarch_bot_log_last_sync_at.
+ * On success, last_sync_at is bumped to the most-recent last_seen we sent
+ * (NOT to now()) — that way out-of-band log writes after the SELECT
+ * still get picked up on the next run.
+ */
+function xenarch_schedule_bot_log_flush() {
+	if ( ! wp_next_scheduled( 'xenarch_flush_bot_log_cron' ) ) {
+		wp_schedule_event( time() + 300, 'daily', 'xenarch_flush_bot_log_cron' );
+	}
+}
+add_action( 'init', 'xenarch_schedule_bot_log_flush' );
+
+function xenarch_unschedule_bot_log_flush() {
+	$timestamp = wp_next_scheduled( 'xenarch_flush_bot_log_cron' );
+	if ( $timestamp ) {
+		wp_unschedule_event( $timestamp, 'xenarch_flush_bot_log_cron' );
+	}
+}
+register_deactivation_hook( __FILE__, 'xenarch_unschedule_bot_log_flush' );
+
+function xenarch_flush_bot_log_to_platform() {
+	$site_token = get_option( 'xenarch_site_token', '' );
+	if ( empty( $site_token ) ) {
+		return; // Not claimed yet — nothing to send.
+	}
+
+	global $wpdb;
+	$table        = $wpdb->prefix . 'xenarch_bot_log';
+	$last_sync_at = get_option( 'xenarch_bot_log_last_sync_at', '1970-01-01 00:00:00' );
+
+	// Pull rows updated since the last sync. Cap at 500 per run to match
+	// the platform's batch limit; if more accumulate, the next cron run
+	// picks up the rest (last_sync_at advances incrementally).
+	$rows = $wpdb->get_results( $wpdb->prepare( // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $table is $wpdb->prefix constant.
+		"SELECT signature, category, company, first_seen, last_seen, hit_count
+		 FROM $table
+		 WHERE last_seen > %s
+		 ORDER BY last_seen ASC
+		 LIMIT 500",
+		$last_sync_at
+	), ARRAY_A );
+
+	if ( empty( $rows ) ) {
+		return;
+	}
+
+	$detections = array();
+	$max_last_seen = $last_sync_at;
+	foreach ( $rows as $row ) {
+		$ls = $row['last_seen'];
+		$fs = $row['first_seen'];
+		$detections[] = array(
+			'signature'  => (string) $row['signature'],
+			'category'   => (string) ( $row['category'] ?? '' ),
+			'company'    => (string) ( $row['company'] ?? '' ),
+			// ISO-8601 UTC. WP's current_time('mysql', true) writes
+			// "Y-m-d H:i:s" without a tz offset — append Z so the
+			// platform's Pydantic datetime parses it as UTC.
+			'first_seen' => str_replace( ' ', 'T', $fs ) . 'Z',
+			'last_seen'  => str_replace( ' ', 'T', $ls ) . 'Z',
+			'hit_count'  => (int) $row['hit_count'],
+		);
+		if ( strcmp( $ls, $max_last_seen ) > 0 ) {
+			$max_last_seen = $ls;
+		}
+	}
+
+	$api      = new Xenarch_Api();
+	$response = $api->post_bot_detections( $detections );
+	if ( is_wp_error( $response ) ) {
+		// Don't advance last_sync_at — retry on the next run.
+		error_log( '[xenarch] bot-log flush failed: ' . $response->get_error_message() );
+		return;
+	}
+	update_option( 'xenarch_bot_log_last_sync_at', $max_last_seen );
+}
+add_action( 'xenarch_flush_bot_log_cron', 'xenarch_flush_bot_log_to_platform' );
 
 function xenarch_create_bot_log_table() {
 	global $wpdb;

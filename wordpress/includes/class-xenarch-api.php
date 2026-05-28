@@ -128,6 +128,32 @@ class Xenarch_Api {
 		return array( 'X-Site-Token' => $site_token );
 	}
 
+	/**
+	 * Push a batch of bot-detection rows from wp_xenarch_bot_log to the
+	 * platform. XEN-394 — lets the dashboard /bots Cross-site activity
+	 * panel aggregate across all of a publisher's sites.
+	 *
+	 * @param array $detections array of associative arrays each shaped
+	 *                          {signature, category, company, first_seen,
+	 *                           last_seen, hit_count} (last_seen/first_seen
+	 *                           as ISO-8601 UTC strings, hit_count as int).
+	 * @return array|WP_Error platform response or error.
+	 */
+	public function post_bot_detections( $detections ) {
+		$site_token = get_option( 'xenarch_site_token', '' );
+		if ( empty( $site_token ) ) {
+			return new WP_Error( 'no_site_token', 'site token not configured' );
+		}
+		if ( ! is_array( $detections ) || empty( $detections ) ) {
+			return array( 'received' => 0, 'upserted' => 0 );
+		}
+		return $this->post(
+			'/v1/sites/me/bot-detections',
+			array( 'detections' => array_values( $detections ) ),
+			$this->site_token_headers()
+		);
+	}
+
 	/** Full site detail (mirror of dashboard /sites/[id]). */
 	public function get_my_site() {
 		$site_token = get_option( 'xenarch_site_token', '' );
