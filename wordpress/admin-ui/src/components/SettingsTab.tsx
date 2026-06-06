@@ -7,6 +7,7 @@ import type {
   BotCategoryKey,
 } from '../types'
 import * as api from '../api'
+import { Cdrop, type CdropOption } from './Cdrop'
 
 interface Props {
   settings: Settings
@@ -392,20 +393,25 @@ export function SettingsTab({ settings, onSettingsChange }: Props) {
         <div className="wallet-card" style={{ marginBottom: 0 }}>
           <span className="dot" />
           {wallets && wallets.length > 1 ? (
-            <select
-              className="addr"
+            <Cdrop
               value={wallets.find((w) => w.is_default)?.address ?? ''}
               disabled={walletBusy}
-              onChange={(e) => handleSelectWallet(e.target.value)}
-            >
-              {wallets.map((w) => (
-                <option key={w.address} value={w.address} disabled={!w.eligible}>
-                  {`${w.address.slice(0, 6)}…${w.address.slice(-4)}`}
-                  {w.is_default ? ' — receiving' : ''}
-                  {!w.eligible ? ' (in cooldown)' : ''}
-                </option>
-              ))}
-            </select>
+              onChange={handleSelectWallet}
+              options={wallets.map((w): CdropOption => {
+                const short = `${w.address.slice(0, 6)}…${w.address.slice(-4)}`
+                return {
+                  value: w.address,
+                  name: short,
+                  triggerLabel: `${short}${w.is_default ? ' — receiving' : ''}`,
+                  hint: !w.eligible
+                    ? 'in cooldown'
+                    : w.is_default
+                      ? 'receiving · gate revenue'
+                      : 'linked wallet',
+                  disabled: !w.eligible,
+                }
+              })}
+            />
           ) : (
             <span className="addr">
               {site?.payout_wallet
