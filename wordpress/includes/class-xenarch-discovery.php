@@ -105,19 +105,41 @@ class Xenarch_Discovery {
 	 * Serve /.well-known/pay.json (pay-json v1.2).
 	 */
 	private function serve_pay_json() {
-		$price  = get_option( 'xenarch_default_price', '0.003' );
-		$wallet = get_option( 'xenarch_payout_wallet', '' );
+		// XEN-438 (A4): wallet/price/rules live on the platform now (the
+		// post-XEN-380 rewrite stopped writing the old local options). Pull the
+		// site detail via the site-token surface, with a short transient cache
+		// (so a public pay.json hit doesn't round-trip the platform every time)
+		// and a persistent last-known-good snapshot so an outage still serves a
+		// payable wallet.
+		$site = get_transient( 'xenarch_pay_json_site' );
+		if ( false === $site ) {
+			$api     = new Xenarch_Api();
+			$fetched = $api->get_my_site();
+			if ( ! is_wp_error( $fetched ) && is_array( $fetched ) ) {
+				$site = $fetched;
+				set_transient( 'xenarch_pay_json_site', $site, 5 * MINUTE_IN_SECONDS );
+				update_option( 'xenarch_pay_json_last_good', $site, false );
+			} else {
+				// Platform unreachable — fall back to the last-known-good.
+				$site = get_option( 'xenarch_pay_json_last_good', array() );
+			}
+		}
 
-		// Build rules array from pricing rules + default catch-all.
-		$rules         = array();
-		$pricing_rules = json_decode( get_option( 'xenarch_pricing_rules', '[]' ), true );
+		$wallet = is_array( $site ) && ! empty( $site['payout_wallet'] )
+			? (string) $site['payout_wallet'] : '';
+		$price  = is_array( $site ) && isset( $site['default_price_usd'] )
+			? (string) $site['default_price_usd'] : '0.003';
 
-		if ( is_array( $pricing_rules ) ) {
-			foreach ( $pricing_rules as $rule ) {
-				if ( ! empty( $rule['path_contains'] ) && isset( $rule['price_usd'] ) ) {
+		// Build rules array from the platform's per-path rules + default
+		// catch-all. Platform rules use the new `path` key (not legacy
+		// `path_contains`).
+		$rules = array();
+		if ( is_array( $site ) && ! empty( $site['rules'] ) && is_array( $site['rules'] ) ) {
+			foreach ( $site['rules'] as $rule ) {
+				if ( ! empty( $rule['path'] ) && isset( $rule['price_usd'] ) ) {
 					$rules[] = array(
-						'path'      => '/**' . $rule['path_contains'] . '**',
-						'price_usd' => $rule['price_usd'],
+						'path'      => (string) $rule['path'],
+						'price_usd' => (string) $rule['price_usd'],
 					);
 				}
 			}
