@@ -227,6 +227,33 @@ class Xenarch_Api {
 		);
 	}
 
+	/**
+	 * XEN-435 P4: the merchant identity's linked wallets, so the admin can
+	 * pick which one receives gate revenue. Returns
+	 * ``{wallets:[{address, eligible_at, eligible, is_default}]}``.
+	 *
+	 * @return array|WP_Error
+	 */
+	public function get_my_site_wallets() {
+		return $this->get( '/v1/sites/me/wallets', $this->site_token_headers() );
+	}
+
+	/**
+	 * XEN-435 P4: set the gate's receiving wallet (the identity default). The
+	 * platform only accepts an already-eligible linked wallet.
+	 *
+	 * @param string $wallet 0x-prefixed address.
+	 * @return array|WP_Error
+	 */
+	public function put_my_site_payout_wallet( $wallet ) {
+		return $this->post(
+			'/v1/sites/me/payout-wallet',
+			array( 'wallet' => (string) $wallet ),
+			$this->site_token_headers(),
+			'PUT'
+		);
+	}
+
 	// ------------------------------------------------------------------
 	// Internal HTTP helpers
 	// ------------------------------------------------------------------
