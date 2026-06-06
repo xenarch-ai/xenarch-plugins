@@ -78,6 +78,25 @@ export function fetchCategoryBreakdown(): Promise<CategoryBreakdownResponse> {
   return apiFetch<CategoryBreakdownResponse>('/site/category-breakdown')
 }
 
+// XEN-435 P4 — linked-wallet payout selection.
+export interface SiteWallet {
+  address: string
+  eligible_at: string
+  eligible: boolean // cooldown elapsed → can receive
+  is_default: boolean // the gate's current receiving wallet
+}
+
+export function fetchSiteWallets(): Promise<{ wallets: SiteWallet[] }> {
+  return apiFetch<{ wallets: SiteWallet[] }>('/site/wallets')
+}
+
+export function setPayoutWallet(wallet: string): Promise<{ payout_wallet: string }> {
+  return apiFetch<{ payout_wallet: string }>('/site/payout-wallet', {
+    method: 'PUT',
+    body: JSON.stringify({ wallet }),
+  })
+}
+
 export interface GatingUpdate {
   gating_enabled: boolean
   gated_categories: GatedCategories

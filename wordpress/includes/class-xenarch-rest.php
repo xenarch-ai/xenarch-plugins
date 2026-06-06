@@ -133,6 +133,25 @@ class Xenarch_Rest {
 				'permission_callback' => array( $this, 'check_admin' ),
 			)
 		);
+		// XEN-435 P4 — list linked wallets + pick the gate's receiving wallet.
+		register_rest_route(
+			self::NAMESPACE,
+			'/site/wallets',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'handle_get_site_wallets' ),
+				'permission_callback' => array( $this, 'check_admin' ),
+			)
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			'/site/payout-wallet',
+			array(
+				'methods'             => 'PUT',
+				'callback'            => array( $this, 'handle_put_payout_wallet' ),
+				'permission_callback' => array( $this, 'check_admin' ),
+			)
+		);
 	}
 
 	/**
@@ -255,6 +274,19 @@ class Xenarch_Rest {
 
 	public function handle_get_category_breakdown() {
 		return $this->forward( $this->api->get_my_site_category_breakdown() );
+	}
+
+	public function handle_get_site_wallets() {
+		return $this->forward( $this->api->get_my_site_wallets() );
+	}
+
+	public function handle_put_payout_wallet( $request ) {
+		$body   = $request->get_json_params();
+		$wallet = isset( $body['wallet'] ) ? trim( (string) $body['wallet'] ) : '';
+		if ( ! preg_match( '/^0x[0-9a-fA-F]{40}$/', $wallet ) ) {
+			return new WP_REST_Response( array( 'error' => 'invalid_wallet' ), 400 );
+		}
+		return $this->forward( $this->api->put_my_site_payout_wallet( $wallet ) );
 	}
 
 	/**

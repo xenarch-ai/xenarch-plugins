@@ -417,6 +417,47 @@ w3m-button, w3m-connect-button, w3m-account-button {
   text-underline-offset: 2px;
 }
 
+/* XEN-435 P4: Cdrop — custom dropdown ported from the dashboard primitive
+   (no OS-rendered <select> in the design system). */
+#xenarch-admin .cdrop { position: relative; display: inline-block; min-width: 260px; }
+#xenarch-admin .cdrop-trigger {
+  width: 100%; text-align: left;
+  background: var(--xn-input-bg); border: 1px solid var(--xn-input-border);
+  color: var(--xn-fg); font: inherit; font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; padding: 8px 30px 8px 12px; border-radius: var(--xn-radius-md);
+  cursor: pointer; user-select: none; height: 36px; position: relative;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#xenarch-admin .cdrop-trigger::after {
+  content: ''; position: absolute; right: 13px; top: 50%;
+  width: 7px; height: 7px;
+  border-right: 1.5px solid var(--xn-muted); border-bottom: 1.5px solid var(--xn-muted);
+  transform: translateY(-70%) rotate(45deg);
+}
+#xenarch-admin .cdrop-trigger:hover { border-color: var(--xn-dim); }
+#xenarch-admin .cdrop-trigger:disabled { opacity: 0.6; cursor: default; }
+#xenarch-admin .cdrop.open .cdrop-trigger { border-color: var(--xn-input-focus); }
+#xenarch-admin .cdrop-menu {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: var(--xn-card); border: 1px solid var(--xn-surface-border);
+  border-radius: var(--xn-radius-md); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  padding: 4px; z-index: 20; display: none;
+}
+#xenarch-admin .cdrop.open .cdrop-menu { display: block; }
+#xenarch-admin .cdrop-item {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+  font-size: 12.5px; color: var(--xn-fg); cursor: pointer;
+  border-radius: var(--xn-radius-sm); user-select: none;
+}
+#xenarch-admin .cdrop-item:hover:not(.disabled) { background: var(--xn-surface); }
+#xenarch-admin .cdrop-item.on { background: var(--xn-surface); }
+#xenarch-admin .cdrop-item.on .check { color: var(--xn-success); }
+#xenarch-admin .cdrop-item.disabled { opacity: 0.45; cursor: not-allowed; }
+#xenarch-admin .cdrop-item .check { color: transparent; flex-shrink: 0; width: 12px; font-size: 11px; }
+#xenarch-admin .cdrop-item .text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+#xenarch-admin .cdrop-item .name { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--xn-fg); }
+#xenarch-admin .cdrop-item .hint { font-size: 10.5px; color: var(--xn-muted); }
+
 #xenarch-admin .stats {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
   margin-bottom: 24px;

@@ -7,6 +7,7 @@ import type {
   BotCategoryKey,
 } from '../types'
 import * as api from '../api'
+import { Cdrop, type CdropOption } from './Cdrop'
 
 interface Props {
   settings: Settings
@@ -55,6 +56,34 @@ export function SettingsTab({ settings, onSettingsChange }: Props) {
   const [defaultScope, setDefaultScope] = useState<'page' | 'path'>('page')
   const [rules, setRules] = useState<(PricingRule & { id: number })[]>([])
   const [pricingDirty, setPricingDirty] = useState(false)
+
+  // XEN-435 P4: which linked wallet receives gate revenue.
+  const [wallets, setWallets] = useState<api.SiteWallet[] | null>(null)
+  const [walletBusy, setWalletBusy] = useState(false)
+  const [walletMsg, setWalletMsg] = useState<string | null>(null)
+
+  useEffect(() => {
+    api
+      .fetchSiteWallets()
+      .then((r) => setWallets(r.wallets))
+      .catch(() => setWallets(null))
+  }, [])
+
+  const handleSelectWallet = useCallback(async (addr: string) => {
+    setWalletBusy(true)
+    setWalletMsg(null)
+    try {
+      await api.setPayoutWallet(addr)
+      const r = await api.fetchSiteWallets()
+      setWallets(r.wallets)
+      setSite((s) => (s ? { ...s, payout_wallet: addr } : s))
+      setWalletMsg('Updated')
+    } catch (e) {
+      setWalletMsg(e instanceof Error ? e.message : 'Failed to update')
+    } finally {
+      setWalletBusy(false)
+    }
+  }, [])
 
   // Hydrate.
   useEffect(() => {
@@ -352,31 +381,59 @@ export function SettingsTab({ settings, onSettingsChange }: Props) {
         </div>
       </div>
 
-      {/* Wallet — read-only deeplink */}
+      {/* Wallet — XEN-435 P4: pick which linked wallet receives gate revenue */}
       <div className="section">
         <div className="section-head">
           <div className="section-title">Wallet</div>
           <div className="section-desc">
-            Where your earnings land. Managed in the dashboard so the email-confirm
-            flow only lives in one place.
+            Which of your linked wallets receives gate revenue. A newly linked
+            wallet is usable once its cooldown elapses.
           </div>
         </div>
         <div className="wallet-card" style={{ marginBottom: 0 }}>
           <span className="dot" />
-          <span className="addr">
-            {site?.payout_wallet
-              ? `${site.payout_wallet.slice(0, 6)}…${site.payout_wallet.slice(-4)}`
-              : 'not set'}
-          </span>
+          {wallets && wallets.length > 1 ? (
+            <Cdrop
+              value={wallets.find((w) => w.is_default)?.address ?? ''}
+              disabled={walletBusy}
+              onChange={handleSelectWallet}
+              options={wallets.map((w): CdropOption => {
+                const short = `${w.address.slice(0, 6)}…${w.address.slice(-4)}`
+                return {
+                  value: w.address,
+                  name: short,
+                  triggerLabel: `${short}${w.is_default ? ' — receiving' : ''}`,
+                  hint: !w.eligible
+                    ? 'in cooldown'
+                    : w.is_default
+                      ? 'receiving · gate revenue'
+                      : 'linked wallet',
+                  disabled: !w.eligible,
+                }
+              })}
+            />
+          ) : (
+            <span className="addr">
+              {site?.payout_wallet
+                ? `${site.payout_wallet.slice(0, 6)}…${site.payout_wallet.slice(-4)}`
+                : 'not set'}
+            </span>
+          )}
           <span className="label">{site?.payout_network ?? 'base'}</span>
-          <a
-            className="change"
-            href="https://dash.xenarch.dev/account/wallet"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Change in dashboard →
-          </a>
+          {walletBusy ? (
+            <span className="change">updating…</span>
+          ) : walletMsg ? (
+            <span className="change">{walletMsg}</span>
+          ) : (
+            <a
+              className="change"
+              href="https://dash.xenarch.dev/account/wallet"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Manage in dashboard →
+            </a>
+          )}
         </div>
       </div>
     </>
