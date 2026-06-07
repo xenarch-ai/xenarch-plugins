@@ -76,6 +76,26 @@ class Xenarch_Payment_Proof {
 	}
 
 	/**
+	 * Read the vanilla x402 ``X-PAYMENT`` header (C10 / XEN-457).
+	 *
+	 * A third-party x402 agent that knows nothing about Xenarch pays with the
+	 * standard ``X-PAYMENT`` voucher (base64 of a signed EIP-3009
+	 * authorization) instead of the canonical (gate_id, tx_hash) pair. We hand
+	 * the raw header to the platform's settle-x402 endpoint, which decodes,
+	 * settles via a facilitator, and verifies the on-chain Transfer.
+	 *
+	 * @return string|null The raw base64 header value, or null if absent.
+	 */
+	public static function extract_x_payment() {
+		$x_payment = self::read_header( 'HTTP_X_PAYMENT', 'X-PAYMENT' );
+		if ( null === $x_payment ) {
+			return null;
+		}
+		$x_payment = trim( $x_payment );
+		return '' === $x_payment ? null : $x_payment;
+	}
+
+	/**
 	 * Read a header by both $_SERVER key and getallheaders() name (case-insensitive).
 	 *
 	 * @param string $server_key e.g. 'HTTP_X_XENARCH_TX_HASH'.

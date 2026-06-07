@@ -86,6 +86,13 @@ class Xenarch_Gate {
 			return;
 		}
 
+		// C10 (XEN-457): bilingual inbound. A third-party x402 agent may pay
+		// with a vanilla X-PAYMENT voucher instead of the canonical headers —
+		// settle + verify it via the platform and let it through on success.
+		if ( $this->try_settle_x_payment( $request_uri ) ) {
+			return;
+		}
+
 		// Check if a pricing rule marks this path as FREE (price_usd = "0").
 		if ( $this->is_free_path( $request_uri ) ) {
 			return;
@@ -167,6 +174,39 @@ class Xenarch_Gate {
 		}
 
 		return $headers;
+	}
+
+	/**
+	 * Try to settle an inbound vanilla x402 ``X-PAYMENT`` voucher for this
+	 * request (C10 / XEN-457). Returns true if the platform settled +
+	 * verified the payment (caller should let the request through).
+	 *
+	 * The agent retried the gated path with an ``X-PAYMENT`` header but no
+	 * canonical (gate_id, tx_hash) pair. We mint/reuse a gate for the path,
+	 * then hand the voucher to the platform's settle-x402 endpoint, which
+	 * routes settlement through a facilitator and verifies the on-chain
+	 * Transfer. Xenarch never broadcasts.
+	 *
+	 * @param string $request_uri The request URI.
+	 * @return bool True if the payment settled + verified.
+	 */
+	private function try_settle_x_payment( $request_uri ) {
+		$x_payment = Xenarch_Payment_Proof::extract_x_payment();
+		if ( null === $x_payment ) {
+			return false;
+		}
+
+		$gate = $this->get_or_create_gate( $request_uri, 'x402_x_payment' );
+		if ( is_wp_error( $gate ) || empty( $gate['gate_id'] ) ) {
+			return false;
+		}
+
+		$result = $this->api->settle_x402( $gate['gate_id'], $x_payment );
+		// A WP_Error here is either a deliberate platform rejection (4xx —
+		// bad voucher) or a transport/5xx error. Either way we fall through
+		// to the normal gate; unlike the canonical-header path we do NOT
+		// fail open, because an unsettled voucher is not a paid request.
+		return ! is_wp_error( $result );
 	}
 
 	/**
@@ -312,6 +352,12 @@ class Xenarch_Gate {
 
 		$proof = Xenarch_Payment_Proof::extract_payment_proof();
 		if ( $proof && Xenarch_Payment_Proof::verify( $proof['gate_id'], $proof['tx_hash'] ) ) {
+			return $response;
+		}
+
+		// C10 (XEN-457): bilingual inbound — settle a vanilla x402 X-PAYMENT
+		// voucher via the platform and let it through on success.
+		if ( $this->try_settle_x_payment( $request_uri ) ) {
 			return $response;
 		}
 
