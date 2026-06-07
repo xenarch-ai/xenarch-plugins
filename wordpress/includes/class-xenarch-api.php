@@ -62,6 +62,29 @@ class Xenarch_Api {
 	}
 
 	/**
+	 * Settle + verify an inbound vanilla x402 ``X-PAYMENT`` voucher
+	 * (C10 / XEN-457). The platform routes settlement through a facilitator
+	 * (Xenarch never broadcasts) and verifies the on-chain Transfer.
+	 *
+	 * @param string      $gate_id     Gate UUID minted for this path.
+	 * @param string      $x_payment   Raw base64 X-PAYMENT header value.
+	 * @param string|null $facilitator Optional facilitator name to try first.
+	 * @return array|WP_Error
+	 */
+	public function settle_x402( $gate_id, $x_payment, $facilitator = null ) {
+		$site_token = get_option( 'xenarch_site_token', '' );
+		$body       = array( 'x_payment' => $x_payment );
+		if ( null !== $facilitator ) {
+			$body['facilitator'] = $facilitator;
+		}
+		return $this->post(
+			'/v1/gates/' . urlencode( $gate_id ) . '/settle-x402',
+			$body,
+			array( 'X-Site-Token' => $site_token )
+		);
+	}
+
+	/**
 	 * Read the dashboard-managed gating state for this site. Returns
 	 * ``{gating_enabled, gated_categories}``. Cached by the caller via
 	 * a WP transient (see Xenarch_Gate::get_gating_config).
