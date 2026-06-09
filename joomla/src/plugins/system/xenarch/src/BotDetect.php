@@ -191,6 +191,34 @@ class BotDetect
     private const HEADER_SCORE_THRESHOLD = 6;
 
     /**
+     * Detect if a User-Agent string matches a known AI bot.
+     * Backwards-compatible — returns matched signature or false.
+     *
+     * @param string $userAgent The User-Agent header value.
+     * @return string|false Matched signature string, or false if not a bot.
+     */
+    public static function detect(string $userAgent)
+    {
+        if (empty($userAgent)) {
+            return 'empty_ua';
+        }
+
+        foreach (self::$signatures as $signature) {
+            if (stripos($userAgent, $signature) !== false) {
+                return $signature;
+            }
+        }
+
+        foreach (self::$fetcherSignatures as $signature) {
+            if (stripos($userAgent, $signature) !== false) {
+                return $signature;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Full traffic classification with header scoring and browser proof.
      */
     public static function detectFull(string $userAgent, array $headers = [], array $context = []): array
@@ -318,6 +346,7 @@ class BotDetect
         if (stripos($userAgent, 'Agent') !== false || stripos($userAgent, 'Operator') !== false) return self::CAT_AI_AGENTS;
         if (stripos($userAgent, '-Extended') !== false || stripos($userAgent, 'training') !== false || stripos($userAgent, 'dataset') !== false) return self::CAT_AI_TRAINING;
         if (stripos($userAgent, 'Spider') !== false || stripos($userAgent, 'Scraper') !== false || stripos($userAgent, 'Scraping') !== false || stripos($userAgent, 'Crawl') !== false) return self::CAT_SCRAPERS;
+        if (stripos($userAgent, 'Bot') !== false) return self::CAT_GENERAL_AI;
         return self::CAT_GENERAL_AI;
     }
 

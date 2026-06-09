@@ -23,10 +23,8 @@ services:
     volumes:
       - joomla_data:/var/www/html
       - ./src/administrator/components/com_xenarch:/var/www/html/administrator/components/com_xenarch
-      - ./src/api/components/com_xenarch:/var/www/html/api/components/com_xenarch
       - ./src/media/com_xenarch:/var/www/html/media/com_xenarch
       - ./src/plugins/system/xenarch:/var/www/html/plugins/system/xenarch
-      - ./src/plugins/webservices/xenarch:/var/www/html/plugins/webservices/xenarch
     networks:
       - default
       - kamal

@@ -2,7 +2,7 @@
 <extension type="package" method="upgrade">
     <name>Xenarch</name>
     <packagename>xenarch</packagename>
-    <version>1.0.3</version>
+    <version>2.0.0</version>
     <creationDate>2026-04</creationDate>
     <author>Xenarch</author>
     <authorUrl>https://xenarch.com</authorUrl>
@@ -11,6 +11,5 @@
     <files>
         <file type="component" id="com_xenarch">packages/com_xenarch.zip</file>
         <file type="plugin" group="system" id="xenarch">packages/plg_system_xenarch.zip</file>
-        <file type="plugin" group="webservices" id="xenarch">packages/plg_webservices_xenarch.zip</file>
     </files>
 </extension>

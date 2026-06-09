@@ -31,16 +31,11 @@ echo "Packaging com_xenarch..."
 echo "Packaging plg_system_xenarch..."
 (cd "$SRC_DIR/plugins/system/xenarch" && zip -r "$PACKAGES_DIR/plg_system_xenarch.zip" . -x "*.DS_Store")
 
-# Package webservices plugin.
-echo "Packaging plg_webservices_xenarch..."
-(cd "$SRC_DIR/plugins/webservices/xenarch" && zip -r "$PACKAGES_DIR/plg_webservices_xenarch.zip" . -x "*.DS_Store")
-
 # Package everything into pkg_xenarch.zip.
 echo "Building pkg_xenarch.zip..."
 (cd "$ROOT_DIR" && zip -j "$PACKAGES_DIR/pkg_xenarch.zip" \
     pkg_xenarch.xml \
     "$PACKAGES_DIR/com_xenarch.zip" \
-    "$PACKAGES_DIR/plg_system_xenarch.zip" \
-    "$PACKAGES_DIR/plg_webservices_xenarch.zip")
+    "$PACKAGES_DIR/plg_system_xenarch.zip")
 
 echo "Done! Package: $PACKAGES_DIR/pkg_xenarch.zip"

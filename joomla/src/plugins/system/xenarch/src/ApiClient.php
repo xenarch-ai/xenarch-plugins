@@ -1,9 +1,31 @@
 <?php
 /**
- * Xenarch API client — Joomla port.
+ * Xenarch platform API client — Joomla port.
  *
- * Wraps all communication with the xenarch.dev REST API using
- * Joomla's HttpFactory.
+ * 1:1 mirror of the WordPress plugin's Xenarch_Api (post-XEN-380
+ * thin-window rewrite). The plugin is a thin window into the platform —
+ * this client does only three things:
+ *
+ *   1. talk to the gate hot-path (create gate, verify on-chain payment,
+ *      settle inbound x402, read dashboard-managed gating config),
+ *   2. complete the claim handshake that boots a fresh install
+ *      (exchangeClaimToken),
+ *   3. read/write the merchant-owned site state through the
+ *      site_token-authed /v1/sites/me/* surface (pricing, gating,
+ *      payout wallet, stats, transactions, category breakdown).
+ *
+ * All Bearer-API-key endpoints are gone — pricing, payouts, wallet
+ * linking, transactions, balances are managed on the platform and read
+ * through site_token, never an api_key. There is no publisher
+ * registration and no offramp/cash-out here; that lives in the dashboard.
+ *
+ * Auth is the per-site ``X-Site-Token`` header, sourced from the
+ * com_xenarch component params.
+ *
+ * Errors: successful calls return an array. Failures throw ApiException
+ * carrying the HTTP status (0 for transport failures) so callers can
+ * fail closed on 4xx / fail open on 5xx, exactly like the WP_Error
+ * ``status`` data in the WordPress client.
  *
  * @package    Xenarch
  * @license    GPL-2.0-or-later
@@ -25,182 +47,272 @@ class ApiClient
         $this->baseUrl = $baseUrl;
     }
 
-    public function getConfig(): ?array
+    /**
+     * Public-config endpoint. The plugin doesn't actively use the values
+     * it returns today, but the call is harmless and cheap — kept so
+     * status checks can ping it. No auth.
+     */
+    public function getConfig(): array
     {
         return $this->get('/v1/config');
     }
 
-    public function register(string $email, string $password): ?array
+    /**
+     * Swap a one-time claim_token (issued by dash.xenarch.dev/sites/claim)
+     * for the long-lived site_token. Server-to-server only — the
+     * claim_token never lives anywhere except its single trip through the
+     * redirect URL and this request.
+     *
+     * @return array {site_id, site_token, domain, integration_type}
+     */
+    public function exchangeClaimToken(string $claimToken): array
     {
-        return $this->post('/v1/publishers', ['email' => $email, 'password' => $password]);
-    }
-
-    public function addSite(string $domain): ?array
-    {
-        return $this->post('/v1/sites', ['domain' => $domain], $this->authHeaders());
+        return $this->post('/v1/site-claims/' . urlencode($claimToken) . '/exchange', []);
     }
 
     /**
-     * Verify an on-chain payment against a gate.
-     *
-     * Posts the tx hash to the platform, which re-checks the transaction
-     * on Base and confirms it satisfies the gate's price + recipient.
-     * No JWT, no cached session — verification is stateless per call.
+     * Verify an on-chain payment for a gate. Stateless — the platform
+     * re-derives everything from the tx hash on each call.
      */
-    public function verifyPayment(string $gateId, string $txHash): ?array
+    public function verifyPayment(string $gateId, string $txHash): array
     {
-        $params = ComponentHelper::getParams('com_xenarch');
-        $siteToken = $params->get('site_token', '');
-
         return $this->post(
             '/v1/gates/' . urlencode($gateId) . '/verify',
             ['tx_hash' => $txHash],
-            ['X-Site-Token' => $siteToken]
+            $this->siteTokenHeaders()
         );
     }
 
-    public function listSites(): ?array
+    /**
+     * Settle + verify an inbound vanilla x402 ``X-PAYMENT`` voucher
+     * (C10 / XEN-457). The platform routes settlement through a
+     * facilitator (Xenarch never broadcasts) and verifies the on-chain
+     * Transfer.
+     */
+    public function settleX402(string $gateId, string $xPayment, ?string $facilitator = null): array
     {
-        return $this->get('/v1/sites', $this->authHeaders());
-    }
-
-    public function updatePricing(string $siteId, float $defaultPrice, array $rules = []): ?array
-    {
-        $body = ['default_price_usd' => $defaultPrice];
-        if (!empty($rules)) {
-            $body['rules'] = $rules;
+        $body = ['x_payment' => $xPayment];
+        if ($facilitator !== null) {
+            $body['facilitator'] = $facilitator;
         }
-        return $this->post('/v1/sites/' . urlencode($siteId) . '/pricing', $body, $this->authHeaders(), 'PUT');
+        return $this->post(
+            '/v1/gates/' . urlencode($gateId) . '/settle-x402',
+            $body,
+            $this->siteTokenHeaders()
+        );
     }
 
-    public function updatePayout(string $wallet, string $network = ''): ?array
+    /**
+     * Read the dashboard-managed gating state for this site. Returns
+     * {gating_enabled, gated_categories, bot_overrides, ...}. Cached by
+     * the caller (see the gate plugin).
+     */
+    public function getGatingConfig(): array
     {
-        if (empty($network)) {
-            $params = ComponentHelper::getParams('com_xenarch');
-            $network = $params->get('wallet_network', 'base');
-        }
-        return $this->post('/v1/publishers/me/payout', ['wallet' => $wallet, 'network' => $network], $this->authHeaders(), 'PUT');
+        return $this->get('/v1/sites/me/gating-config', $this->siteTokenHeaders());
     }
 
-    public function getProfile(): ?array
+    /**
+     * Create a gate on the platform for a freshly detected bot request.
+     * Returns the full x402 envelope (with accepts + facilitators) which
+     * the plugin echoes back as the 402 body. 402 is treated as success.
+     */
+    public function createGate(string $url, string $detectionMethod = 'ua_match'): array
     {
-        return $this->get('/v1/publishers/me', $this->authHeaders());
-    }
-
-    public function createGate(string $url, string $detectionMethod = 'ua_match'): ?array
-    {
-        $params = ComponentHelper::getParams('com_xenarch');
-        $siteToken = $params->get('site_token', '');
-
         return $this->post(
             '/v1/gates',
             ['url' => $url, 'detection_method' => $detectionMethod],
-            ['X-Site-Token' => $siteToken],
+            $this->siteTokenHeaders(),
             'POST',
-            true
+            true // allow 402 as success
         );
     }
 
-    public function getStats(string $siteId): ?array
+    /**
+     * Push a batch of bot-detection rows to the platform (XEN-394) so the
+     * dashboard /bots cross-site activity panel can aggregate them.
+     *
+     * Fire-and-forget: called inline on every bot detection, so it must
+     * not add meaningful latency to bot page loads and we don't care about
+     * the response (the platform is canonical; failures show up as missing
+     * detections, not duplicates). PHP can't truly detach the request the
+     * way WP's non-blocking wp_remote_post does, so we use a tight timeout
+     * and swallow every error.
+     *
+     * @param array $detections list of {signature, category, company,
+     *                          first_seen, last_seen, hit_count}.
+     */
+    public function postBotDetections(array $detections): void
     {
-        return $this->get('/v1/sites/' . urlencode($siteId) . '/stats', $this->authHeaders());
-    }
-
-    public function getBalance(string $siteId): ?array
-    {
-        return $this->get('/v1/sites/' . urlencode($siteId) . '/balance', $this->authHeaders());
-    }
-
-    public function getCategoryBreakdown(string $siteId): ?array
-    {
-        return $this->get('/v1/sites/' . urlencode($siteId) . '/category-breakdown', $this->authHeaders());
-    }
-
-    public function getTransactions(string $siteId, array $params = []): ?array
-    {
-        $query = http_build_query($params);
-        $endpoint = '/v1/sites/' . urlencode($siteId) . '/transactions';
-        if (!empty($query)) {
-            $endpoint .= '?' . $query;
+        $siteToken = $this->siteToken();
+        if ($siteToken === '' || empty($detections)) {
+            return;
         }
-        return $this->get($endpoint, $this->authHeaders());
+
+        $url     = $this->baseUrl . '/v1/sites/me/bot-detections';
+        $headers = [
+            'Content-Type' => 'application/json',
+            'X-Site-Token' => $siteToken,
+        ];
+        $body = json_encode(['detections' => array_values($detections)], JSON_UNESCAPED_SLASHES);
+
+        try {
+            // Tight timeout — open the connection, don't wait on the body.
+            HttpFactory::getHttp()->post($url, $body, $headers, 2);
+        } catch (\Throwable $e) {
+            // best-effort telemetry; ignore.
+        }
     }
 
-    public function getSellConfig(): ?array
+    // ------------------------------------------------------------------
+    // XEN-380 / XEN-383 — thin-window mirror of /v1/sites/me/*
+    // All X-Site-Token authed.
+    // ------------------------------------------------------------------
+
+    /** Full site detail (mirror of dashboard /sites/[id]). */
+    public function getMySite(): array
     {
-        return $this->get('/v1/offramp/sell-config', $this->authHeaders());
+        return $this->get('/v1/sites/me', $this->siteTokenHeaders());
     }
 
-    public function getSellOptions(string $country): ?array
+    /** PUT gating — full replace of gating_enabled + gated_categories + use_publisher_defaults. */
+    public function putMySiteGating(bool $gatingEnabled, array $gatedCategories, bool $usePublisherDefaults): array
     {
-        return $this->get('/v1/offramp/sell-options?country=' . urlencode($country), $this->authHeaders());
+        return $this->post(
+            '/v1/sites/me/gating',
+            [
+                'gating_enabled'         => $gatingEnabled,
+                'gated_categories'       => (object) $gatedCategories,
+                'use_publisher_defaults' => $usePublisherDefaults,
+            ],
+            $this->siteTokenHeaders(),
+            'PUT'
+        );
     }
 
-    public function createSellQuote(string $siteId, string $amountUsd, string $country, string $paymentMethod = 'FIAT_WALLET'): ?array
+    /** PUT pricing — default + per-path rules. */
+    public function putMySitePricing(float $defaultPriceUsd, array $rules, string $defaultBillingScope = 'page'): array
     {
-        return $this->post('/v1/offramp/sell-quote', [
-            'site_id'        => $siteId,
-            'amount_usd'     => $amountUsd,
-            'country'        => $country,
-            'payment_method' => $paymentMethod,
-        ], $this->authHeaders());
+        return $this->post(
+            '/v1/sites/me/pricing',
+            [
+                'default_price_usd'     => $defaultPriceUsd,
+                'default_billing_scope' => $defaultBillingScope,
+                'rules'                 => array_values($rules),
+            ],
+            $this->siteTokenHeaders(),
+            'PUT'
+        );
     }
 
-    public function recordCashOut(string $siteId, string $amountUsd): ?array
+    /** Today / month / all-time stats. */
+    public function getMySiteStats(): array
     {
-        return $this->post('/v1/sites/' . urlencode($siteId) . '/cash-outs', ['amount_usd' => $amountUsd], $this->authHeaders());
+        return $this->get('/v1/sites/me/stats', $this->siteTokenHeaders());
+    }
+
+    /** Paginated transactions feed. */
+    public function getMySiteTransactions(array $params = []): array
+    {
+        $qs = http_build_query($params);
+        return $this->get('/v1/sites/me/transactions' . ($qs ? '?' . $qs : ''), $this->siteTokenHeaders());
+    }
+
+    /** Earnings grouped by detected bot category. */
+    public function getMySiteCategoryBreakdown(): array
+    {
+        return $this->get('/v1/sites/me/category-breakdown', $this->siteTokenHeaders());
+    }
+
+    /**
+     * XEN-435 P4: the merchant identity's linked wallets, so the admin can
+     * pick which one receives gate revenue. Returns
+     * {wallets:[{address, eligible_at, eligible, is_default}]}.
+     */
+    public function getMySiteWallets(): array
+    {
+        return $this->get('/v1/sites/me/wallets', $this->siteTokenHeaders());
+    }
+
+    /**
+     * XEN-435 P4: set the gate's receiving wallet (the identity default).
+     * The platform only accepts an already-eligible linked wallet.
+     */
+    public function putMySitePayoutWallet(string $wallet): array
+    {
+        return $this->post(
+            '/v1/sites/me/payout-wallet',
+            ['wallet' => $wallet],
+            $this->siteTokenHeaders(),
+            'PUT'
+        );
     }
 
     // ------------------------------------------------------------------
     // Internal helpers
     // ------------------------------------------------------------------
 
-    private function authHeaders(): array
+    private function siteToken(): string
     {
-        $params = ComponentHelper::getParams('com_xenarch');
-        $apiKey = $params->get('api_key', '');
-
-        return ['Authorization' => 'Bearer ' . $apiKey];
+        return (string) ComponentHelper::getParams('com_xenarch')->get('site_token', '');
     }
 
-    private function post(string $endpoint, array $body = [], array $headers = [], string $method = 'POST', bool $allow402 = false): ?array
+    /**
+     * @throws ApiException when no site_token is configured — callers
+     *                      treat this the same as a transport failure.
+     */
+    private function siteTokenHeaders(): array
+    {
+        $siteToken = $this->siteToken();
+        if ($siteToken === '') {
+            throw new ApiException(0, 'site token not configured');
+        }
+        return ['X-Site-Token' => $siteToken];
+    }
+
+    /**
+     * @throws ApiException on any non-success response or transport error.
+     */
+    private function post(string $endpoint, array $body = [], array $headers = [], string $method = 'POST', bool $allow402 = false): array
     {
         $url = $this->baseUrl . $endpoint;
         $headers['Content-Type'] = 'application/json';
+        $jsonBody = json_encode($body, JSON_UNESCAPED_SLASHES);
 
         try {
             $http = HttpFactory::getHttp();
-            $jsonBody = json_encode($body, JSON_UNESCAPED_SLASHES);
-
-            if ($method === 'PUT') {
-                $response = $http->put($url, $jsonBody, $headers, 30);
-            } else {
-                $response = $http->post($url, $jsonBody, $headers, 30);
-            }
-
-            return $this->handleResponse($response, $allow402);
-        } catch (\Exception $e) {
-            return null;
+            $response = $method === 'PUT'
+                ? $http->put($url, $jsonBody, $headers, 30)
+                : $http->post($url, $jsonBody, $headers, 30);
+        } catch (\Throwable $e) {
+            throw new ApiException(0, $e->getMessage());
         }
+
+        return $this->handleResponse($response, $allow402);
     }
 
-    private function get(string $endpoint, array $headers = []): ?array
+    /**
+     * @throws ApiException on any non-success response or transport error.
+     */
+    private function get(string $endpoint, array $headers = []): array
     {
         $url = $this->baseUrl . $endpoint;
 
         try {
-            $http = HttpFactory::getHttp();
-            $response = $http->get($url, $headers, 30);
-
-            return $this->handleResponse($response);
-        } catch (\Exception $e) {
-            return null;
+            $response = HttpFactory::getHttp()->get($url, $headers, 30);
+        } catch (\Throwable $e) {
+            throw new ApiException(0, $e->getMessage());
         }
+
+        return $this->handleResponse($response);
     }
 
-    private function handleResponse(object $response, bool $allow402 = false): ?array
+    /**
+     * @throws ApiException on any non-success response.
+     */
+    private function handleResponse(object $response, bool $allow402 = false): array
     {
-        $code = $response->code;
+        $code = (int) ($response->code ?? 0);
         $body = $response->body ?? '';
         $data = json_decode($body, true);
 
@@ -212,6 +324,15 @@ class ApiClient
             return $data;
         }
 
-        return null;
+        $message = '';
+        if (is_array($data)) {
+            if (isset($data['message'])) {
+                $message = (string) $data['message'];
+            } elseif (isset($data['detail'])) {
+                $message = is_array($data['detail']) ? json_encode($data['detail']) : (string) $data['detail'];
+            }
+        }
+
+        throw new ApiException($code, $message);
     }
 }

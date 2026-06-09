@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="component" method="upgrade">
     <name>Xenarch</name>
-    <version>1.0.3</version>
+    <version>2.0.0</version>
     <creationDate>2026-04</creationDate>
     <author>Xenarch</author>
     <authorUrl>https://xenarch.com</authorUrl>
@@ -10,13 +10,10 @@
 
     <namespace path="src">Xenarch\Component\Xenarch</namespace>
 
-    <install>
-        <sql><file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file></sql>
-    </install>
-    <uninstall>
-        <sql><file driver="mysql" charset="utf8">sql/uninstall.mysql.utf8.sql</file></sql>
-    </uninstall>
-
+    <!-- Thin-window rebuild (XEN-481): the plugin stores nothing canonical
+         locally — no custom Xenarch tables. The only local persistence is
+         three component params (site_token, site_id, browser_proof_secret),
+         seeded by script.php. -->
     <scriptfile>script.php</scriptfile>
 
     <files folder="src">
@@ -40,15 +37,8 @@
             <filename>script.php</filename>
             <folder>services</folder>
             <folder>src</folder>
-            <folder>sql</folder>
             <folder>tmpl</folder>
         </files>
         <menu>Xenarch</menu>
     </administration>
-
-    <api>
-        <files folder="../../../api/components/com_xenarch">
-            <folder>src</folder>
-        </files>
-    </api>
 </extension>
