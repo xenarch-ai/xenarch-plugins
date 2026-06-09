@@ -24,6 +24,15 @@ const STATIC_EXT = new Set([
 
 const GATE_TTL_MS = 30 * 60 * 1000; // gate cached 30 min per path.
 const DECIDE_TTL_MS = 60 * 1000; // gating verdict cached 60 s.
+const SITE_TTL_MS = 60 * 1000; // site detail (price rules + wallet) cached 60 s.
+
+// Ranked facilitator stack emitted in pay.json — mirror of WP
+// class-xenarch-discovery.php DEFAULT_FACILITATORS (pay-json v1.2 shape).
+const FACILITATORS = [
+  { name: "payai", url: "https://facilitator.payai.network", priority: 1, spec_version: "v1" },
+  { name: "xpay", url: "https://facilitator.xpay.dev", priority: 2, spec_version: "v1" },
+  { name: "ultravioleta", url: "https://x402.ultravioleta.dev", priority: 3, spec_version: "v2" },
+];
 
 // Browser-proof challenge (mirror of WP class-xenarch-browser-proof.php).
 const PROOF_COOKIE = "xenarch_browser_proof";
@@ -73,6 +82,12 @@ function cacheSet(key, val, ttlMs) {
     }
   }
   memo.set(key, { val, exp: Date.now() + ttlMs });
+}
+
+/** Test-only: clear the per-isolate caches so cases don't leak state. */
+export function __resetGateCaches() {
+  memo.clear();
+  lastGoodSite = null;
 }
 
 /**
@@ -127,8 +142,17 @@ export async function handleGate(request, env, opts = {}) {
   const freePaths = opts.freePaths || parseFreePaths(env.XENARCH_FREE_PATHS);
   if (isFreePath(path, freePaths)) return passthrough(request);
 
-  // Never gate discovery docs.
-  if (path.startsWith("/.well-known/") || path === "/pay.json") {
+  // Discovery docs: serve pay.json + xenarch.md GENERATED from the platform
+  // (mirror of WP class-xenarch-discovery.php), so a static origin with no
+  // discovery files still advertises payment. Other /.well-known/ paths (ACME
+  // challenges, etc.) pass through untouched.
+  if (path === "/.well-known/pay.json" || path === "/pay.json") {
+    return servePayJson(apiBase, siteToken, host);
+  }
+  if (path === "/.well-known/xenarch.md") {
+    return serveXenarchMd(apiBase, siteToken, host);
+  }
+  if (path.startsWith("/.well-known/")) {
     return passthrough(request);
   }
   // Never gate static assets.
@@ -161,7 +185,18 @@ export async function handleGate(request, env, opts = {}) {
     }
   }
 
-  // 3. Validate any browser-proof cookie locally, then ask the platform for the
+  // 3. FREE path: a platform price rule (or the site default) of $0 is served
+  //    free to everyone — bots included — BEFORE detection, mirror of WP
+  //    is_free_path (class-xenarch-gate.php:97). Uses the platform's own
+  //    fnmatch/longest-match pricing semantics so the edge never disagrees with
+  //    what the dashboard set. The static XENARCH_FREE_PATHS env list (handled
+  //    above) is an additional deploy-time convenience on top of this.
+  const site = await getSiteDetail(apiBase, siteToken);
+  if (site && isFreeByRule(path, site)) {
+    return passthrough(request);
+  }
+
+  // 4. Validate any browser-proof cookie locally, then ask the platform for the
   //    full-ladder verdict (A2). detect_full runs server-side: empty-UA, named
   //    bots, search allowlist, fetcher list, browser-proof short-circuit,
   //    Mozilla/ header-scoring, unknown-non-browser. Fails OPEN if unreachable.
@@ -192,6 +227,16 @@ export async function handleGate(request, env, opts = {}) {
     waitUntil(reportDetection(apiBase, siteToken, verdict));
   }
 
+  // Unknown non-browser traffic (webhooks, link-checkers, etc.) → optionally
+  // allowed through via a deploy-time toggle. Mirror of WP
+  // xenarch_gate_unknown_traffic (default '1' = gate).
+  if (
+    verdict.method === "unknown_non_browser" &&
+    (env.XENARCH_GATE_UNKNOWN_TRAFFIC || "1") !== "1"
+  ) {
+    return passthrough(request);
+  }
+
   // Allowed (valid browser proof, social/search allowlist, ungated category) → serve.
   if (verdict.decision === "allow") {
     return passthrough(request);
@@ -211,6 +256,7 @@ export async function handleGate(request, env, opts = {}) {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "no-store, private",
+        "X-Xenarch-Bot": verdict.method || "browser_headers",
         "X-Xenarch-Decision": "challenge",
       },
     });
@@ -222,13 +268,15 @@ export async function handleGate(request, env, opts = {}) {
   const gate = await getOrCreateGate(
     apiBase, siteToken, path, host, verdict.label || "ua_match",
   );
-  const body = gate && gate.gate_id ? gate : fallbackGate(path);
+  const body = enrichGatePayload(gate && gate.gate_id ? gate : fallbackGate(path), host);
   return new Response(JSON.stringify(body), {
     status: 402,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
       "Cache-Control": "no-store, private",
+      "X-Xenarch-Bot": verdict.method || "ua_match",
       "X-Xenarch-Decision": "block",
+      ...discoveryHeaders(host),
     },
   });
 }
@@ -302,7 +350,7 @@ async function gateDecide(apiBase, siteToken, ua, headers, proof, publisherId) {
   const key = `decide:${ua}|${fp}`;
   const cached = cacheGet(key);
   if (cached) return cached;
-  const open = { decision: "allow", signature: null, category: "", company: "", label: "" };
+  const open = { decision: "allow", signature: null, category: "", company: "", label: "", method: "" };
   try {
     let u = `${apiBase}/v1/gate-decide`;
     if (publisherId) u += `?publisher_id=${encodeURIComponent(publisherId)}`;
@@ -321,6 +369,7 @@ async function gateDecide(apiBase, siteToken, ua, headers, proof, publisherId) {
       category: d.category || "",
       company: d.company || "",
       label: d.label || d.signature || "",
+      method: d.method || "",
     };
     cacheSet(key, verdict, DECIDE_TTL_MS);
     return verdict;
@@ -407,6 +456,287 @@ function fallbackGate(path) {
     protocol: "x402",
     resource: path,
   };
+}
+
+// --- Site detail + pricing (free-path parity, pay.json) ---------------------
+
+// Best-effort last-known-good site detail for the platform-outage case. Isolate-
+// scoped (not cross-isolate persistent — a cold isolate during an outage serves
+// a wallet-less pay.json, the WP last_good option's edge analog would be KV).
+let lastGoodSite = null;
+
+/**
+ * GET /v1/sites/me (X-Site-Token) → {domain, default_price_usd, payout_wallet,
+ * rules:[{path, price_usd}]}. Cached 60s; returns last-known-good on error.
+ */
+async function getSiteDetail(apiBase, siteToken) {
+  const cached = cacheGet("site:detail");
+  if (cached) return cached;
+  try {
+    const res = await fetch(`${apiBase}/v1/sites/me`, {
+      headers: { "X-Site-Token": siteToken },
+    });
+    if (!res.ok) return lastGoodSite;
+    const data = await res.json();
+    if (data && typeof data === "object") {
+      lastGoodSite = data;
+      cacheSet("site:detail", data, SITE_TTL_MS);
+      return data;
+    }
+    return lastGoodSite;
+  } catch (_e) {
+    return lastGoodSite;
+  }
+}
+
+/**
+ * Match a path against a Python-fnmatch glob WITHOUT building a regex — a linear
+ * two-pointer matcher, so a pathological pattern (e.g. `*a*a*a*b`) can't trigger
+ * catastrophic backtracking on the gating hot path. Supports `*` (any run,
+ * including `/`), `?` (one char), and `[seq]`/`[!seq]` classes, matching CPython
+ * fnmatch on the full string (case-sensitive, as the platform's resolve_price
+ * runs on Linux) so the edge stays in lockstep with the gate the platform mints.
+ */
+function globMatch(pattern, str) {
+  let p = 0;
+  let s = 0;
+  let starP = -1;
+  let starS = -1;
+  while (s < str.length) {
+    const pc = pattern[p];
+    if (p < pattern.length && pc === "*") {
+      starP = p++;
+      starS = s;
+    } else if (p < pattern.length && pc === "?") {
+      p++;
+      s++;
+    } else if (p < pattern.length && pc === "[") {
+      const m = matchCharClass(pattern, p, str[s]);
+      if (m.matched) {
+        p = m.next;
+        s++;
+      } else if (starP >= 0) {
+        p = starP + 1;
+        s = ++starS;
+      } else {
+        return false;
+      }
+    } else if (p < pattern.length && pc === str[s]) {
+      p++;
+      s++;
+    } else if (starP >= 0) {
+      p = starP + 1;
+      s = ++starS;
+    } else {
+      return false;
+    }
+  }
+  while (p < pattern.length && pattern[p] === "*") p++;
+  return p === pattern.length;
+}
+
+/**
+ * Evaluate a `[...]` character class in `pattern` at index `p` against char
+ * `ch`. Returns {matched, next} (next = index past `]`). An unterminated class
+ * makes `[` a literal, matching fnmatch.
+ */
+function matchCharClass(pattern, p, ch) {
+  let i = p + 1;
+  let negate = false;
+  if (pattern[i] === "!") {
+    negate = true;
+    i++;
+  }
+  let j = i;
+  if (pattern[j] === "]") j++; // a leading ] is a literal member
+  while (j < pattern.length && pattern[j] !== "]") j++;
+  if (j >= pattern.length) {
+    return { matched: ch === "[", next: p + 1 }; // unterminated → literal '['
+  }
+  let matched = false;
+  let k = i;
+  while (k < j) {
+    if (pattern[k + 1] === "-" && k + 2 < j) {
+      if (ch >= pattern[k] && ch <= pattern[k + 2]) matched = true;
+      k += 3;
+    } else {
+      if (ch === pattern[k]) matched = true;
+      k += 1;
+    }
+  }
+  return { matched: negate ? !matched : matched, next: j + 1 };
+}
+
+/**
+ * True when an explicit price RULE matches this path with price 0 — a FREE path.
+ * Faithful mirror of WP is_free_path (class-xenarch-gate.php:710): only a
+ * matching rule frees a path; the site DEFAULT price is NOT considered here (a
+ * $0 default must not silently free the whole site). Rule selection uses the
+ * platform's fnmatch / longest-pattern-wins so the edge agrees with the gate the
+ * platform would mint.
+ */
+function isFreeByRule(path, site) {
+  const rules = Array.isArray(site && site.rules) ? site.rules : [];
+  let best = null;
+  let bestLen = -1;
+  for (const r of rules) {
+    if (!r || !r.path) continue;
+    const pat = String(r.path);
+    // Longest matching pattern wins, first on ties — exactly mirrors the
+    // platform resolve_price (`len(rule.path_pattern) > best_length`).
+    if (globMatch(pat, path) && pat.length > bestLen) {
+      best = r;
+      bestLen = pat.length;
+    }
+  }
+  return best !== null && Number(best.price_usd) === 0;
+}
+
+// --- Discovery (mirror of WP get_discovery_headers / enrich_gate_payload) ----
+
+/** Keep only valid hostname characters before interpolating into headers/docs.
+ * Cloudflare already rejects malformed Host before the isolate runs; this makes
+ * the code correct even off-CF (no CRLF/quote injection into Link headers). */
+function safeHost(host) {
+  return String(host || "").replace(/[^a-zA-Z0-9.:[\]-]/g, "");
+}
+
+/** The three discovery HTTP headers WP adds to every 402 block response. */
+function discoveryHeaders(host) {
+  host = safeHost(host);
+  const payJson = `https://${host}/.well-known/pay.json`;
+  const xenarchMd = `https://${host}/.well-known/xenarch.md`;
+  return {
+    Link: `<${payJson}>; rel="payment-terms", <${xenarchMd}>; rel="payment-instructions"`,
+    "X-Pay-Json": payJson,
+    "X-Xenarch": `payment-required; pay_json="${payJson}"`,
+  };
+}
+
+/** Add pay_json_url / instructions_url / message to a 402 body (WP enrich). */
+function enrichGatePayload(gate, host) {
+  host = safeHost(host);
+  const payJson = `https://${host}/.well-known/pay.json`;
+  const xenarchMd = `https://${host}/.well-known/xenarch.md`;
+  if (gate.xenarch === undefined) gate.xenarch = true;
+  gate.pay_json_url = payJson;
+  gate.instructions_url = xenarchMd;
+  gate.message =
+    `Payment required. Fetch ${payJson} for pricing, payment address, and ` +
+    `integration tools. Full instructions at ${xenarchMd}`;
+  return gate;
+}
+
+/** Serve /.well-known/pay.json (pay-json v1.2) generated from platform detail. */
+async function servePayJson(apiBase, siteToken, host) {
+  const site = (await getSiteDetail(apiBase, siteToken)) || {};
+  const wallet = site.payout_wallet || "";
+  const price = site.default_price_usd != null ? String(site.default_price_usd) : "0.003";
+  const rules = [];
+  if (Array.isArray(site.rules)) {
+    for (const r of site.rules) {
+      if (r && r.path && r.price_usd != null) {
+        rules.push({ path: String(r.path), price_usd: String(r.price_usd) });
+      }
+    }
+  }
+  rules.push({ path: "/**", price_usd: price });
+  const payJson = {
+    version: "1.2",
+    protocol: "x402",
+    network: "base",
+    asset: "USDC",
+    receiver: wallet,
+    seller_wallet: wallet,
+    facilitators: FACILITATORS,
+    rules,
+  };
+  return new Response(JSON.stringify(payJson, null, 2), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "public, max-age=3600",
+    },
+  });
+}
+
+/** Serve /.well-known/xenarch.md — the human/LLM payment guide (WP mirror). */
+async function serveXenarchMd(apiBase, siteToken, host) {
+  const site = (await getSiteDetail(apiBase, siteToken)) || {};
+  const domain = safeHost(host);
+  const siteUrl = `https://${domain}`;
+  const price = site.default_price_usd != null ? String(site.default_price_usd) : "0.003";
+  const md =
+`# Xenarch Payment Gate — ${domain}
+
+## What's Happening
+
+This site charges AI agents for content access using the x402 micropayment protocol. You received an HTTP 402 response because your request was identified as coming from an AI agent.
+
+This is not an error. It means the content is available for purchase.
+
+## How to Pay (x402 standard flow)
+
+### Step 1: Discover the gate
+
+Make a request to any page. If you are detected as an AI agent, you'll receive HTTP 402 with a JSON body and discovery headers pointing at \`pay.json\`:
+
+\`\`\`
+GET ${siteUrl}/your-page
+→ HTTP/1.1 402 Payment Required
+→ Link: <${siteUrl}/.well-known/pay.json>; rel="payment-terms"
+\`\`\`
+
+Fetch \`${siteUrl}/.well-known/pay.json\` to learn the price, the seller wallet, and the ranked list of x402 facilitators that can settle the payment.
+
+### Step 2: Pay via an x402 facilitator
+
+Pick a facilitator from the \`facilitators\` array. Sign a USDC \`transferWithAuthorization\` (EIP-3009) for the price, payable to \`seller_wallet\` on Base, and submit it to the facilitator. The facilitator broadcasts the transaction and returns the on-chain \`tx_hash\`.
+
+Funds settle directly from your wallet to the publisher wallet. Xenarch is never in the money flow — there is no intermediary contract.
+
+### Step 3: Replay the request with proof of payment
+
+Send both the gate UUID (from the 402 response body) and the on-chain transaction hash:
+
+\`\`\`
+GET ${siteUrl}/your-page
+X-Xenarch-Gate-Id: <gate_id from the 402 body>
+X-Xenarch-Tx-Hash: 0x<your_transaction_hash>
+\`\`\`
+
+The edge re-verifies the transaction against the platform (\`/v1/gates/<gate_id>/verify\`). If the on-chain payment matches the gate price and recipient, you receive the full page with HTTP 200.
+
+## Easiest path: use the Xenarch MCP server
+
+If you are an AI agent (Claude, Cursor, LangChain, CrewAI, or any MCP client), install the Xenarch MCP server and the three steps above happen automatically:
+
+\`\`\`bash
+npx @xenarch/agent-mcp
+\`\`\`
+
+Then ask the agent to fetch the URL. It will discover the gate, pick a facilitator, sign the payment, and return the content.
+
+## Pricing
+
+- Default price: $${price} per page
+- Full pricing rules: ${siteUrl}/.well-known/pay.json
+- Maximum price: $1.00 (protocol limit)
+
+## Links
+
+- Xenarch documentation: https://xenarch.com/docs
+- x402 spec: https://www.x402.org/
+- pay.json standard: https://payjson.org
+- pay.json for this site: ${siteUrl}/.well-known/pay.json
+`;
+  return new Response(md, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/markdown; charset=utf-8",
+      "Cache-Control": "public, max-age=3600",
+    },
+  });
 }
 
 // --- Browser proof (mirror of WP class-xenarch-browser-proof.php) -----------

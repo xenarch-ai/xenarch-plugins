@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import worker from "../src/index.js";
+import { __resetGateCaches } from "../src/gate.js";
 
 const ENV = { XENARCH_API_BASE: "https://api.test", XENARCH_SITE_TOKEN: "st_test" };
 const ORIGIN = "https://shop.example.com";
@@ -31,6 +32,7 @@ function mockFetch(api) {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  __resetGateCaches();
 });
 
 const GPTBOT = "Mozilla/5.0 (compatible; GPTBot/1.0)";
@@ -42,9 +44,29 @@ describe("config + skip rules", () => {
     expect(await res.text()).toBe("ORIGIN");
   });
 
-  it("never gates /.well-known discovery", async () => {
-    global.fetch = mockFetch({});
+  it("generates pay.json from platform site detail (not origin)", async () => {
+    global.fetch = mockFetch({
+      "/v1/sites/me": {
+        body: {
+          domain: "shop.example.com",
+          default_price_usd: "0.003",
+          payout_wallet: "0xWALLET",
+          rules: [{ path: "/premium/*", price_usd: "0.01" }],
+        },
+      },
+    });
     const res = await worker.fetch(req("/.well-known/pay.json"), ENV);
+    expect(res.status).toBe(200);
+    const pj = await res.json();
+    expect(pj.version).toBe("1.2");
+    expect(pj.seller_wallet).toBe("0xWALLET");
+    expect(pj.rules.at(-1)).toEqual({ path: "/**", price_usd: "0.003" });
+    expect(pj.facilitators.length).toBe(3);
+  });
+
+  it("passes other .well-known paths through to origin", async () => {
+    global.fetch = mockFetch({});
+    const res = await worker.fetch(req("/.well-known/acme-challenge/abc"), ENV);
     expect(await res.text()).toBe("ORIGIN");
   });
 
@@ -152,6 +174,73 @@ describe("browser-proof challenge band", () => {
       env,
     );
     expect(await second.text()).toBe("ORIGIN");
+  });
+});
+
+describe("WP parity: free paths, discovery, toggles", () => {
+  it("free path (price-0 rule) is served to everyone, before detection", async () => {
+    global.fetch = mockFetch({
+      "/v1/sites/me": {
+        body: {
+          default_price_usd: "0.003",
+          rules: [{ path: "/free/*", price_usd: "0" }],
+        },
+      },
+      // gate-decide must NOT be consulted for a free path; if it is and returns
+      // charge, the test would fail — proving the free check runs first.
+      "/gate-decide": { body: { decision: "charge", label: "GPTBot" } },
+    });
+    const res = await worker.fetch(
+      req("/free/report", { "User-Agent": "Mozilla/5.0 (compatible; GPTBot/1.0)" }),
+      ENV,
+    );
+    expect(await res.text()).toBe("ORIGIN");
+  });
+
+  it("a non-rule path still gates even when site default is $0", async () => {
+    // Faithful WP is_free_path: the default price does NOT free a path.
+    global.fetch = mockFetch({
+      "/v1/sites/me": { body: { default_price_usd: "0", rules: [] } },
+      "/gate-decide": { body: { decision: "charge", label: "GPTBot", method: "ua_match" } },
+      "/v1/gates": { status: 402, body: { gate_id: "g0" } },
+    });
+    const res = await worker.fetch(
+      req("/article", { "User-Agent": "Mozilla/5.0 (compatible; GPTBot/1.0)" }),
+      ENV,
+    );
+    expect(res.status).toBe(402);
+  });
+
+  it("402 carries discovery headers + enriched body + X-Xenarch-Bot", async () => {
+    global.fetch = mockFetch({
+      "/v1/sites/me": { body: { default_price_usd: "0.003", rules: [] } },
+      "/gate-decide": { body: { decision: "charge", signature: "GPTBot", label: "GPTBot", method: "ua_match" } },
+      "/v1/gates": { status: 402, body: { gate_id: "g1", xenarch: true, accepts: [] } },
+    });
+    const res = await worker.fetch(
+      req("/article-disc", { "User-Agent": "Mozilla/5.0 (compatible; GPTBot/1.0)" }),
+      ENV,
+    );
+    expect(res.status).toBe(402);
+    expect(res.headers.get("X-Xenarch-Bot")).toBe("ua_match");
+    expect(res.headers.get("X-Pay-Json")).toContain("/.well-known/pay.json");
+    expect(res.headers.get("Link")).toContain('rel="payment-terms"');
+    const body = await res.json();
+    expect(body.pay_json_url).toContain("/.well-known/pay.json");
+    expect(body.instructions_url).toContain("/.well-known/xenarch.md");
+    expect(body.message).toContain("Payment required");
+  });
+
+  it("unknown-non-browser passes when XENARCH_GATE_UNKNOWN_TRAFFIC=0", async () => {
+    global.fetch = mockFetch({
+      "/v1/sites/me": { body: { default_price_usd: "0.003", rules: [] } },
+      "/gate-decide": { body: { decision: "charge", method: "unknown_non_browser" } },
+    });
+    const res = await worker.fetch(
+      req("/hook", { "User-Agent": "MyToolkit/1.0" }),
+      { ...ENV, XENARCH_GATE_UNKNOWN_TRAFFIC: "0" },
+    );
+    expect(await res.text()).toBe("ORIGIN");
   });
 });
 

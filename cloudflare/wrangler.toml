@@ -19,6 +19,12 @@ compatibility_date = "2026-06-01"
 # Platform API base. Override per environment if needed.
 [vars]
 XENARCH_API_BASE = "https://xenarch.dev"
+# Optional. Paths a $0 platform price rule already frees automatically (mirrors
+# WP); this is an extra static free-list applied on top, e.g. "/,/about,/blog/*".
+# XENARCH_FREE_PATHS = "/"
+# Optional. "1" (default) gates unknown non-browser traffic (webhooks, scripts);
+# set "0" to let it through — mirror of WP xenarch_gate_unknown_traffic.
+# XENARCH_GATE_UNKNOWN_TRAFFIC = "1"
 
 # XENARCH_SITE_TOKEN is a secret, NOT a var — set it with:
 #   npx wrangler secret put XENARCH_SITE_TOKEN
