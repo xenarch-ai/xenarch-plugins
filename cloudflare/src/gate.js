@@ -147,10 +147,10 @@ export async function handleGate(request, env, opts = {}) {
   // discovery files still advertises payment. Other /.well-known/ paths (ACME
   // challenges, etc.) pass through untouched.
   if (path === "/.well-known/pay.json" || path === "/pay.json") {
-    return servePayJson(apiBase, siteToken, host);
+    return servePayJson(apiBase, siteToken, host, passthrough, request);
   }
   if (path === "/.well-known/xenarch.md") {
-    return serveXenarchMd(apiBase, siteToken, host);
+    return serveXenarchMd(apiBase, siteToken, host, passthrough, request);
   }
   if (path.startsWith("/.well-known/")) {
     return passthrough(request);
@@ -628,10 +628,13 @@ function enrichGatePayload(gate, host) {
 }
 
 /** Serve /.well-known/pay.json (pay-json v1.2) generated from platform detail. */
-async function servePayJson(apiBase, siteToken, host) {
-  const site = (await getSiteDetail(apiBase, siteToken)) || {};
+async function servePayJson(apiBase, siteToken, host, passthrough, request) {
+  const site = await getSiteDetail(apiBase, siteToken);
+  // No platform data (and no last-known-good) → don't fabricate a price; let the
+  // origin serve its own pay.json (or 404). Price lives only on the platform.
+  if (!site || site.default_price_usd == null) return passthrough(request);
   const wallet = site.payout_wallet || "";
-  const price = site.default_price_usd != null ? String(site.default_price_usd) : "0.001";
+  const price = String(site.default_price_usd);
   const rules = [];
   if (Array.isArray(site.rules)) {
     for (const r of site.rules) {
@@ -661,11 +664,12 @@ async function servePayJson(apiBase, siteToken, host) {
 }
 
 /** Serve /.well-known/xenarch.md — the human/LLM payment guide (WP mirror). */
-async function serveXenarchMd(apiBase, siteToken, host) {
-  const site = (await getSiteDetail(apiBase, siteToken)) || {};
+async function serveXenarchMd(apiBase, siteToken, host, passthrough, request) {
+  const site = await getSiteDetail(apiBase, siteToken);
+  if (!site || site.default_price_usd == null) return passthrough(request);
   const domain = safeHost(host);
   const siteUrl = `https://${domain}`;
-  const price = site.default_price_usd != null ? String(site.default_price_usd) : "0.001";
+  const price = String(site.default_price_usd);
   const md =
 `# Xenarch Payment Gate — ${domain}
 
