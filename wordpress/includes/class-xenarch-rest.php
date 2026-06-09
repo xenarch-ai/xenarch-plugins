@@ -249,10 +249,19 @@ class Xenarch_Rest {
 	}
 
 	public function handle_put_pricing( $request ) {
-		$body  = $request->get_json_params();
+		$body = $request->get_json_params();
+		// A pricing edit must state the default explicitly — don't fabricate one
+		// from a hardcoded literal (the platform is the single source of truth).
+		if ( ! isset( $body['default_price_usd'] ) ) {
+			return new WP_Error(
+				'xenarch_missing_price',
+				'default_price_usd is required',
+				array( 'status' => 400 )
+			);
+		}
 		$rules = isset( $body['rules'] ) && is_array( $body['rules'] ) ? $body['rules'] : array();
 		return $this->forward( $this->api->put_my_site_pricing(
-			isset( $body['default_price_usd'] ) ? (float) $body['default_price_usd'] : 0.003,
+			(float) $body['default_price_usd'],
 			$rules,
 			isset( $body['default_billing_scope'] ) ? (string) $body['default_billing_scope'] : 'page'
 		) );

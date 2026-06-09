@@ -102,33 +102,52 @@ class Xenarch_Discovery {
 	}
 
 	/**
+	 * Fetch the platform site detail (payout wallet, default price, per-path
+	 * rules) — the single source of truth for pricing. 5-min transient cache so a
+	 * public discovery hit doesn't round-trip the platform every time, with a
+	 * persistent last-known-good snapshot for the outage case.
+	 *
+	 * @return array|null Site detail, or null when the platform is unreachable
+	 *                    and no last-known-good exists.
+	 */
+	private function fetch_site() {
+		$site = get_transient( 'xenarch_pay_json_site' );
+		if ( false !== $site ) {
+			return is_array( $site ) ? $site : null;
+		}
+
+		$api     = new Xenarch_Api();
+		$fetched = $api->get_my_site();
+		if ( ! is_wp_error( $fetched ) && is_array( $fetched ) ) {
+			set_transient( 'xenarch_pay_json_site', $fetched, 5 * MINUTE_IN_SECONDS );
+			update_option( 'xenarch_pay_json_last_good', $fetched, false );
+			return $fetched;
+		}
+
+		// Platform unreachable — fall back to the last-known-good, or null.
+		$last_good = get_option( 'xenarch_pay_json_last_good', array() );
+		return is_array( $last_good ) && ! empty( $last_good ) ? $last_good : null;
+	}
+
+	/**
 	 * Serve /.well-known/pay.json (pay-json v1.2).
 	 */
 	private function serve_pay_json() {
-		// XEN-438 (A4): wallet/price/rules live on the platform now (the
-		// post-XEN-380 rewrite stopped writing the old local options). Pull the
-		// site detail via the site-token surface, with a short transient cache
-		// (so a public pay.json hit doesn't round-trip the platform every time)
-		// and a persistent last-known-good snapshot so an outage still serves a
-		// payable wallet.
-		$site = get_transient( 'xenarch_pay_json_site' );
-		if ( false === $site ) {
-			$api     = new Xenarch_Api();
-			$fetched = $api->get_my_site();
-			if ( ! is_wp_error( $fetched ) && is_array( $fetched ) ) {
-				$site = $fetched;
-				set_transient( 'xenarch_pay_json_site', $site, 5 * MINUTE_IN_SECONDS );
-				update_option( 'xenarch_pay_json_last_good', $site, false );
-			} else {
-				// Platform unreachable — fall back to the last-known-good.
-				$site = get_option( 'xenarch_pay_json_last_good', array() );
-			}
-		}
-
+		$site   = $this->fetch_site();
 		$wallet = is_array( $site ) && ! empty( $site['payout_wallet'] )
 			? (string) $site['payout_wallet'] : '';
 		$price  = is_array( $site ) && isset( $site['default_price_usd'] )
-			? (string) $site['default_price_usd'] : '0.003';
+			? (string) $site['default_price_usd'] : null;
+
+		// No payable wallet + price → don't fabricate a pay.json. Both the wallet
+		// and the price live only on the platform (single source of truth); on a
+		// total outage with no last-known-good, signal unavailable instead of
+		// emitting a hardcoded default.
+		if ( '' === $wallet || null === $price ) {
+			status_header( 503 );
+			header( 'Retry-After: 60' );
+			exit;
+		}
 
 		// Build rules array from the platform's per-path rules + default
 		// catch-all. Platform rules use the new `path` key (not legacy
@@ -188,8 +207,19 @@ class Xenarch_Discovery {
 	private function serve_xenarch_md() {
 		$site_url = get_site_url();
 		$domain   = wp_parse_url( $site_url, PHP_URL_HOST );
-		$price    = get_option( 'xenarch_default_price', '0.003' );
-		$email    = get_option( 'xenarch_email', '' );
+
+		// Price comes from the platform (single source of truth), not a local
+		// option. 503 if the platform is unreachable and we have no snapshot.
+		$site  = $this->fetch_site();
+		$price = is_array( $site ) && isset( $site['default_price_usd'] )
+			? (string) $site['default_price_usd'] : null;
+		if ( null === $price ) {
+			status_header( 503 );
+			header( 'Retry-After: 60' );
+			exit;
+		}
+
+		$email = get_option( 'xenarch_email', '' );
 
 		$contact_line = '';
 		if ( ! empty( $email ) ) {
