@@ -1,0 +1,31 @@
+# Xenarch Cloudflare Worker — Tier-2 edge gating (XEN-464).
+#
+# Install (publisher's own Cloudflare account):
+#   1. npm install
+#   2. Set the site token (provisioned from the dashboard's "Add site →
+#      Cloudflare" claim flow) as a secret — never commit it:
+#        npx wrangler secret put XENARCH_SITE_TOKEN
+#      And a browser-proof HMAC key (any high-entropy random string) so the
+#      browser-challenge band works (absent → that band passes through):
+#        npx wrangler secret put XENARCH_BROWSER_PROOF_SECRET
+#   3. npx wrangler deploy
+#   4. Add a route so the Worker fronts the site, e.g. in the dashboard or:
+#        routes = [{ pattern = "example.com/*", zone_name = "example.com" }]
+
+name = "xenarch-gate"
+main = "src/index.js"
+compatibility_date = "2026-06-01"
+
+# Platform API base. Override per environment if needed.
+[vars]
+XENARCH_API_BASE = "https://xenarch.dev"
+
+# XENARCH_SITE_TOKEN is a secret, NOT a var — set it with:
+#   npx wrangler secret put XENARCH_SITE_TOKEN
+# It authenticates the Worker as a specific site (X-Site-Token) so
+# /gate-decide returns this site's effective rules.
+
+# Uncomment and edit to bind the Worker to the publisher's zone:
+# routes = [
+#   { pattern = "example.com/*", zone_name = "example.com" },
+# ]

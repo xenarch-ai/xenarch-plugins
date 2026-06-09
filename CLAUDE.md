@@ -18,7 +18,7 @@ gtm/           — Google Tag Manager template
 
 ## Design Principle
 
-Plugins should be minimal — load `l.js` with the publisher's site ID and optionally manage `pay.json` generation. Business logic lives in the platform and the JS snippet.
+Plugins are thin enforcement surfaces over the platform gating API. They authenticate with a per-site `X-Site-Token`, enforce payment (HTTP 402 + on-chain verification), and read their gating settings live from the dashboard-managed platform state. Business logic and the canonical bot-signature catalog live in the platform — `cloudflare/` delegates detection to `/v1/gate-decide` rather than bundling a list. (The historical `l.js` client snippet is parked — XEN-147.)
 
 ## Workflow
 

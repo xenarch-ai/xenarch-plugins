@@ -1,0 +1,44 @@
+# Xenarch Edge sandbox — live x402 gating test site (XEN-464).
+#
+# Deploy (Xenarch Cloudflare account):
+#   1. cd xenarch-plugins/cloudflare && npm install   # gets wrangler
+#   2. cd test-site
+#   3. Set the site token for the edge.xenarch.dev site (minted from the
+#      dashboard "Add site → Cloudflare" claim flow) — never commit it:
+#        npx wrangler secret put XENARCH_SITE_TOKEN
+#      And the browser-proof HMAC key (any high-entropy random string):
+#        npx wrangler secret put XENARCH_BROWSER_PROOF_SECRET
+#   4. npx wrangler deploy
+#      The custom_domain route below auto-provisions DNS + TLS for
+#      edge.xenarch.dev (the xenarch.dev zone is on this account).
+
+name = "xenarch-edge-sandbox"
+main = "worker.js"
+compatibility_date = "2026-06-01"
+
+# Bundle the four pages as static assets. run_worker_first makes the gate run
+# on EVERY request before an asset is served (so bots get 402 on gated paths).
+# Requires a recent wrangler (run_worker_first GA'd in wrangler 4.x).
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
+
+[vars]
+XENARCH_API_BASE = "https://api.xenarch.dev"
+# Landing page is free for everyone; the three /dispatch/* pages are gated.
+XENARCH_FREE_PATHS = "/"
+# Transitional fallback so gate-decide works on current prod (pre-A2): the
+# platform's publisher-level path answers via publisher_id. Once A2 (X-Site-Token
+# site-level decisioning) ships, the site token takes precedence and this is
+# moot. publisher_id is not secret.
+XENARCH_PUBLISHER_ID = "e8328508-c15a-4505-854a-1ab0632f16db"
+
+# Auto-provision the subdomain on the Worker (no manual DNS record needed).
+[[routes]]
+pattern = "edge.xenarch.dev"
+custom_domain = true
+
+# Secrets (set with `npx wrangler secret put <NAME>`, never committed):
+#   XENARCH_SITE_TOKEN            — authenticates the Worker as this site.
+#   XENARCH_BROWSER_PROOF_SECRET  — HMAC key for the browser-proof challenge cookie.
