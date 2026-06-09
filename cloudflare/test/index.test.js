@@ -118,6 +118,38 @@ describe("gate-decide verdict", () => {
     expect(res.status).toBe(402);
   });
 
+  it("does NOT charge for a nonexistent page (origin 404 → passthrough)", async () => {
+    global.fetch = vi.fn(async (input, init) => {
+      const u = typeof input === "string" ? input : input.url;
+      const method = (typeof input === "string" ? init?.method : input.method) || "GET";
+      if (u.includes("/gate-decide"))
+        return new Response(JSON.stringify({ decision: "charge", label: "GPTBot", method: "ua_match" }), { status: 200 });
+      if (u.includes("/v1/sites/me"))
+        return new Response(JSON.stringify({ default_price_usd: "0.001", rules: [] }), { status: 200 });
+      if (u.startsWith(ORIGIN))
+        return new Response(method === "HEAD" ? null : "NOT FOUND", { status: 404 });
+      throw new Error("unexpected: " + u);
+    });
+    const res = await worker.fetch(req("/ghost-page", { "User-Agent": GPTBOT }), ENV);
+    expect(res.status).toBe(404); // origin's real 404, NOT a 402 charge
+  });
+
+  it("still charges for a page that exists (origin 200 → 402)", async () => {
+    global.fetch = vi.fn(async (input) => {
+      const u = typeof input === "string" ? input : input.url;
+      if (u.includes("/gate-decide"))
+        return new Response(JSON.stringify({ decision: "charge", label: "GPTBot", method: "ua_match" }), { status: 200 });
+      if (u.includes("/v1/sites/me"))
+        return new Response(JSON.stringify({ default_price_usd: "0.001", rules: [] }), { status: 200 });
+      if (u.includes("/v1/gates"))
+        return new Response(JSON.stringify({ gate_id: "gr1" }), { status: 402 });
+      if (u.startsWith(ORIGIN)) return new Response("REAL PAGE", { status: 200 });
+      throw new Error("unexpected: " + u);
+    });
+    const res = await worker.fetch(req("/real-page", { "User-Agent": GPTBOT }), ENV);
+    expect(res.status).toBe(402);
+  });
+
   it("platform outage on gate-decide fails open → origin", async () => {
     global.fetch = mockFetch({
       "/gate-decide": { status: 503 },
