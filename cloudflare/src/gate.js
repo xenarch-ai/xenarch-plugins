@@ -25,6 +25,7 @@ const STATIC_EXT = new Set([
 const GATE_TTL_MS = 30 * 60 * 1000; // gate cached 30 min per path.
 const DECIDE_TTL_MS = 60 * 1000; // gating verdict cached 60 s.
 const SITE_TTL_MS = 60 * 1000; // site detail (price rules + wallet) cached 60 s.
+const EXISTS_TTL_MS = 60 * 1000; // origin existence check cached 60 s per path.
 
 // Ranked facilitator stack emitted in pay.json — mirror of WP
 // class-xenarch-discovery.php DEFAULT_FACILITATORS (pay-json v1.2 shape).
@@ -262,6 +263,14 @@ export async function handleGate(request, env, opts = {}) {
     });
   }
 
+  // Don't charge for content that doesn't exist (mirror of WP is_404). A quick
+  // HEAD to the origin — on the bot-charge path ONLY, never a human's, so it
+  // adds no latency to real page loads. A missing page is served as the origin's
+  // real 404/410 instead of a nonsense 402 "pay for a page that isn't there".
+  if (!(await originExists(request, passthrough, path))) {
+    return passthrough(request);
+  }
+
   // 4. Charge: return the platform's 402 superset envelope. The gate's
   //    detection_method carries the WP-style agent label (the signature, or
   //    "Unknown Bot" for header-scored) so the earnings "Agent" column matches.
@@ -446,6 +455,46 @@ function gateTtl(gate) {
     }
   }
   return GATE_TTL_MS;
+}
+
+/**
+ * Does the origin actually have this path? A HEAD request, run ONLY on the
+ * bot-charge path (never a human's), so it costs no latency on real page loads.
+ * Only an explicit 404/410 counts as "missing" → we skip charging and let the
+ * origin serve its real not-found (mirror of WP is_404). Any other status (200,
+ * 3xx, 405 when HEAD is unsupported, 5xx) or a transport error assumes the page
+ * exists, so a hiccup never silently un-gates content. Cached per path to keep a
+ * bot hammering dead URLs from re-probing the origin every time.
+ */
+async function originExists(request, passthrough, path) {
+  const key = `exists:${path}`;
+  const cached = cacheGet(key);
+  if (cached !== undefined) return cached;
+  // Probe with a minimal header set, not the bot's full headers — a forwarded
+  // Range/If-None-Match/Cookie could turn the status into a conditional artifact
+  // (206/304/401) rather than the resource's true existence.
+  const probeHeaders = new Headers({ Accept: "*/*" });
+  const ua = request.headers.get("User-Agent");
+  if (ua) probeHeaders.set("User-Agent", ua);
+
+  let exists = true;
+  try {
+    let resp = await passthrough(
+      new Request(request.url, { method: "HEAD", headers: probeHeaders }),
+    );
+    // Some origins / asset servers don't implement HEAD — fall back to GET to
+    // get a real status (the body is discarded; this is the bot-charge path).
+    if (resp.status === 405 || resp.status === 501) {
+      resp = await passthrough(
+        new Request(request.url, { method: "GET", headers: probeHeaders }),
+      );
+    }
+    if (resp.status === 404 || resp.status === 410) exists = false;
+  } catch (_e) {
+    exists = true; // can't verify → charge (don't leak content on an origin hiccup)
+  }
+  cacheSet(key, exists, EXISTS_TTL_MS);
+  return exists;
 }
 
 /** Minimal 402 body when the platform can't mint a gate. */
