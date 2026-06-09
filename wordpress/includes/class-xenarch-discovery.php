@@ -128,7 +128,7 @@ class Xenarch_Discovery {
 		$wallet = is_array( $site ) && ! empty( $site['payout_wallet'] )
 			? (string) $site['payout_wallet'] : '';
 		$price  = is_array( $site ) && isset( $site['default_price_usd'] )
-			? (string) $site['default_price_usd'] : '0.003';
+			? (string) $site['default_price_usd'] : '0.001';
 
 		// Build rules array from the platform's per-path rules + default
 		// catch-all. Platform rules use the new `path` key (not legacy
@@ -188,7 +188,7 @@ class Xenarch_Discovery {
 	private function serve_xenarch_md() {
 		$site_url = get_site_url();
 		$domain   = wp_parse_url( $site_url, PHP_URL_HOST );
-		$price    = get_option( 'xenarch_default_price', '0.003' );
+		$price    = get_option( 'xenarch_default_price', '0.001' );
 		$email    = get_option( 'xenarch_email', '' );
 
 		$contact_line = '';

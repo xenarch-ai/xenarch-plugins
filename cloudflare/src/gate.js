@@ -631,7 +631,7 @@ function enrichGatePayload(gate, host) {
 async function servePayJson(apiBase, siteToken, host) {
   const site = (await getSiteDetail(apiBase, siteToken)) || {};
   const wallet = site.payout_wallet || "";
-  const price = site.default_price_usd != null ? String(site.default_price_usd) : "0.003";
+  const price = site.default_price_usd != null ? String(site.default_price_usd) : "0.001";
   const rules = [];
   if (Array.isArray(site.rules)) {
     for (const r of site.rules) {
@@ -665,7 +665,7 @@ async function serveXenarchMd(apiBase, siteToken, host) {
   const site = (await getSiteDetail(apiBase, siteToken)) || {};
   const domain = safeHost(host);
   const siteUrl = `https://${domain}`;
-  const price = site.default_price_usd != null ? String(site.default_price_usd) : "0.003";
+  const price = site.default_price_usd != null ? String(site.default_price_usd) : "0.001";
   const md =
 `# Xenarch Payment Gate — ${domain}
 
