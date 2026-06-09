@@ -4,6 +4,13 @@
  *
  * Serves /.well-known/pay.json (pay-json v1.2) and /.well-known/xenarch.md.
  *
+ * 1:1 mirror of the WordPress Xenarch_Discovery (post-XEN-438): the payout
+ * wallet, default price and per-path rules come from the platform site
+ * detail (the single source of truth), never from local options. A 5-minute
+ * cache fronts the platform call, with a persistent last-known-good snapshot
+ * (stored as a component param) for the outage case. With no wallet/price and
+ * no snapshot we emit 503, never a fabricated default.
+ *
  * @package    Xenarch
  * @license    GPL-2.0-or-later
  */
@@ -13,13 +20,13 @@ namespace Xenarch\Plugin\System\Xenarch;
 defined('_JEXEC') or die;
 
 use Joomla\CMS\Component\ComponentHelper;
+use Joomla\CMS\Factory;
 use Joomla\CMS\Uri\Uri;
 
 class Discovery
 {
     /**
      * Default ranked facilitator list (pay-json v1.2 shape).
-     *
      * Mirrors the platform's default Router stack and the WordPress plugin.
      */
     public const DEFAULT_FACILITATORS = [
@@ -28,41 +35,78 @@ class Discovery
         ['name' => 'ultravioleta', 'url' => 'https://x402.ultravioleta.dev',     'priority' => 3, 'spec_version' => 'v2'],
     ];
 
+    private const SITE_CACHE_KEY = 'xenarch_pay_json_site';
+    private const SITE_CACHE_TTL = 300; // 5 minutes
+    private const LAST_GOOD_PARAM = 'pay_json_last_good';
+
+    /**
+     * Fetch the platform site detail (payout wallet, default price, per-path
+     * rules). 5-min cache so a public discovery hit doesn't round-trip the
+     * platform every time, with a persistent last-known-good snapshot for the
+     * outage case.
+     *
+     * @return array|null Site detail, or null when the platform is unreachable
+     *                    and no last-known-good exists.
+     */
+    private static function fetchSite(): ?array
+    {
+        $cached = Cache::get(self::SITE_CACHE_KEY);
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        try {
+            $fetched = (new ApiClient())->getMySite();
+            if (is_array($fetched) && !empty($fetched)) {
+                Cache::set(self::SITE_CACHE_KEY, $fetched, self::SITE_CACHE_TTL);
+                self::setLastGood($fetched);
+                return $fetched;
+            }
+        } catch (ApiException $e) {
+            // fall through to last-known-good
+        }
+
+        $lastGood = self::getLastGood();
+        return !empty($lastGood) ? $lastGood : null;
+    }
+
     /**
      * Serve /.well-known/pay.json (pay-json v1.2).
      */
     public static function servePayJson(): void
     {
         $params = ComponentHelper::getParams('com_xenarch');
-        $siteToken = $params->get('site_token', '');
-
-        if (empty($siteToken)) {
+        if ($params->get('site_token', '') === '') {
             http_response_code(404);
             return;
         }
 
-        $price = $params->get('default_price', '0.003');
-        $wallet = $params->get('payout_wallet', '');
+        $site   = self::fetchSite();
+        $wallet = is_array($site) && !empty($site['payout_wallet']) ? (string) $site['payout_wallet'] : '';
+        $price  = is_array($site) && isset($site['default_price_usd']) ? (string) $site['default_price_usd'] : null;
 
-        // Build rules array from pricing rules + default catch-all.
+        // No payable wallet + price → don't fabricate a pay.json. Both live only
+        // on the platform; on a total outage with no snapshot, signal unavailable.
+        if ($wallet === '' || $price === null) {
+            http_response_code(503);
+            header('Retry-After: 60');
+            return;
+        }
+
+        // Build rules from the platform's per-path rules (new `path` key) + a
+        // default catch-all.
         $rules = [];
-        $pricingRules = json_decode($params->get('pricing_rules', '[]'), true);
-
-        if (is_array($pricingRules)) {
-            foreach ($pricingRules as $rule) {
-                if (!empty($rule['path_contains']) && isset($rule['price_usd'])) {
+        if (is_array($site) && !empty($site['rules']) && is_array($site['rules'])) {
+            foreach ($site['rules'] as $rule) {
+                if (!empty($rule['path']) && isset($rule['price_usd'])) {
                     $rules[] = [
-                        'path'      => '/**' . $rule['path_contains'] . '**',
-                        'price_usd' => $rule['price_usd'],
+                        'path'      => (string) $rule['path'],
+                        'price_usd' => (string) $rule['price_usd'],
                     ];
                 }
             }
         }
-
-        $rules[] = [
-            'path'      => '/**',
-            'price_usd' => $price,
-        ];
+        $rules[] = ['path' => '/**', 'price_usd' => $price];
 
         $payJson = [
             'version'       => '1.2',
@@ -87,22 +131,26 @@ class Discovery
     public static function serveXenarchMd(): void
     {
         $params = ComponentHelper::getParams('com_xenarch');
-        $siteToken = $params->get('site_token', '');
-
-        if (empty($siteToken)) {
+        if ($params->get('site_token', '') === '') {
             http_response_code(404);
             return;
         }
 
         $siteUrl = rtrim(Uri::root(), '/');
-        $domain = parse_url($siteUrl, PHP_URL_HOST);
-        $price = $params->get('default_price', '0.003');
-        $email = $params->get('email', '');
+        $domain  = parse_url($siteUrl, PHP_URL_HOST);
 
-        $contactLine = '';
-        if (!empty($email)) {
-            $contactLine = "- Publisher contact: {$email}\n";
+        // Price comes from the platform (single source of truth). 503 if the
+        // platform is unreachable and we have no snapshot.
+        $site  = self::fetchSite();
+        $price = is_array($site) && isset($site['default_price_usd']) ? (string) $site['default_price_usd'] : null;
+        if ($price === null) {
+            http_response_code(503);
+            header('Retry-After: 60');
+            return;
         }
+
+        $email = (string) $params->get('email', '');
+        $contactLine = $email !== '' ? "- Publisher contact: {$email}\n" : '';
 
         $md = "# Xenarch Payment Gate — {$domain}\n"
             . "\n"
@@ -194,5 +242,47 @@ class Discovery
         header('Content-Type: text/markdown; charset=utf-8');
         header('Cache-Control: public, max-age=3600');
         echo $md;
+    }
+
+    // ------------------------------------------------------------------
+    // Persistent last-known-good snapshot (component param — no custom table)
+    // ------------------------------------------------------------------
+
+    private static function getLastGood(): array
+    {
+        $raw = (string) ComponentHelper::getParams('com_xenarch')->get(self::LAST_GOOD_PARAM, '');
+        if ($raw === '') {
+            return [];
+        }
+        $decoded = json_decode($raw, true);
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    private static function setLastGood(array $site): void
+    {
+        try {
+            $db = Factory::getContainer()->get('DatabaseDriver');
+
+            // Read current params, merge the snapshot key, write back — never
+            // clobber sibling params.
+            $query = $db->getQuery(true)
+                ->select($db->quoteName('params'))
+                ->from($db->quoteName('#__extensions'))
+                ->where($db->quoteName('element') . ' = ' . $db->quote('com_xenarch'))
+                ->where($db->quoteName('type') . ' = ' . $db->quote('component'));
+            $db->setQuery($query);
+            $current = json_decode((string) $db->loadResult(), true) ?: [];
+            $current[self::LAST_GOOD_PARAM] = json_encode($site, JSON_UNESCAPED_SLASHES);
+
+            $update = $db->getQuery(true)
+                ->update($db->quoteName('#__extensions'))
+                ->set($db->quoteName('params') . ' = ' . $db->quote(json_encode($current)))
+                ->where($db->quoteName('element') . ' = ' . $db->quote('com_xenarch'))
+                ->where($db->quoteName('type') . ' = ' . $db->quote('component'));
+            $db->setQuery($update);
+            $db->execute();
+        } catch (\Throwable $e) {
+            // best-effort persistence; ignore.
+        }
     }
 }

@@ -2,55 +2,42 @@
 /**
  * @package    Xenarch
  * @license    GPL-2.0-or-later
+ *
+ * React mount point — the Joomla analogue of class-xenarch-admin.php's
+ * admin page. Post-XEN-481 the bootstrap carries only the thin-window
+ * snapshot the React app needs (am I paired with a site_token yet?); the
+ * platform owns everything else and the tabs fetch their own data live.
  */
 
 defined('_JEXEC') or die;
 
-use Joomla\CMS\Factory;
 use Joomla\CMS\Session\Session;
 use Joomla\CMS\Uri\Uri;
 use Xenarch\Component\Xenarch\Administrator\Helper\XenarchHelper;
+use Xenarch\Plugin\System\Xenarch\BotDetect;
 
 $mediaUrl = Uri::root() . 'media/com_xenarch';
+$version  = '2.0.0';
 
-// Build initial settings snapshot (same shape as WordPress).
-$params = XenarchHelper::getAllParams();
-$botCategories = json_decode($params['bot_categories'] ?? '{}', true);
-$botOverrides = json_decode($params['bot_overrides'] ?? '{}', true);
+$params    = XenarchHelper::getAllParams();
+$siteToken = (string) ($params['site_token'] ?? '');
+$siteUrl   = XenarchHelper::getSiteUrl();
 
-// Count bot signatures by loading the BotDetect class.
 $botSignatureCount = 0;
-if (class_exists('Xenarch\\Plugin\\System\\Xenarch\\BotDetect')) {
-    $botSignatureCount = count(\Xenarch\Plugin\System\Xenarch\BotDetect::getSignatures())
-        + count(\Xenarch\Plugin\System\Xenarch\BotDetect::getFetcherSignatures());
+if (class_exists(BotDetect::class)) {
+    $botSignatureCount = count(BotDetect::getSignatures()) + count(BotDetect::getFetcherSignatures());
 }
 
-$siteUrl = XenarchHelper::getSiteUrl();
-$version = '1.0.3';
-
+// Thin snapshot — matches the React `Settings` type 1:1 with the WordPress plugin.
 $initialSettings = [
-    'api_key'             => !empty($params['api_key'] ?? ''),
-    'site_id'             => $params['site_id'] ?? '',
-    'site_token'          => $params['site_token'] ?? '',
-    'default_price'       => $params['default_price'] ?? '0.003',
-    'payout_wallet'       => $params['payout_wallet'] ?? '',
-    'gate_unknown_traffic' => $params['gate_unknown_traffic'] ?? '1',
-    'gate_enabled'        => $params['gate_enabled'] ?? '1',
-    'bot_categories'      => is_array($botCategories) ? $botCategories : [],
-    'bot_overrides'       => is_array($botOverrides) ? $botOverrides : [],
-    'wallet_type'         => $params['wallet_type'] ?? '',
-    'wallet_network'      => $params['wallet_network'] ?? 'base',
+    'site_id'             => (string) ($params['site_id'] ?? ''),
+    'site_token'          => $siteToken,
     'domain'              => XenarchHelper::getSiteDomain(),
-    'has_wallet'          => !empty($params['payout_wallet'] ?? ''),
-    'has_site'            => !empty($params['site_id'] ?? '') && !empty($params['site_token'] ?? ''),
+    'has_site'            => $siteToken !== '',
     'bot_signature_count' => $botSignatureCount,
     'pay_json_url'        => $siteUrl . '/.well-known/pay.json',
     'xenarch_md_url'      => $siteUrl . '/.well-known/xenarch.md',
 ];
-
-// WalletConnect + CDP project IDs — fetched from platform API, cached 24h.
-$wcProjectId = XenarchHelper::getWcProjectId();
-$cdpProjectId = XenarchHelper::getCdpProjectId();
 
 $config = [
     'restUrl'        => Uri::root() . 'administrator/index.php?option=com_xenarch&format=json',
@@ -59,8 +46,6 @@ $config = [
     'settings'       => $initialSettings,
     'pluginUrl'      => Uri::root() . 'media/com_xenarch/',
     'version'        => $version,
-    'wcProjectId'    => $wcProjectId,
-    'cdpProjectId'   => $cdpProjectId,
 ];
 ?>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&family=Space+Grotesk:wght@300;500;600&display=swap">

@@ -2,16 +2,17 @@
 /**
  * Xenarch payment proof verification — Joomla port.
  *
- * Validates an on-chain `tx_hash` against the platform for a given gate.
- * Verified hashes are cached in #__xenarch_cache to avoid hitting the
- * platform on every replay of the same paid request.
- *
- * Replaces the old access-token (JWT) flow now that the platform does
- * stateless on-chain re-verification (post-XEN-179).
+ * 1:1 mirror of the WordPress Xenarch_Payment_Proof. Validates an on-chain
+ * `tx_hash` against the platform for a given gate. Verified results are
+ * cached (via the Joomla cache layer) to avoid hitting the platform on
+ * every replay of the same paid request.
  *
  * Canonical headers (must match the SDK middleware):
  *   X-Xenarch-Gate-Id  — UUID of the gate the agent paid for
  *   X-Xenarch-Tx-Hash  — 0x-prefixed Base USDC transferWithAuthorization hash
+ *
+ * Vanilla x402 (C10 / XEN-457):
+ *   X-PAYMENT          — base64 of a signed EIP-3009 authorization
  *
  * @package    Xenarch
  * @license    GPL-2.0-or-later
@@ -20,8 +21,6 @@
 namespace Xenarch\Plugin\System\Xenarch;
 
 defined('_JEXEC') or die;
-
-use Joomla\CMS\Factory;
 
 class PaymentProof
 {
@@ -60,6 +59,26 @@ class PaymentProof
     }
 
     /**
+     * Read the vanilla x402 ``X-PAYMENT`` header (C10 / XEN-457).
+     *
+     * A third-party x402 agent that knows nothing about Xenarch pays with
+     * the standard ``X-PAYMENT`` voucher (base64 of a signed EIP-3009
+     * authorization) instead of the canonical (gate_id, tx_hash) pair. The
+     * gate hands the raw header to the platform's settle-x402 endpoint.
+     *
+     * @return string|null The raw base64 header value, or null if absent.
+     */
+    public static function extractXPayment(): ?string
+    {
+        $xPayment = self::readHeader('HTTP_X_PAYMENT', 'X-PAYMENT');
+        if ($xPayment === null) {
+            return null;
+        }
+        $xPayment = trim($xPayment);
+        return $xPayment === '' ? null : $xPayment;
+    }
+
+    /**
      * Verify a tx hash satisfies the named gate.
      *
      * @param string $gateId  Gate UUID, as supplied by the agent in the X-Xenarch-Gate-Id header.
@@ -74,7 +93,7 @@ class PaymentProof
 
         $cacheKey = self::CACHE_PREFIX . md5($txHash . '|' . $gateId);
 
-        $cached = self::getCached($cacheKey);
+        $cached = Cache::get($cacheKey);
         if ($cached === 'valid') {
             return true;
         }
@@ -82,13 +101,22 @@ class PaymentProof
             return false;
         }
 
-        $api = new ApiClient();
-        $result = $api->verifyPayment($gateId, $txHash);
-
-        if ($result === null) {
-            // Platform unreachable — fail open briefly to avoid blocking legitimate
-            // paid requests during platform downtime. Short cache to recover quickly.
-            self::setCached($cacheKey, 'valid', 60);
+        try {
+            $result = (new ApiClient())->verifyPayment($gateId, $txHash);
+        } catch (ApiException $e) {
+            // XEN-386: only fail-open on transport errors (timeout, DNS,
+            // connection refused) and 5xx. A 4xx is the platform deliberately
+            // saying "no" (e.g. rejecting a forged tx hash) and MUST fail
+            // closed, otherwise a bad proof would silently serve content.
+            if ($e->isClientError()) {
+                // Cache 'invalid' briefly so we don't hammer the platform,
+                // but short enough that an operator fix takes effect fast.
+                Cache::set($cacheKey, 'invalid', 60);
+                return false;
+            }
+            // Transport error or 5xx — fail open so a brief platform outage
+            // doesn't block real paid agents. Short cache TTL to recover fast.
+            Cache::set($cacheKey, 'valid', 60);
             return true;
         }
 
@@ -99,7 +127,7 @@ class PaymentProof
         $isValid = $status === 'paid'
             || !empty($result['verified'])
             || !empty($result['valid']);
-        self::setCached($cacheKey, $isValid ? 'valid' : 'invalid', self::CACHE_TTL);
+        Cache::set($cacheKey, $isValid ? 'valid' : 'invalid', self::CACHE_TTL);
 
         return $isValid;
     }
@@ -126,52 +154,5 @@ class PaymentProof
         }
 
         return null;
-    }
-
-    /**
-     * Get a cached value from #__xenarch_cache.
-     */
-    private static function getCached(string $key): ?string
-    {
-        try {
-            $db = Factory::getContainer()->get('DatabaseDriver');
-            $query = $db->getQuery(true)
-                ->select($db->quoteName('cache_value'))
-                ->from($db->quoteName('#__xenarch_cache'))
-                ->where($db->quoteName('cache_key') . ' = ' . $db->quote($key))
-                ->where($db->quoteName('expires_at') . ' > NOW()');
-            $db->setQuery($query);
-            return $db->loadResult();
-        } catch (\Exception $e) {
-            return null;
-        }
-    }
-
-    /**
-     * Set a cached value in #__xenarch_cache.
-     */
-    private static function setCached(string $key, string $value, int $ttl): void
-    {
-        try {
-            $db = Factory::getContainer()->get('DatabaseDriver');
-            $expiresAt = gmdate('Y-m-d H:i:s', time() + $ttl);
-
-            $query = "INSERT INTO " . $db->quoteName('#__xenarch_cache') . " ("
-                . $db->quoteName('cache_key') . ', '
-                . $db->quoteName('cache_value') . ', '
-                . $db->quoteName('expires_at')
-                . ") VALUES ("
-                . $db->quote($key) . ', '
-                . $db->quote($value) . ', '
-                . $db->quote($expiresAt)
-                . ") ON DUPLICATE KEY UPDATE "
-                . $db->quoteName('cache_value') . ' = VALUES(' . $db->quoteName('cache_value') . '), '
-                . $db->quoteName('expires_at') . ' = VALUES(' . $db->quoteName('expires_at') . ')';
-
-            $db->setQuery($query);
-            $db->execute();
-        } catch (\Exception $e) {
-            // Silently fail — cache is best-effort.
-        }
     }
 }

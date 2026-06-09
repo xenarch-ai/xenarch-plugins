@@ -1,13 +1,12 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type {
   Settings,
-  StatsResponse,
-  TransactionsResponse,
+  SiteDetail,
+  SiteStats,
+  Transaction,
   CategoryBreakdownItem,
-  WalletBalanceResponse,
 } from '../types'
 import * as api from '../api'
-import { CashOutModal } from './CashOutModal'
 
 interface Props {
   settings: Settings
@@ -15,479 +14,267 @@ interface Props {
 
 const PERIODS = [
   { value: '24h', label: '24h' },
-  { value: '7d', label: '7d' },
+  { value: '7d',  label: '7d'  },
   { value: '30d', label: '30d' },
   { value: 'all', label: 'All' },
-]
+] as const
+type Period = (typeof PERIODS)[number]['value']
 
-const BASE_STATUS_FILTERS = [
-  { value: 'all', label: 'All' },
-  { value: 'paid', label: 'Earned' },
-  { value: 'blocked', label: 'Gated' },
-]
+const STATUS_FILTERS = [
+  { value: 'all',     label: 'All'    },
+  { value: 'paid',    label: 'Earned' },
+  { value: 'blocked', label: 'Gated'  },
+] as const
+type StatusFilter = (typeof STATUS_FILTERS)[number]['value']
 
-const CATEGORY_LABELS: Record<string, string> = {
-  ai_search: 'AI Search',
-  ai_assistants: 'AI Assistants',
-  ai_agents: 'AI Agents',
-  ai_training: 'AI Training',
-  scrapers: 'Scrapers',
-  general_ai: 'General AI',
+// Mirrors dashboard's STATUS_LABEL on /sites/[id]/activity — "pay" for
+// paid rows, "gate" for blocked / pending. "cash" is for withdraws.
+function pillKind(t: Transaction): 'pay' | 'gate' | 'cash' | 'free' {
+  if (t.type === 'withdraw') return 'cash'
+  if (t.status === 'paid') return 'pay'
+  return 'gate'
 }
 
-function truncateWallet(addr: string): string {
-  if (!addr || addr.length < 10) return addr
-  return `${addr.slice(0, 6)}...${addr.slice(-4)}`
+function formatUsd(s: string | number | null | undefined): string {
+  if (s == null) return '—'
+  const n = typeof s === 'number' ? s : parseFloat(s)
+  if (!isFinite(n) || n === 0) return '—'
+  return '+$' + (n < 0.01 ? n.toFixed(4) : n.toFixed(2))
 }
 
-function formatNumber(n: number): string {
-  return n.toLocaleString()
+function dollarsHeader(s: string | number | null | undefined): string {
+  if (s == null) return '$0.00'
+  const n = typeof s === 'number' ? s : parseFloat(s)
+  if (!isFinite(n)) return '$0.00'
+  return '$' + (n < 1 ? n.toFixed(4) : n.toFixed(2))
 }
 
-function formatTime(iso: string): string {
-  const now = Date.now()
-  const then = new Date(iso).getTime()
-  const diffMs = now - then
-  const diffMin = Math.floor(diffMs / 60000)
+function truncate(addr: string | null | undefined): string {
+  if (!addr) return '—'
+  return addr.length > 12 ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : addr
+}
 
-  if (diffMin < 1) return 'Just now'
-  if (diffMin < 60) return `${diffMin} min ago`
-  const diffHr = Math.floor(diffMin / 60)
-  if (diffHr < 24) return `${diffHr}h ago`
-  const diffDays = Math.floor(diffHr / 24)
-  if (diffDays < 7) return `${diffDays}d ago`
-
-  const d = new Date(iso)
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+function relative(iso: string): string {
+  const d = new Date(iso).getTime()
+  if (!isFinite(d)) return iso
+  const diff = Math.max(0, (Date.now() - d) / 1000)
+  if (diff < 60) return `${Math.floor(diff)}s ago`
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+  return `${Math.floor(diff / 86400)}d ago`
 }
 
 export function EarningsTab({ settings }: Props) {
-  const [stats, setStats] = useState<StatsResponse | null>(null)
-  const [transactions, setTransactions] = useState<TransactionsResponse | null>(null)
-  const [breakdown, setBreakdown] = useState<CategoryBreakdownItem[] | null>(null)
-  const [balance, setBalance] = useState<WalletBalanceResponse | null>(null)
-  const [period, setPeriod] = useState('30d')
-  const [statusFilter, setStatusFilter] = useState('paid')
+  const [site, setSite] = useState<SiteDetail | null>(null)
+  const [stats, setStats] = useState<SiteStats | null>(null)
+  const [categories, setCategories] = useState<CategoryBreakdownItem[]>([])
+
+  // XEN-366: dashboard defaults — Earned/30d — so the merchant doesn't
+  // open to a screen full of unpaid-bot noise. They can opt into Gated.
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('paid')
+  const [period, setPeriod] = useState<Period>('30d')
   const [page, setPage] = useState(1)
+  const perPage = 25
+
+  const [txs, setTxs] = useState<Transaction[] | null>(null)
+  const [txTotal, setTxTotal] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [txLoading, setTxLoading] = useState(false)
+  const [txError, setTxError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [showCashOut, setShowCashOut] = useState(false)
 
-  const isXenarch = settings.wallet_type === 'xenarch' || settings.wallet_type === 'coinbase'
-  const wallet = settings.payout_wallet
-
-  const statusFilters = useMemo(() => {
-    if (isXenarch) {
-      return [...BASE_STATUS_FILTERS, { value: 'withdraw', label: 'Cashed' }]
-    }
-    return BASE_STATUS_FILTERS
-  }, [isXenarch])
-
-  // ---- Data loading ----
-
-  const loadEarnings = useCallback(() => {
-    if (!settings.has_site) {
-      setLoading(false)
-      return
-    }
-    setError(null)
+  // Initial load — site detail + stats + category breakdown.
+  useEffect(() => {
     setLoading(true)
-
-    const promises: Promise<void>[] = [
-      api.fetchStats().then(setStats),
-      api.fetchCategoryBreakdown().then((r) => setBreakdown(r.categories)),
-    ]
-    if (isXenarch) {
-      promises.push(api.fetchBalance().then(setBalance))
-    }
-
-    Promise.all(promises)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load'))
-      .finally(() => setLoading(false))
-  }, [settings.has_site, isXenarch])
-
-  useEffect(() => {
-    loadEarnings()
-  }, [loadEarnings])
-
-  // Fetch transactions when filters change
-  useEffect(() => {
-    if (!settings.has_site) return
-    setTxLoading(true)
-    api
-      .fetchTransactions(period, page, 25, statusFilter)
-      .then((data) => {
-        if (page > 1 && transactions) {
-          setTransactions({
-            ...data,
-            transactions: [...transactions.transactions, ...data.transactions],
-          })
-        } else {
-          setTransactions(data)
-        }
+    Promise.all([api.fetchSite(), api.fetchStats(), api.fetchCategoryBreakdown()])
+      .then(([s, st, cb]) => {
+        setSite(s); setStats(st); setCategories(cb.categories); setLoading(false)
       })
-      .catch(() => {})
-      .finally(() => setTxLoading(false))
-  }, [period, statusFilter, page, settings.has_site])
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : 'Failed to load earnings.')
+        setLoading(false)
+      })
+  }, [])
 
-  const handlePeriodChange = (p: string) => {
-    setPeriod(p)
-    setPage(1)
-  }
+  // Refetch transactions on any filter change.
+  useEffect(() => {
+    setTxError(null)
+    api
+      .fetchTransactions(period, page, perPage, statusFilter)
+      .then((r) => { setTxs(r.transactions); setTxTotal(r.total) })
+      .catch((err) => {
+        setTxError(err instanceof Error ? err.message : 'Failed to load activity.')
+        setTxs([])
+      })
+  }, [period, statusFilter, page])
 
-  const handleStatusChange = (t: string) => {
-    setStatusFilter(t)
-    setPage(1)
-  }
+  const dashboardSiteUrl = settings.site_id
+    ? `https://dash.xenarch.dev/sites/${encodeURIComponent(settings.site_id)}`
+    : 'https://dash.xenarch.dev/sites'
 
-  const handleRetry = () => {
-    loadEarnings()
-  }
+  const sortedCategories = useMemo(
+    () => [...categories].sort((a, b) => parseFloat(b.earned_usd) - parseFloat(a.earned_usd)),
+    [categories],
+  )
 
-  const handleLoadMore = () => {
-    setPage((p) => p + 1)
-  }
-
-  const handleCashOutComplete = useCallback(() => {
-    setShowCashOut(false)
-    // Refresh balance + transactions
-    if (isXenarch) {
-      api.fetchBalance().then(setBalance).catch(() => {})
-    }
-    api.fetchTransactions(period, 1, 25, statusFilter).then(setTransactions).catch(() => {})
-    setPage(1)
-  }, [isXenarch, period, statusFilter])
-
-  // ---- Helpers for zero-state detection ----
-
-  const hasAnyEarnings =
-    stats &&
-    (parseFloat(stats.all_time.earned_usd) > 0 || stats.all_time.requests > 0)
-
-  const hasBreakdownData =
-    breakdown && breakdown.some((b) => parseFloat(b.earned_usd) > 0)
-
-  const txRows = transactions?.transactions || []
-  const txTotal = transactions?.total || 0
-  const txPerPage = transactions?.per_page || 25
-  const hasMorePages = txTotal > page * txPerPage
-
-  // ---- Wallet row ----
-
-  function renderWalletRow() {
-    if (!wallet) return null
-
-    const truncated = truncateWallet(wallet)
-    const balanceUsd = balance ? `$${balance.balance_usd} USDC` : '$0.00 USDC'
-
-    return (
-      <div className="xenarch-earnings-wallet-row">
-        <span className="xenarch-earnings-wallet-dot" />
-        <span className="xenarch-earnings-wallet-addr">{truncated}</span>
-        {isXenarch ? (
-          <span className="xenarch-earnings-badge xenarch-earnings-badge--xenarch">
-            xenarch wallet
-          </span>
-        ) : (
-          <span className="xenarch-earnings-badge xenarch-earnings-badge--own">
-            your wallet
-          </span>
-        )}
-        {isXenarch && (
-          <>
-            <span className="xenarch-earnings-wallet-bal">{balanceUsd}</span>
-            <button
-              className="xenarch-earnings-btn-cashout"
-              onClick={() => setShowCashOut(true)}
-            >
-              Cash out
-            </button>
-          </>
-        )}
-      </div>
-    )
-  }
-
-  // ---- Stats cards ----
-
-  function renderStats() {
-    const zeroBucket = { earned_usd: '0.00', requests: 0, paid: 0 }
-    const s = stats || { today: zeroBucket, month: zeroBucket, all_time: zeroBucket }
-
-    const cards = [
-      { label: 'Today', bucket: s.today },
-      { label: 'This month', bucket: s.month },
-      { label: 'All time', bucket: s.all_time },
-    ]
-
-    return (
-      <div className="xenarch-earnings-stats">
-        {cards.map((c) => (
-          <div key={c.label} className="xenarch-earnings-stat">
-            <div className="xenarch-earnings-stat-label">{c.label}</div>
-            <div className="xenarch-earnings-stat-value">${c.bucket.earned_usd}</div>
-            <div className="xenarch-earnings-stat-sub">
-              {formatNumber(c.bucket.paid)} paid requests
-            </div>
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  // ---- Category breakdown ----
-
-  function renderBreakdown() {
-    if (!hasBreakdownData || !breakdown) return null
-
-    const sorted = [...breakdown]
-      .filter((b) => parseFloat(b.earned_usd) > 0)
-      .sort((a, b) => parseFloat(b.earned_usd) - parseFloat(a.earned_usd))
-
-    return (
-      <div className="xenarch-earnings-breakdown">
-        {sorted.map((item) => (
-          <div key={item.category} className="xenarch-earnings-bd-item">
-            <span className="xenarch-earnings-bd-name">
-              {CATEGORY_LABELS[item.category] || item.category}
-            </span>
-            <span className="xenarch-earnings-bd-amount">${item.earned_usd}</span>
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  // ---- Period row + type filter pills ----
-
-  function renderPeriodRow() {
-    return (
-      <div className="xenarch-earnings-period-row">
-        <span className="xenarch-earnings-period-title">Transactions</span>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <div className="xenarch-earnings-pills">
-            {statusFilters.map((f) => (
-              <button
-                key={f.value}
-                className={`xenarch-earnings-pill${statusFilter === f.value ? ' xenarch-earnings-pill--active' : ''}`}
-                onClick={() => handleStatusChange(f.value)}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-          <div className="xenarch-earnings-pills">
-            {PERIODS.map((p) => (
-              <button
-                key={p.value}
-                className={`xenarch-earnings-pill${period === p.value ? ' xenarch-earnings-pill--active' : ''}`}
-                onClick={() => handlePeriodChange(p.value)}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // ---- Transaction table ----
-
-  function renderTransactions() {
-    if (txLoading && txRows.length === 0) {
-      return renderSkeletonRows()
-    }
-
-    if (txRows.length === 0) {
-      // Empty period state vs zero earnings state
-      if (hasAnyEarnings) {
-        return (
-          <div className="xenarch-earnings-empty">
-            <div className="xenarch-earnings-empty-desc">
-              No transactions for this period
-            </div>
-          </div>
-        )
-      }
-      return (
-        <div className="xenarch-earnings-empty">
-          <div className="xenarch-earnings-empty-title">No paid requests yet</div>
-          <div className="xenarch-earnings-empty-desc">
-            When AI bots pay to access your content, transactions will appear here.
-          </div>
-        </div>
-      )
-    }
-
-    return (
-      <>
-        <table className="xenarch-earnings-table">
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Page</th>
-              <th>Agent</th>
-              <th style={{ textAlign: 'right' }}>Amount</th>
-              <th style={{ textAlign: 'right' }}>Time</th>
-            </tr>
-          </thead>
-          <tbody>
-            {txRows.map((tx) => {
-              const isWithdraw = tx.type === 'withdraw'
-              const isPaid = !isWithdraw && tx.status === 'paid'
-              const isBlocked = !isWithdraw && tx.status !== 'paid'
-
-              let pillClass = ' xenarch-earnings-tx-type--earn'
-              let pillLabel = 'earn'
-              if (isWithdraw) {
-                pillClass = ' xenarch-earnings-tx-type--withdraw'
-                pillLabel = 'cash'
-              } else if (isBlocked) {
-                pillClass = ' xenarch-earnings-tx-type--blocked'
-                pillLabel = 'gated'
-              }
-
-              return (
-                <tr key={tx.id}>
-                  <td>
-                    <span className={`xenarch-earnings-tx-type${pillClass}`}>
-                      {pillLabel}
-                    </span>
-                  </td>
-                  <td
-                    className="xenarch-earnings-td-path"
-                    style={isWithdraw ? { color: 'var(--xn-dot-red)' } : undefined}
-                  >
-                    {isWithdraw
-                      ? `\u2192 ${truncateWallet(tx.path)}`
-                      : tx.path}
-                  </td>
-                  <td className="xenarch-earnings-td-agent">
-                    {tx.agent_name && /^(empty_ua|header_score|unknown_non_browser|browser_headers)/.test(tx.agent_name) ? 'Unknown Bot' : tx.agent_name || '-'}
-                  </td>
-                  <td
-                    className="xenarch-earnings-td-amount"
-                    style={
-                      isWithdraw
-                        ? { color: 'var(--xn-dot-red)' }
-                        : isBlocked
-                          ? { color: 'var(--xn-text-muted)' }
-                          : undefined
-                    }
-                  >
-                    {isWithdraw ? `-$${tx.amount_usd}` : isPaid ? `+$${tx.amount_usd}` : '\u2014'}
-                  </td>
-                  <td className="xenarch-earnings-td-time">
-                    {formatTime(tx.created_at)}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-        {hasMorePages && (
-          <div className="xenarch-earnings-more-row">
-            <button className="xenarch-earnings-btn-more" onClick={handleLoadMore}>
-              Load more
-            </button>
-          </div>
-        )}
-      </>
-    )
-  }
-
-  // ---- Skeleton states ----
-
-  function renderSkeletonStats() {
-    return (
-      <div className="xenarch-earnings-stats">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="xenarch-earnings-stat xenarch-earnings-stat--skeleton">
-            <div className="xenarch-skeleton" style={{ width: '50%', height: 12, marginBottom: 8 }} />
-            <div className="xenarch-skeleton" style={{ width: '70%', height: 28, marginBottom: 8 }} />
-            <div className="xenarch-skeleton" style={{ width: '60%', height: 10 }} />
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  function renderSkeletonRows() {
-    const widths = [
-      { pill: 48, path: 160, agent: 80, amount: 60, time: 50 },
-      { pill: 48, path: 140, agent: 90, amount: 55, time: 50 },
-      { pill: 48, path: 180, agent: 70, amount: 50, time: 50 },
-      { pill: 48, path: 120, agent: 100, amount: 65, time: 50 },
-      { pill: 48, path: 150, agent: 85, amount: 45, time: 50 },
-    ]
-    return (
-      <>
-        {widths.map((w, i) => (
-          <div key={i} className="xenarch-earnings-skeleton-row">
-            <div className="xenarch-skeleton" style={{ width: w.pill, height: 22, borderRadius: 4 }} />
-            <div className="xenarch-skeleton" style={{ width: w.path, height: 12, borderRadius: 4 }} />
-            <div className="xenarch-skeleton" style={{ width: w.agent, height: 12, borderRadius: 4 }} />
-            <div className="xenarch-skeleton" style={{ width: w.amount, height: 12, borderRadius: 4, marginLeft: 'auto' }} />
-            <div className="xenarch-skeleton" style={{ width: w.time, height: 12, borderRadius: 4 }} />
-          </div>
-        ))}
-      </>
-    )
-  }
-
-  // ---- Error state ----
-
+  if (loading) return <div className="empty">Loading earnings…</div>
   if (error) {
     return (
-      <>
-        {renderWalletRow()}
-        <div className="xenarch-earnings-empty" style={{ padding: '64px 24px' }}>
-          <div className="xenarch-earnings-empty-title">
-            Couldn&apos;t load earnings data
-          </div>
-          <div className="xenarch-earnings-empty-desc">
-            Check your connection and{' '}
-            <span className="xenarch-earnings-error-link" onClick={handleRetry}>
-              try again
-            </span>
-            .
-          </div>
+      <div className="section">
+        <div className="section-head">
+          <div className="section-title">Earnings</div>
+          <div className="section-desc">Couldn't reach the platform.</div>
         </div>
-      </>
+        <div className="onboarding-error">{error}</div>
+      </div>
     )
   }
-
-  // ---- Loading state ----
-
-  if (loading) {
-    return (
-      <>
-        {renderWalletRow()}
-        {renderSkeletonStats()}
-        {renderPeriodRow()}
-        {renderSkeletonRows()}
-      </>
-    )
-  }
-
-  // ---- Normal / zero earnings / empty period states ----
 
   return (
     <>
-      {renderWalletRow()}
-      {renderStats()}
-      {renderBreakdown()}
-      {renderPeriodRow()}
-      {renderTransactions()}
-      {showCashOut && (
-        <CashOutModal
-          balance={balance?.balance_usd || '0.00'}
-          onComplete={handleCashOutComplete}
-          onClose={() => setShowCashOut(false)}
-        />
+      {/* Wallet bar */}
+      <div className="wallet-card">
+        <span className="dot" />
+        <span className="addr">{truncate(site?.payout_wallet)}</span>
+        <span className="label">{site?.payout_network ?? 'base'}</span>
+        <a
+          className="change"
+          href="https://dash.xenarch.dev/account/wallet"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Change in dashboard →
+        </a>
+      </div>
+
+      {/* Stats — same 3 KPIs the dashboard's activity page uses */}
+      {stats && (
+        <div className="stats">
+          <div className="stat">
+            <div className="lbl">paid</div>
+            <div className="val">{dollarsHeader(stats.today.earned_usd)}</div>
+            <div className="sub">{stats.today.paid} paid requests · today</div>
+          </div>
+          <div className="stat">
+            <div className="lbl">requests</div>
+            <div className="val">{stats.today.requests}</div>
+            <div className="sub">seen · today</div>
+          </div>
+          <div className="stat">
+            <div className="lbl">gated</div>
+            <div className="val">{Math.max(0, stats.today.requests - stats.today.paid)}</div>
+            <div className="sub">non-paying · today</div>
+          </div>
+        </div>
       )}
+
+      {/* Lifetime stats — duplicate of dashboard's "all time" trio */}
+      {stats && (
+        <div className="stats">
+          <div className="stat">
+            <div className="lbl">all time</div>
+            <div className="val">{dollarsHeader(stats.all_time.earned_usd)}</div>
+            <div className="sub">{stats.all_time.paid} paid · {stats.all_time.requests} total</div>
+          </div>
+          <div className="stat">
+            <div className="lbl">this month</div>
+            <div className="val">{dollarsHeader(stats.month.earned_usd)}</div>
+            <div className="sub">{stats.month.paid} paid · {stats.month.requests} total</div>
+          </div>
+          <div className="stat">
+            <div className="lbl">payout</div>
+            <div className="val mono" style={{ fontSize: 14 }}>{truncate(site?.payout_wallet)}</div>
+            <div className="sub">{site?.payout_network ?? 'base'}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Category breakdown */}
+      {sortedCategories.length > 0 && (
+        <div className="section">
+          <div className="section-head">
+            <div className="section-title">Earnings by bot category</div>
+            <div className="section-desc">Live, since this site started gating.</div>
+          </div>
+          <div className="agg">
+            {sortedCategories.map((c) => (
+              <div key={c.category} className="agg-cell">
+                <div className="agg-label">{c.category.replace(/_/g, ' ')}</div>
+                <div className="agg-value">{dollarsHeader(c.earned_usd)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Activity table */}
+      <div className="section">
+        <div className="section-head">
+          <div className="section-title">Recent activity</div>
+          <div className="section-desc">Earned filters paid traffic; switch to Gated to see what would have paid.</div>
+        </div>
+
+        <div className="filters">
+          <div className="fpills">
+            {STATUS_FILTERS.map((p) => (
+              <span
+                key={p.value}
+                className={`fpill${statusFilter === p.value ? ' on' : ''}`}
+                onClick={() => { setStatusFilter(p.value); setPage(1) }}
+              >{p.label}</span>
+            ))}
+          </div>
+          <div className="fpills" style={{ marginLeft: 'auto' }}>
+            {PERIODS.map((p) => (
+              <span
+                key={p.value}
+                className={`fpill${period === p.value ? ' on' : ''}`}
+                onClick={() => { setPeriod(p.value); setPage(1) }}
+              >{p.label}</span>
+            ))}
+          </div>
+        </div>
+
+        {txError ? <div className="onboarding-error">{txError}</div> : null}
+
+        <div className="tx-table activity">
+          <div className="tx-row head">
+            <div>Type</div>
+            <div>Path</div>
+            <div>Agent</div>
+            <div style={{ textAlign: 'right' }}>Amount</div>
+            <div style={{ textAlign: 'right' }}>Time</div>
+          </div>
+          {txs === null ? (
+            <div className="tx-row"><span className="muted">Loading…</span></div>
+          ) : txs.length === 0 ? (
+            <div className="tx-row"><span className="muted">No activity yet for this filter.</span></div>
+          ) : (
+            txs.map((t) => {
+              const kind = pillKind(t)
+              const amt = formatUsd(t.amount_usd)
+              const isZero = amt === '—'
+              return (
+                <div key={t.id} className="tx-row">
+                  <span className={`tx-type ${kind}`}>{kind}</span>
+                  <span className="tx-path">{t.path}</span>
+                  <span className="tx-agent">{t.agent_name ?? '—'}</span>
+                  <span className={`tx-amt${isZero ? ' zero' : ''}`}>{amt}</span>
+                  <span className="tx-time">{relative(t.created_at)}</span>
+                </div>
+              )
+            })
+          )}
+        </div>
+
+        <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button className="btn secondary" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>‹ Prev</button>
+          <span className="muted">Page {page} · {txTotal} total</span>
+          <button className="btn secondary" onClick={() => setPage((p) => p + 1)} disabled={page * perPage >= txTotal}>Next ›</button>
+          <a href={dashboardSiteUrl} target="_blank" rel="noopener noreferrer" className="btn ghost link" style={{ marginLeft: 'auto' }}>
+            see full history in dashboard →
+          </a>
+        </div>
+      </div>
     </>
   )
 }

@@ -1,83 +1,112 @@
 # Joomla Plugin — Dev Reference
 
-Complete port of the WordPress Xenarch plugin to Joomla 5.x. Same features, same UI, same behavior. Two independent projects — no shared code.
+1:1 port of the WordPress Xenarch plugin to Joomla 5.x — same features, same
+UI, same behavior. Two independent projects, no shared code. The WordPress
+plugin is the **reference**: when in doubt, match `../wordpress`.
+
+Post-XEN-481 this is a **thin window into the platform** (the WP post-XEN-380
+architecture). The plugin stores nothing canonical locally — pricing, gating,
+per-bot overrides, payout wallet, earnings and transactions all live on the
+platform and are read/written through the per-site `X-Site-Token` surface.
+Onboarding is a SIWE claim handoff to `dash.xenarch.dev`; there is no wallet
+management, registration, or offramp in the plugin.
 
 For bot classification logic and signature lists, see [`Information/design/bot-classification.md`](../../Information/design/bot-classification.md).
 
 ## Architecture
 
-Joomla package (`pkg_xenarch`) containing 3 extensions:
+Joomla package (`pkg_xenarch`) containing **2** extensions:
 
-1. **`com_xenarch` (Component)** — Admin panel + API controllers + database
-2. **`plg_system_xenarch` (System Plugin)** — Request interception (bot detection, 402 gating, discovery docs)
-3. **`plg_webservices_xenarch` (Web Services Plugin)** — REST API route registration
+1. **`com_xenarch` (Component)** — admin dashboard (React) + the admin-side
+   AjaxController that the dashboard talks to.
+2. **`plg_system_xenarch` (System Plugin)** — request interception (bot
+   detection, 402 gating, discovery docs, x402 settlement).
+
+> There is **no** external webservices API and **no** `api/` component — the
+> WordPress plugin has no external REST surface, so neither does this. The
+> admin UI calls the component's AjaxController same-origin.
+
+## Local persistence
+
+**No custom Xenarch DB tables.** The only local state is three component
+params in `#__extensions` (the analogue of WP's three `wp_options`):
+
+- `site_token` — pairing credential (sent as `X-Site-Token`)
+- `site_id` — platform site UUID
+- `browser_proof_secret` — HMAC secret for the browser-challenge cookie
+
+Plus a few behaviour fallbacks the gate reads only when the platform is
+unreachable (`gate_enabled`, `gate_unknown_traffic`, and the legacy
+`bot_categories`/`bot_overrides`/`pricing_rules` which are never written
+post-pivot), and `pay_json_last_good` (the Discovery outage snapshot).
+
+Transient-equivalents (gating config, gate payloads, payment-proof results,
+the pay.json site snapshot) use Joomla's native cache via
+`src/plugins/system/xenarch/src/Cache.php` — not a bespoke table.
 
 ## File Map
 
 | Path | Purpose |
 |------|---------|
-| `src/plugins/system/xenarch/src/Extension/Xenarch.php` | Main system plugin (gate + discovery) |
-| `src/plugins/system/xenarch/src/BotDetect.php` | UA signature matching, header scoring |
-| `src/plugins/system/xenarch/src/BrowserProof.php` | Browser challenge cookie |
-| `src/plugins/system/xenarch/src/PaymentProof.php` | On-chain payment verification via canonical `X-Xenarch-Gate-Id` + `X-Xenarch-Tx-Hash` headers (replaces JWT access tokens post-XEN-179) |
-| `src/plugins/system/xenarch/src/ApiClient.php` | Xenarch platform API client |
+| `src/plugins/system/xenarch/src/Extension/Xenarch.php` | Gate + discovery (onAfterInitialise / onAfterDispatch) |
+| `src/plugins/system/xenarch/src/BotDetect.php` | UA signature matching, header scoring (137 sigs, 1:1 with WP) |
+| `src/plugins/system/xenarch/src/BrowserProof.php` | Browser challenge cookie (HMAC) |
+| `src/plugins/system/xenarch/src/PaymentProof.php` | On-chain proof verify (canonical headers + X-PAYMENT); fail-closed on 4xx |
+| `src/plugins/system/xenarch/src/ApiClient.php` | Platform API client — site_token only, `/v1/sites/me/*` |
+| `src/plugins/system/xenarch/src/ApiException.php` | Status-aware platform error (fail-closed vs fail-open) |
+| `src/plugins/system/xenarch/src/Cache.php` | Native-cache transient wrapper |
 | `src/plugins/system/xenarch/src/GateResponse.php` | 402/403 response rendering |
-| `src/plugins/system/xenarch/src/Discovery.php` | pay.json and xenarch.md serving |
-| `src/plugins/webservices/xenarch/src/Extension/Xenarch.php` | REST API route registration |
-| `src/api/components/com_xenarch/src/Controller/` | 16 REST API controllers |
-| `src/administrator/components/com_xenarch/` | Admin component (view, helper, templates) |
-| `src/administrator/components/com_xenarch/src/Helper/XenarchHelper.php` | Settings read/write helper |
-| `src/administrator/components/com_xenarch/tmpl/dashboard/default.php` | React mount point template |
-| `src/media/com_xenarch/` | JS/CSS assets + joomla.asset.json |
-| `admin-ui/` | React admin dashboard (Vite, TypeScript) |
-| `mockups/` | HTML mockups (design source of truth) |
+| `src/plugins/system/xenarch/src/Discovery.php` | pay.json / xenarch.md (sourced from platform `getMySite`) |
+| `src/administrator/components/com_xenarch/src/Controller/AjaxController.php` | Admin REST surface (analogue of `class-xenarch-rest.php`) |
+| `src/administrator/components/com_xenarch/src/Helper/XenarchHelper.php` | Param read/write |
+| `src/administrator/components/com_xenarch/tmpl/dashboard/default.php` | React mount point + thin-snapshot bootstrap |
+| `src/media/com_xenarch/` | Built JS/CSS bundle + joomla.asset.json |
+| `admin-ui/` | React dashboard (Vite, TS) — copied from WP, only `api.ts` + onboarding URL differ |
 
-## WordPress → Joomla Hook Mapping
+## WordPress → Joomla mapping
 
 | WordPress | Joomla | Where |
 |-----------|--------|-------|
-| `template_redirect` (priority 1) | `onAfterRoute` | System plugin — bot gating |
-| `template_redirect` (priority 0) | `onAfterInitialise` | System plugin — /.well-known/ serving |
-| `wp_enqueue_scripts` | `onBeforeCompileHead` | System plugin — l.js (disabled) |
-| `register_rest_route()` | `onBeforeApiRoute` + Route objects | Web services plugin |
-| `get_option()` / `update_option()` | `ComponentHelper::getParams()` / XenarchHelper | Throughout |
-| `wp_remote_post/get()` | `HttpFactory::getHttp()->post/get()` | ApiClient |
-| `get_transient()` / `set_transient()` | `#__xenarch_cache` table | PaymentProof, gate caching |
-| `$wpdb` queries | `DatabaseInterface` with query builder | Bot logging, cache |
-| `X-WP-Nonce` | `X-CSRF-Token` (Joomla session form token) | Admin UI API calls |
+| `template_redirect` priority 0 (discovery) | `onAfterInitialise` | System plugin |
+| `template_redirect` priority 1 (gating) | `onAfterDispatch` | System plugin — runs there so a 404 (which throws before the event) is never gated, matching WP's `is_404()` skip |
+| `get_option` / `update_option` | `ComponentHelper::getParams()` / `XenarchHelper` | throughout |
+| `wp_remote_post/get` | `HttpFactory::getHttp()->post/get` | `ApiClient` |
+| `get_transient` / `set_transient` | `Cache` (Joomla native cache) | gate, PaymentProof, Discovery |
+| `WP_Error` `status` | `ApiException::$status` | fail-closed-on-4xx |
+| `X-WP-Nonce` | Joomla session form token (`&<token>=1`) | admin UI `api.ts` |
+| `add_option('xenarch_pay_json_last_good')` | `pay_json_last_good` component param | Discovery outage fallback |
 
-## Settings Storage
-
-Settings are stored in the `params` JSON column of `#__extensions` (component row). Same keys as WordPress `wp_options` but without the `xenarch_` prefix.
-
-## Database Tables
-
-- `#__xenarch_bot_log` — Same schema as WordPress (`wp_xenarch_bot_log`)
-- `#__xenarch_cache` — Replaces WordPress transients (`cache_key`, `cache_value`, `expires_at`)
+The admin REST endpoints the React app calls (via `task=ajax.<endpoint>`):
+`settings`, `claimexchange`, `disconnect`, `site`, `gating`, `pricing`,
+`stats`, `transactions`, `categorybreakdown`, `wallets`, `payoutwallet` —
+the 1:1 set of WP's `/xenarch/v1/*` routes.
 
 ## Admin UI
 
-Identical React app to WordPress. Only differences:
-- `api.ts` — Uses configurable CSRF header instead of hardcoded `X-WP-Nonce`
-- `types.ts` — Added `csrfHeaderName` to `XenarchAdmin` interface
+Shared 1:1 with WordPress (`admin-ui/src` is copied from `../wordpress`).
+Only differences:
+- `api.ts` — Joomla transport (`task=ajax.*` + form token) instead of WP REST + `X-WP-Nonce`.
+- `App.tsx` / `Onboarding.tsx` — admin URL is `?option=com_xenarch`, claim `integration=joomla`.
 
 Build: `cd admin-ui && npm install && npm run build`
-Deploy: Copy `admin-ui/dist/` to `src/media/com_xenarch/js/` and `css/`
-
-## Test Server
-
-- Docker: `docker compose up -d` (MySQL 8 + Joomla 5.4)
-- Domain: `joomla-gate.xenarch.dev`
-- Same Hetzner VPS as WordPress test server (see secrets.md for IP)
-- Port: 8889 (nginx reverse proxy)
+Deploy: `build-release.sh` copies `dist/` into `src/media/com_xenarch/{js,css}` and zips the package.
 
 ## Build Package
 
 ```bash
-./scripts/build-release.sh
+./scripts/build-release.sh   # → src/packages/pkg_xenarch.zip
 ```
 
-Produces `src/packages/pkg_xenarch.zip` for installation via Joomla Extension Manager.
+## Test Server
+
+- Docker: `docker compose up -d` (MySQL 8 + Joomla 5.x)
+- Domain: `joomla-gate.xenarch.dev` (same Hetzner VPS as the WP test server; see secrets.md)
+
+## External dependency
+
+Onboarding redirects to `dash.xenarch.dev/sites/claim?...&integration=joomla`.
+The dashboard must recognize `integration=joomla` for the claim→site_token
+exchange to complete.
 
 ## Workflow
 
