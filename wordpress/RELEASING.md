@@ -95,7 +95,9 @@ Only PNGs and SVGs. Do NOT upload `listing-copy.md` or `preview.html`.
 Run before every release on the test server (gate.xenarch.dev):
 
 ```bash
-ssh root@5.78.183.39 "docker exec gate-wordpress-wordpress-1 wp plugin check xenarch --format=table --allow-root"
+ssh root@<production-server> "docker exec gate-wordpress-wordpress-1 wp plugin check xenarch --format=table --allow-root"
 ```
 
 0 errors required. Warnings are acceptable.
+
+> `<production-server>` = `SSH_HOST` in the workspace `secrets.md` (gitignored). The prod IP is intentionally not committed — it was leaked once via this file (XEN-204/XEN-463) and the server was hardened + the IP rotated as a result.
