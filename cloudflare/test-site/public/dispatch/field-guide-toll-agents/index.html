@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark light">
+<title>A Field Guide to Toll-Paying Agents — Xenarch Edge</title>
+<meta name="description" content="A fictional field guide. Gated by a Xenarch Cloudflare Worker.">
+<link rel="payment" href="/.well-known/pay.json" type="application/json">
+<meta name="x402" content="supported">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@300;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+<div class="page">
+
+  <header class="hdr">
+    <a href="/" class="logo">/xenarch <span class="mono" style="color:var(--muted);font-size:12px;font-weight:400;">edge</span></a>
+    <nav class="nav">
+      <a href="/">sandbox</a>
+      <a href="https://docs.xenarch.com" target="_blank" rel="noopener">docs</a>
+      <a href="https://xenarch.com" target="_blank" rel="noopener">xenarch.com</a>
+    </nav>
+  </header>
+
+  <main>
+    <article class="article">
+      <div class="eyebrow">Dispatch 02 <span class="n">/ field guide</span></div>
+      <h1>A Field Guide to Toll-Paying Agents</h1>
+      <div class="meta">
+        <span>fiction</span><span class="sep">/</span>
+        <span>5 min read</span><span class="sep">/</span>
+        <span>0.005 USDC at the edge</span>
+      </div>
+
+      <div class="body">
+        <p class="lead"><span class="mf-hi">Stand at a paywall long enough and you learn to tell the species apart.</span> Not by what they claim to be — they all claim to be browsers eventually — but by what they do the moment the door asks for a few cents.</p>
+
+        <h2>The six you'll meet</h2>
+        <p>Catalogued at the edge over one fictional season, sorted by manners.</p>
+
+        <div class="datarow"><span class="k"><strong>The Assistant.</strong> Reads the 402, signs, retries, reads. Gone in two round-trips. Leaves a receipt.</span><span class="v">pays</span></div>
+        <div class="datarow"><span class="k"><strong>The Researcher.</strong> Checks <code>pay.json</code> first, budgets the whole crawl, pays only for what it keeps.</span><span class="v">pays</span></div>
+        <div class="datarow"><span class="k"><strong>The Search Crawler.</strong> Announces itself honestly, indexes the free pages, never argues about the gated ones.</span><span class="v">passes</span></div>
+        <div class="datarow"><span class="k"><strong>The Scraper.</strong> Doesn't read the envelope. Retries the same URL forty times. Gets forty 402s.</span><span class="v">blocked</span></div>
+        <div class="datarow"><span class="k"><strong>The Impersonator.</strong> Wears a browser's headers like a borrowed coat. The wall reads the wallet, not the coat.</span><span class="v">blocked</span></div>
+        <div class="datarow"><span class="k"><strong>The Ghost.</strong> No user-agent at all. Hopes anonymity reads as innocence. It does not.</span><span class="v">blocked</span></div>
+
+        <h2>The tell</h2>
+        <p>The paying species share one trait: they treat 402 as a question, not an error. An error you log and move past. A question you answer. The whole shift, if there is one, is that a generation of agents started answering.</p>
+
+        <blockquote>A polite agent costs you a third of a cent. A rude one costs you nothing, because it never gets in.</blockquote>
+
+        <p>The guide is fictional. The behaviors are not — every one of them shows up in a real edge log within a day of turning the toll on. You just usually can't see them, because the wall handles it before you wake up.</p>
+
+        <p style="color:var(--muted);font-size:13px;font-family:'JetBrains Mono',monospace;margin-top:40px;">— Browser? You read free. Agent? The toll above is real: 0.005 USDC, settled on Base.</p>
+      </div>
+    </article>
+  </main>
+
+  <footer class="ftr">
+    <div class="ftr-l"><span class="note">Xenarch Edge &middot; gating sandbox &middot; fictional content</span></div>
+    <div class="ftr-r">
+      <a href="/dispatch/the-toll-economy/">next dispatch &rarr;</a><span class="sep">/</span>
+      <a href="/">sandbox</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

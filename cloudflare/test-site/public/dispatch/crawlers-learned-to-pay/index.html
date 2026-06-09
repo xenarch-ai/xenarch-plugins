@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark light">
+<title>The Night the Crawlers Learned to Pay — Xenarch Edge</title>
+<meta name="description" content="A fictional dispatch from the agentic frontier. Gated by a Xenarch Cloudflare Worker.">
+<link rel="payment" href="/.well-known/pay.json" type="application/json">
+<meta name="x402" content="supported">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@300;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+<div class="page">
+
+  <header class="hdr">
+    <a href="/" class="logo">/xenarch <span class="mono" style="color:var(--muted);font-size:12px;font-weight:400;">edge</span></a>
+    <nav class="nav">
+      <a href="/">sandbox</a>
+      <a href="https://docs.xenarch.com" target="_blank" rel="noopener">docs</a>
+      <a href="https://xenarch.com" target="_blank" rel="noopener">xenarch.com</a>
+    </nav>
+  </header>
+
+  <main>
+    <article class="article">
+      <div class="eyebrow">Dispatch 01 <span class="n">/ from the agentic frontier</span></div>
+      <h1>The Night the Crawlers Learned to Pay</h1>
+      <div class="meta">
+        <span>fiction</span><span class="sep">/</span>
+        <span>6 min read</span><span class="sep">/</span>
+        <span>0.003 USDC at the edge</span>
+      </div>
+
+      <div class="body">
+        <p class="lead"><span class="mf-hi">For thirty years the door said 402 and nobody knocked.</span> Then, on an ordinary Tuesday, a billion machines reached the same wall at once — and for the first time, instead of turning around, they reached for a wallet.</p>
+
+        <p>It started quietly, the way these things do. A small news site somewhere flipped a switch at its edge: a worker, no bigger than a paragraph of code, sitting in front of every page. To a person with a browser it did nothing at all. To a crawler it said six words that had been waiting since 1997 — <em>HTTP 402, Payment Required</em> — and then, politely, told it exactly how much and to whom.</p>
+
+        <h2>The first hour</h2>
+        <p>Most bots did what bots had always done: they retried, harder. They rotated user-agents. They pretended to be Chrome on a Tuesday in Toledo. The wall did not care. It had stopped reading the costume and started reading the wallet.</p>
+        <p>A few of them — the well-built ones, the ones whose makers had read the spec — paused. They parsed the little JSON envelope the wall handed back. They signed a USDC authorization worth a third of a cent. They sent it back in a header and asked again. The wall opened. No gas. No account. No human in the loop. Three-tenths of a cent moved on Base and an article appeared.</p>
+
+        <blockquote>The ones that paid got smarter. The ones that hammered got nothing.</blockquote>
+
+        <h2>What the wall wanted</h2>
+        <p>It is easy to read this as a story about money. It isn't, quite. The toll was never large enough to matter as money — a thousand reads cost less than a sandwich. What mattered was the handshake: a machine and a website, agreeing on terms, without a middleman holding the cash or a lawyer holding the contract.</p>
+        <p>By morning the pattern had spread the way patterns do on the internet, which is to say all at once and then as though it had always been there. The crawlers that learned to pay kept reading. The ones that didn't went looking for a quieter web, and found it smaller every day.</p>
+
+        <p style="color:var(--muted);font-size:13px;font-family:'JetBrains Mono',monospace;margin-top:40px;">— You are reading this for free in a browser. An agent paid 0.003 USDC for the same bytes. That asymmetry is the whole idea.</p>
+      </div>
+    </article>
+  </main>
+
+  <footer class="ftr">
+    <div class="ftr-l"><span class="note">Xenarch Edge &middot; gating sandbox &middot; fictional content</span></div>
+    <div class="ftr-r">
+      <a href="/dispatch/field-guide-toll-agents/">next dispatch &rarr;</a><span class="sep">/</span>
+      <a href="/">sandbox</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

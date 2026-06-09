@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark light">
+<title>Xenarch Edge — live x402 gating sandbox</title>
+<meta name="description" content="A live Cloudflare Worker gating sandbox. Browsers read free; AI agents get HTTP 402. Point your agent at it and watch the toll work.">
+<meta name="robots" content="index, follow">
+<link rel="payment" href="/.well-known/pay.json" type="application/json" title="Xenarch pricing (pay.json)">
+<meta name="x402" content="supported">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@300;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+<div class="page">
+
+  <header class="hdr">
+    <a href="/" class="logo">/xenarch <span class="mono" style="color:var(--muted);font-size:12px;font-weight:400;">edge</span></a>
+    <nav class="nav">
+      <a href="/" aria-current="page">sandbox</a>
+      <a href="https://docs.xenarch.com" target="_blank" rel="noopener">docs</a>
+      <a href="https://xenarch.com" target="_blank" rel="noopener">xenarch.com</a>
+    </nav>
+  </header>
+
+  <main>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-copy">
+        <h1>A paywall that talks to robots<span class="caret" aria-hidden="true"></span></h1>
+        <p class="sub">This whole site sits behind a Xenarch Cloudflare Worker. You, in a browser, read everything free. An AI agent hits the same URL and gets <strong>HTTP&nbsp;402</strong> — pay a few tenths of a cent in USDC, or no content. Point your crawler at it and watch the toll work.</p>
+        <div class="actions">
+          <a href="/dispatch/crawlers-learned-to-pay/" class="btn primary">Read a dispatch <span aria-hidden="true">&rarr;</span></a>
+          <a href="https://docs.xenarch.com" class="btn action" target="_blank" rel="noopener"><span class="pr">$</span><span>edge gating docs</span></a>
+        </div>
+        <div class="statusline" aria-label="live status">
+          <span class="live">&#9679; live</span>
+          <span class="sep">/</span><span>edge.xenarch.dev</span>
+          <span class="sep">/</span><span>Cloudflare Worker</span>
+          <span class="sep">/</span><span>x402</span>
+          <span class="sep">/</span><span>USDC on Base</span>
+        </div>
+      </div>
+
+      <!-- Hero visual: the test, made literal -->
+      <div class="hero-vis" aria-hidden="true">
+        <div class="term">
+          <div class="term-head"><span class="tdot"></span> the toll, live</div>
+<pre><span class="cmt"># a browser — read free</span>
+$ curl -I edge.xenarch.dev/dispatch/...
+<span class="ok">200 OK</span>
+
+<span class="cmt"># an agent — pay or pass</span>
+$ curl -I -A "GPTBot" .../dispatch/...
+<span class="warn">402 Payment Required</span>
+<span class="cmt"># → 0.003 USDC, settles on Base</span><span class="caret"></span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHAT THIS IS -->
+    <section class="manifesto">
+      <div class="eyebrow">What this is <span class="n">/ a sandbox you can hit</span></div>
+      <p class="mf"><span class="mf-hi">Every URL below is real and live.</span> Humans browse free; self-identifying agents pay per read. It exists so anyone building an agent, a facilitator, or a crawler can test against a genuine x402-gated edge — <span class="mf-hi">the same Worker a publisher would install.</span></p>
+    </section>
+
+    <!-- THE THREE GATED PAGES -->
+    <section class="block">
+      <div class="block-head">
+        <h2>Three dispatches, behind the toll</h2>
+        <p class="lede">Fictional reads from the agentic frontier. Free in a browser, 402 for a bot.</p>
+      </div>
+      <div class="surfaces">
+
+        <a href="/dispatch/crawlers-learned-to-pay/" class="surface">
+          <div class="s-top"><span class="s-idx">01</span><span class="pill lock"><span class="dot"></span>gated</span></div>
+          <div class="s-who">dispatch</div>
+          <div class="s-title">The Night the Crawlers Learned to Pay</div>
+          <p class="s-lede">The first hour a billion bots met a wall that wanted a few cents — and what happened when they reached for their wallets instead of their user-agents.</p>
+          <div class="s-price"><strong>0.003 USDC</strong> &middot; per read</div>
+          <div class="s-foot"><span class="s-go">read it <span aria-hidden="true">&rarr;</span></span></div>
+        </a>
+
+        <a href="/dispatch/field-guide-toll-agents/" class="surface">
+          <div class="s-top"><span class="s-idx">02</span><span class="pill lock"><span class="dot"></span>gated</span></div>
+          <div class="s-who">field guide</div>
+          <div class="s-title">A Field Guide to Toll-Paying Agents</div>
+          <p class="s-lede">Six species of bot, sorted by how they behave at a paywall — from the polite assistant that signs and retries to the scraper that just keeps knocking.</p>
+          <div class="s-price"><strong>0.005 USDC</strong> &middot; per read</div>
+          <div class="s-foot"><span class="s-go">read it <span aria-hidden="true">&rarr;</span></span></div>
+        </a>
+
+        <a href="/dispatch/the-toll-economy/" class="surface">
+          <div class="s-top"><span class="s-idx">03</span><span class="pill lock"><span class="dot"></span>gated</span></div>
+          <div class="s-who">essay</div>
+          <div class="s-title">The Toll Economy</div>
+          <p class="s-lede">What changes when reading costs a fraction of a cent and the reader is a machine with a budget. A short essay on the internet that meters itself.</p>
+          <div class="s-price"><strong>0.01 USDC</strong> &middot; per read</div>
+          <div class="s-foot"><span class="s-go">read it <span aria-hidden="true">&rarr;</span></span></div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- HOW TO TEST -->
+    <section class="block">
+      <div class="block-head">
+        <h2>Test it yourself <span class="mono" style="color:var(--muted);font-size:11px;font-weight:400;">/ 30 seconds</span></h2>
+        <p class="lede">Same URL, two outcomes. The user-agent decides.</p>
+      </div>
+      <div class="term" style="max-width:100%;">
+<pre><span class="cmt"># Browser-class request → 200, full article</span>
+$ curl -s -o /dev/null -w "%{http_code}\n" \
+    https://edge.xenarch.dev/dispatch/the-toll-economy/
+<span class="ok">200</span>
+
+<span class="cmt"># Self-identifying agent → 402 with the x402 envelope</span>
+$ curl -s -A "GPTBot/1.0" \
+    https://edge.xenarch.dev/dispatch/the-toll-economy/ | jq .
+<span class="warn">{ "x402Version": 1, "accepts": [ ... ], "xenarch": true,
+  "price_usd": "0.01", "verify_url": "...", "facilitators": [ ... ] }</span>
+
+<span class="cmt"># Pay the voucher, retry with X-Payment → 200. That's the rail.</span></pre>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="ftr">
+    <div class="ftr-l"><span class="note">Xenarch Edge &middot; gating sandbox &middot; fictional content</span></div>
+    <div class="ftr-r">
+      <a href="/">sandbox</a><span class="sep">/</span>
+      <a href="https://docs.xenarch.com" target="_blank" rel="noopener">docs</a><span class="sep">/</span>
+      <a href="https://xenarch.com" target="_blank" rel="noopener">xenarch.com</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

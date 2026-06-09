@@ -1,0 +1,26 @@
+{
+  "x402Version": 1,
+  "publisher": "Xenarch Edge (sandbox)",
+  "description": "Live x402 gating sandbox. Browsers read free; AI agents pay per read. Fictional content for testing against a real Cloudflare-edge gate.",
+  "network": "base",
+  "asset": "USDC",
+  "currency": "USD",
+  "resources": [
+    {
+      "path": "/dispatch/crawlers-learned-to-pay/",
+      "title": "The Night the Crawlers Learned to Pay",
+      "price": "0.003"
+    },
+    {
+      "path": "/dispatch/field-guide-toll-agents/",
+      "title": "A Field Guide to Toll-Paying Agents",
+      "price": "0.005"
+    },
+    {
+      "path": "/dispatch/the-toll-economy/",
+      "title": "The Toll Economy",
+      "price": "0.01"
+    }
+  ],
+  "free": ["/"]
+}
