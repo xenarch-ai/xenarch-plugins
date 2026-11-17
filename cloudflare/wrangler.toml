@@ -16,9 +16,10 @@ name = "xenarch-gate"
 main = "src/index.js"
 compatibility_date = "2026-06-01"
 
-# Platform API base. Override per environment if needed.
+# Platform API base. Override per environment if needed. The bare xenarch.dev host
+# 301-redirects every request to the xenarch.com homepage, so it can never serve the API.
 [vars]
-XENARCH_API_BASE = "https://xenarch.dev"
+XENARCH_API_BASE = "https://api.xenarch.dev"
 # Optional. Paths a $0 platform price rule already frees automatically (mirrors
 # WP); this is an extra static free-list applied on top, e.g. "/,/about,/blog/*".
 # XENARCH_FREE_PATHS = "/"

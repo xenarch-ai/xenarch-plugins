@@ -61,7 +61,7 @@ routes = [
 
 | Key | Type | Default | Purpose |
 |-----|------|---------|---------|
-| `XENARCH_API_BASE` | var | `https://xenarch.dev` | Platform API base |
+| `XENARCH_API_BASE` | var | `https://api.xenarch.dev` | Platform API base |
 | `XENARCH_SITE_TOKEN` | **secret** | — | Authenticates the Worker as a specific site (`X-Site-Token`) |
 
 ## Test

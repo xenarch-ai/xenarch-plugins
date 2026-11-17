@@ -117,6 +117,26 @@ function isFreePath(path, freePaths) {
 }
 
 /**
+ * The platform API base for this Worker. Workers deployed from the original
+ * wrangler.toml carry XENARCH_API_BASE = "https://xenarch.dev", a host that
+ * 301-redirects every request to the xenarch.com homepage and so can never
+ * answer a gate call. Read it as the API host so those deployments work again.
+ */
+export function apiBaseFrom(value) {
+  const base = (value || "https://api.xenarch.dev").replace(/\/$/, "");
+  try {
+    const url = new URL(base);
+    if (url.hostname === "xenarch.dev") {
+      url.hostname = "api.xenarch.dev";
+      return url.toString().replace(/\/$/, "");
+    }
+  } catch {
+    // Not a URL: keep it, so the failure shows the configured value.
+  }
+  return base;
+}
+
+/**
  * The gate. Returns a Response.
  * @param opts.passthrough (request) => Promise<Response> — how to serve an
  *   allowed request. Defaults to `fetch(request)` (origin passthrough).
@@ -129,7 +149,7 @@ function isFreePath(path, freePaths) {
 export async function handleGate(request, env, opts = {}) {
   const passthrough = opts.passthrough || ((req) => fetch(req));
   const waitUntil = opts.waitUntil || (() => {});
-  const apiBase = (env.XENARCH_API_BASE || "https://api.xenarch.dev").replace(/\/$/, "");
+  const apiBase = apiBaseFrom(env.XENARCH_API_BASE);
   const siteToken = env.XENARCH_SITE_TOKEN;
 
   // Not configured yet — never gate.

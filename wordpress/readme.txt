@@ -83,7 +83,7 @@ Learn more at [xenarch.com](https://xenarch.com).
 
 == Third-Party Services ==
 
-This plugin connects to the Xenarch API (`xenarch.dev`) to:
+This plugin connects to the Xenarch API (`api.xenarch.dev`) to:
 * Create and manage gate transactions
 * Validate payment receipts on-chain
 * Serve pay.json pricing specifications

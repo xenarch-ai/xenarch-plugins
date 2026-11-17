@@ -330,3 +330,18 @@ describe("bilingual inbound payment", () => {
     expect(await res.text()).toBe("ORIGIN");
   });
 });
+
+import { apiBaseFrom } from "../src/gate.js";
+
+describe("apiBaseFrom", () => {
+  it("defaults to the API host", () => {
+    expect(apiBaseFrom(undefined)).toBe("https://api.xenarch.dev");
+  });
+  it("reads the retired bare host as the API host", () => {
+    expect(apiBaseFrom("https://xenarch.dev")).toBe("https://api.xenarch.dev");
+    expect(apiBaseFrom("https://xenarch.dev/")).toBe("https://api.xenarch.dev");
+  });
+  it("keeps any other base as configured", () => {
+    expect(apiBaseFrom("https://api.test/")).toBe("https://api.test");
+  });
+});
