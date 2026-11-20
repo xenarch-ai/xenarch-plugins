@@ -23,7 +23,7 @@ Prepare all assets and copy for [JED submission](https://extensions.joomla.org/s
 - [ ] **Demo** — working non-production demo site
 - [ ] **Support** — GitHub Issues (NOT Joomla Forums)
 - [ ] **Documentation** — setup/config docs
-- [ ] **Website** — xenarch.dev or xenarch.com
+- [ ] **Website** — xenarch.com
 
 ## Metadata
 
