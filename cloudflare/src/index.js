@@ -29,7 +29,7 @@
  *   - XENARCH_BROWSER_PROOF_SECRET (secret) — HMAC key for the browser-proof
  *                                    challenge cookie. Required for the challenge
  *                                    band; absent → that band degrades to allow.
- *   - XENARCH_API_BASE   (var)    — platform base, default https://xenarch.dev.
+ *   - XENARCH_API_BASE   (var)    — platform base, default https://api.xenarch.dev.
  *   - XENARCH_FREE_PATHS (var)    — optional comma-separated paths never gated
  *                                    (e.g. "/,/about" to keep a homepage free).
  *
