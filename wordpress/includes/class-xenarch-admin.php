@@ -111,6 +111,8 @@ class Xenarch_Admin {
 			'version'   => XENARCH_VERSION,
 			// XEN-681: show the WooCommerce Checkout tab.
 			'wooActive' => class_exists( 'WooCommerce' ),
+			// XEN-684: which features are on, and whether to ask first.
+			'features'  => Xenarch_Features::snapshot(),
 		);
 		echo '<div class="wrap xenarch-wrap">';
 		echo '<div class="xenarch-page-container">';
@@ -122,7 +124,9 @@ class Xenarch_Admin {
 		echo '<svg class="xn-icon-moon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.2 9.5a5.5 5.5 0 01-7-7 5.5 5.5 0 106.7 6.7z"/></svg>';
 		echo '</button>';
 		echo '</div>';
-		echo '<p class="xenarch-page-subtitle">Charge the bots that take. Let through the ones that help.</p>';
+		// XEN-684: tagline follows the features that are on; the React app
+		// rewrites it in place when a feature is switched.
+		echo '<p class="xenarch-page-subtitle" id="xenarch-page-subtitle">' . esc_html( Xenarch_Features::tagline() ) . '</p>';
 		echo '<script>window.xenarchAdmin = ' . wp_json_encode( $config ) . ';';
 		echo 'function xenarchToggleTheme(){';
 		echo 'var el=document.getElementById("xenarch-admin");if(!el)return;';

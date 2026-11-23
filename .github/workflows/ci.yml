@@ -23,3 +23,7 @@ jobs:
           set -e
           find . -type f -name "*.php" -not -path "./vendor/*" -not -path "./node_modules/*" -print0 \
             | xargs -0 -n1 -P4 php -l
+
+      # XEN-684: Features switch helpers.
+      - name: PHP unit tests (features)
+        run: php tests/php/features-test.php

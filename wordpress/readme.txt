@@ -4,7 +4,7 @@ Tags: ai bot detection, ai scraping, ai crawlers, paywall, micropayments
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.7.4
+Stable tag: 1.13.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -184,6 +184,12 @@ Xenarch complements Cloudflare's x402 pay-per-crawl tooling. Both use the same x
 7. Terminal showing HTTP 402 response with x-payment headers and JSON gate payload.
 
 == Changelog ==
+
+= 1.13.0 =
+* New: Features switch under Settings → /xenarch → Features. Turn "Bot gating" and "Crypto checkout (WooCommerce)" on or off on their own. A new install asks which you want; with WooCommerce active and no bot gating set up it suggests checkout only. Screens of a feature that is off are hidden and the header adapts.
+* With bot gating off the plugin stops gating completely: no 402 responses, no bot detection, and no /.well-known/pay.json or xenarch.md. Turning it back on restores your previous gating settings.
+* With crypto checkout off the "Crypto: USDC" option is not offered at checkout. Your pay link connection is kept for when you turn it back on.
+* Existing installs keep both features on. (XEN-684)
 
 = 1.12.0 =
 * New: WooCommerce payment option "Crypto: USDC". Buyers pay the order total in USDC on Base from their own wallet, straight to your wallet, on the Xenarch pay page. The order moves to Processing on its own when the payment lands (signed webhook, amount checked against the order total; underpaid orders go on-hold). Set it up under Settings → /xenarch → Checkout with a merchant key and a reusable open-amount pay link. Works with the classic and the block checkout. (XEN-681)

@@ -1,23 +1,46 @@
 import { useState, useCallback, useEffect } from 'react'
-import type { Settings } from './types'
+import type { Settings, Features } from './types'
 import * as api from './api'
 import { Onboarding } from './components/Onboarding'
 import { SettingsTab } from './components/SettingsTab'
 import { EarningsTab } from './components/EarningsTab'
 import { StatusTab } from './components/StatusTab'
 import { CheckoutTab } from './components/CheckoutTab'
+import { FeaturesTab } from './components/FeaturesTab'
+import { FeatureChooser } from './components/FeatureChooser'
 
-type Tab = 'earnings' | 'settings' | 'checkout' | 'status'
+// XEN-684: which tabs show depends on the Features switch. `gating` is the
+// connect-this-site screen, shown in place of Earnings/Settings/Status
+// while bot gating is on but the site isn't paired yet. The Checkout tab
+// needs WooCommerce (XEN-681) and the checkout feature on.
+type Tab = 'earnings' | 'settings' | 'gating' | 'checkout' | 'status' | 'features'
 
-// XEN-681: the Checkout tab exists only with WooCommerce active. It doesn't
-// need the bot-gating site connection, so it's reachable before onboarding.
-const WOO_ACTIVE = Boolean(window.xenarchAdmin.wooActive)
+const TAB_LABELS: Record<Tab, string> = {
+  earnings: 'Earnings',
+  settings: 'Settings',
+  gating: 'Bot gating',
+  checkout: 'Checkout',
+  status: 'Status',
+  features: 'Features',
+}
 
-function initialTab(): Tab {
+function visibleTabs(features: Features, hasSite: boolean): Tab[] {
+  const tabs: Tab[] = []
+  if (features.gating) tabs.push(...(hasSite ? (['earnings', 'settings'] as Tab[]) : (['gating'] as Tab[])))
+  if (features.checkout) tabs.push('checkout')
+  if (features.gating && hasSite) tabs.push('status')
+  tabs.push('features')
+  return tabs
+}
+
+function requestedTab(): Tab | null {
   const t = new URLSearchParams(window.location.search).get('tab')
-  if (t === 'checkout' && WOO_ACTIVE) return 'checkout'
-  if (t === 'settings' || t === 'status') return t
-  return 'earnings'
+  return t && Object.prototype.hasOwnProperty.call(TAB_LABELS, t) ? (t as Tab) : null
+}
+
+function setTagline(text: string) {
+  const el = document.getElementById('xenarch-page-subtitle')
+  if (el && text) el.textContent = text
 }
 
 type ClaimState =
@@ -33,8 +56,9 @@ function stripClaimTokenFromUrl(): string {
 }
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<Tab>(initialTab)
+  const [activeTab, setActiveTab] = useState<Tab | null>(requestedTab)
   const [settings, setSettings] = useState<Settings>(window.xenarchAdmin.settings)
+  const [features, setFeatures] = useState<Features>(window.xenarchAdmin.features)
   const [claim, setClaim] = useState<ClaimState>({ kind: 'idle' })
 
   // Apply initial theme.
@@ -76,6 +100,11 @@ export function App() {
     setSettings(updated)
   }, [])
 
+  const onFeaturesChange = useCallback((updated: Features) => {
+    setFeatures(updated)
+    setTagline(updated.tagline)
+  }, [])
+
   if (claim.kind === 'exchanging') {
     return (
       <div className="xenarch-app">
@@ -87,75 +116,44 @@ export function App() {
     )
   }
 
-  if (!settings.has_site) {
-    const onboarding = (
-      <Onboarding
-        domain={settings.domain}
-        pluginAdminUrl={window.location.href.split('?')[0] + '?page=xenarch'}
-        errorMessage={claim.kind === 'error' ? claim.message : null}
-      />
-    )
-    if (!WOO_ACTIVE) {
-      return <div className="xenarch-app">{onboarding}</div>
-    }
-    const showCheckout = activeTab === 'checkout'
+  if (!features.chosen) {
     return (
       <div className="xenarch-app">
-        <div className="xenarch-tabs-row">
-          <button
-            className={`xenarch-tab ${!showCheckout ? 'xenarch-tab--active' : ''}`}
-            onClick={() => setActiveTab('earnings')}
-          >
-            Bot gating
-          </button>
-          <button
-            className={`xenarch-tab ${showCheckout ? 'xenarch-tab--active' : ''}`}
-            onClick={() => setActiveTab('checkout')}
-          >
-            Checkout
-          </button>
-        </div>
-        <div className="xenarch-tab-content">{showCheckout ? <CheckoutTab /> : onboarding}</div>
+        <FeatureChooser features={features} onSaved={onFeaturesChange} />
       </div>
     )
   }
 
+  const tabs = visibleTabs(features, settings.has_site)
+  const tab: Tab = activeTab && tabs.includes(activeTab) ? activeTab : tabs[0]
+
   return (
     <div className="xenarch-app">
       <div className="xenarch-tabs-row">
-        <button
-          className={`xenarch-tab ${activeTab === 'earnings' ? 'xenarch-tab--active' : ''}`}
-          onClick={() => setActiveTab('earnings')}
-        >
-          Earnings
-        </button>
-        <button
-          className={`xenarch-tab ${activeTab === 'settings' ? 'xenarch-tab--active' : ''}`}
-          onClick={() => setActiveTab('settings')}
-        >
-          Settings
-        </button>
-        {WOO_ACTIVE ? (
+        {tabs.map((t) => (
           <button
-            className={`xenarch-tab ${activeTab === 'checkout' ? 'xenarch-tab--active' : ''}`}
-            onClick={() => setActiveTab('checkout')}
+            key={t}
+            className={`xenarch-tab ${tab === t ? 'xenarch-tab--active' : ''}`}
+            onClick={() => setActiveTab(t)}
           >
-            Checkout
+            {TAB_LABELS[t]}
           </button>
-        ) : null}
-        <button
-          className={`xenarch-tab ${activeTab === 'status' ? 'xenarch-tab--active' : ''}`}
-          onClick={() => setActiveTab('status')}
-        >
-          Status
-        </button>
+        ))}
       </div>
 
       <div className="xenarch-tab-content">
-        {activeTab === 'earnings' && <EarningsTab settings={settings} />}
-        {activeTab === 'settings' && <SettingsTab settings={settings} onSettingsChange={onSettingsChange} />}
-        {activeTab === 'checkout' && WOO_ACTIVE && <CheckoutTab />}
-        {activeTab === 'status' && <StatusTab settings={settings} onSettingsChange={onSettingsChange} />}
+        {tab === 'gating' && (
+          <Onboarding
+            domain={settings.domain}
+            pluginAdminUrl={window.location.href.split('?')[0] + '?page=xenarch'}
+            errorMessage={claim.kind === 'error' ? claim.message : null}
+          />
+        )}
+        {tab === 'earnings' && <EarningsTab settings={settings} />}
+        {tab === 'settings' && <SettingsTab settings={settings} onSettingsChange={onSettingsChange} />}
+        {tab === 'checkout' && <CheckoutTab />}
+        {tab === 'status' && <StatusTab settings={settings} onSettingsChange={onSettingsChange} />}
+        {tab === 'features' && <FeaturesTab features={features} onChange={onFeaturesChange} />}
       </div>
 
       <div className="xenarch-footer">

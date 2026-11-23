@@ -44,3 +44,9 @@ delete_option( 'xenarch_woo_pay_to' );
 delete_option( 'xenarch_woo_merchant_key' );
 delete_option( 'xenarch_woo_webhook_secret' );
 delete_option( 'woocommerce_xenarch_settings' );
+
+// XEN-684: Features switch. The stored version goes too, so a reinstall is
+// treated as a fresh install and asks which features to use.
+delete_option( 'xenarch_feature_gating' );
+delete_option( 'xenarch_feature_checkout' );
+delete_option( 'xenarch_installed_version' );

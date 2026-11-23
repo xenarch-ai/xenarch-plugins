@@ -9,6 +9,17 @@ export interface XenarchAdmin {
   pluginUrl: string
   version: string
   wooActive?: boolean
+  features: Features
+}
+
+// XEN-684 — Features switch. `checkout` is already false without WooCommerce.
+export interface Features {
+  chosen: boolean
+  gating: boolean
+  checkout: boolean
+  woo_active: boolean
+  suggested: { gating: boolean; checkout: boolean }
+  tagline: string
 }
 
 export interface Settings {
