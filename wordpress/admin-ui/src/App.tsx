@@ -5,8 +5,20 @@ import { Onboarding } from './components/Onboarding'
 import { SettingsTab } from './components/SettingsTab'
 import { EarningsTab } from './components/EarningsTab'
 import { StatusTab } from './components/StatusTab'
+import { CheckoutTab } from './components/CheckoutTab'
 
-type Tab = 'earnings' | 'settings' | 'status'
+type Tab = 'earnings' | 'settings' | 'checkout' | 'status'
+
+// XEN-681: the Checkout tab exists only with WooCommerce active. It doesn't
+// need the bot-gating site connection, so it's reachable before onboarding.
+const WOO_ACTIVE = Boolean(window.xenarchAdmin.wooActive)
+
+function initialTab(): Tab {
+  const t = new URLSearchParams(window.location.search).get('tab')
+  if (t === 'checkout' && WOO_ACTIVE) return 'checkout'
+  if (t === 'settings' || t === 'status') return t
+  return 'earnings'
+}
 
 type ClaimState =
   | { kind: 'idle' }
@@ -21,7 +33,7 @@ function stripClaimTokenFromUrl(): string {
 }
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('earnings')
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab)
   const [settings, setSettings] = useState<Settings>(window.xenarchAdmin.settings)
   const [claim, setClaim] = useState<ClaimState>({ kind: 'idle' })
 
@@ -76,13 +88,34 @@ export function App() {
   }
 
   if (!settings.has_site) {
+    const onboarding = (
+      <Onboarding
+        domain={settings.domain}
+        pluginAdminUrl={window.location.href.split('?')[0] + '?page=xenarch'}
+        errorMessage={claim.kind === 'error' ? claim.message : null}
+      />
+    )
+    if (!WOO_ACTIVE) {
+      return <div className="xenarch-app">{onboarding}</div>
+    }
+    const showCheckout = activeTab === 'checkout'
     return (
       <div className="xenarch-app">
-        <Onboarding
-          domain={settings.domain}
-          pluginAdminUrl={window.location.href.split('?')[0] + '?page=xenarch'}
-          errorMessage={claim.kind === 'error' ? claim.message : null}
-        />
+        <div className="xenarch-tabs-row">
+          <button
+            className={`xenarch-tab ${!showCheckout ? 'xenarch-tab--active' : ''}`}
+            onClick={() => setActiveTab('earnings')}
+          >
+            Bot gating
+          </button>
+          <button
+            className={`xenarch-tab ${showCheckout ? 'xenarch-tab--active' : ''}`}
+            onClick={() => setActiveTab('checkout')}
+          >
+            Checkout
+          </button>
+        </div>
+        <div className="xenarch-tab-content">{showCheckout ? <CheckoutTab /> : onboarding}</div>
       </div>
     )
   }
@@ -102,6 +135,14 @@ export function App() {
         >
           Settings
         </button>
+        {WOO_ACTIVE ? (
+          <button
+            className={`xenarch-tab ${activeTab === 'checkout' ? 'xenarch-tab--active' : ''}`}
+            onClick={() => setActiveTab('checkout')}
+          >
+            Checkout
+          </button>
+        ) : null}
         <button
           className={`xenarch-tab ${activeTab === 'status' ? 'xenarch-tab--active' : ''}`}
           onClick={() => setActiveTab('status')}
@@ -113,6 +154,7 @@ export function App() {
       <div className="xenarch-tab-content">
         {activeTab === 'earnings' && <EarningsTab settings={settings} />}
         {activeTab === 'settings' && <SettingsTab settings={settings} onSettingsChange={onSettingsChange} />}
+        {activeTab === 'checkout' && WOO_ACTIVE && <CheckoutTab />}
         {activeTab === 'status' && <StatusTab settings={settings} onSettingsChange={onSettingsChange} />}
       </div>
 

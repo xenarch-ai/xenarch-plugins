@@ -6,6 +6,7 @@ import type {
   CategoryBreakdownResponse,
   GatedCategories,
   PricingRule,
+  WooStatus,
 } from './types'
 
 function getConfig() {
@@ -121,4 +122,21 @@ export function putPricing(body: PricingUpdate): Promise<{ rules_applied: number
     method: 'PUT',
     body: JSON.stringify(body),
   })
+}
+
+// XEN-681 — WooCommerce checkout.
+export function fetchWoo(): Promise<WooStatus> {
+  return apiFetch<WooStatus>('/woo')
+}
+
+export function saveWoo(body: { enabled?: boolean; title?: string }): Promise<WooStatus> {
+  return apiFetch<WooStatus>('/woo', { method: 'POST', body: JSON.stringify(body) })
+}
+
+export function connectWoo(body: { merchant_key: string; link: string }): Promise<WooStatus> {
+  return apiFetch<WooStatus>('/woo/connect', { method: 'POST', body: JSON.stringify(body) })
+}
+
+export function disconnectWoo(): Promise<WooStatus> {
+  return apiFetch<WooStatus>('/woo/disconnect', { method: 'POST' })
 }

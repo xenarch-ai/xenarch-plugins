@@ -278,6 +278,70 @@ class Xenarch_Api {
 	}
 
 	// ------------------------------------------------------------------
+	// XEN-681 — WooCommerce checkout. Merchant-key (xm_live_*) calls on
+	// the store's reusable open-amount pay link. The key is the merchant's
+	// data-plane credential (get_merchant_session on the platform); it
+	// never leaves PHP.
+	// ------------------------------------------------------------------
+
+	/**
+	 * Owner detail of a pay link (params, status, kind).
+	 *
+	 * @param string $merchant_key xm_live_* key.
+	 * @param string $link_id      Pay link id.
+	 * @return array|WP_Error
+	 */
+	public function merchant_get_link( $merchant_key, $link_id ) {
+		return $this->get(
+			'/v1/links/' . rawurlencode( $link_id ),
+			$this->merchant_headers( $merchant_key )
+		);
+	}
+
+	/**
+	 * Point the link's webhook at this store and subscribe to the payment
+	 * events (whole-state replace on the platform).
+	 *
+	 * @param string   $merchant_key xm_live_* key.
+	 * @param string   $link_id      Pay link id.
+	 * @param string   $url          Receiver URL.
+	 * @param string[] $event_types  Events to subscribe to.
+	 * @param bool     $enabled      Delivery on/off.
+	 * @return array|WP_Error
+	 */
+	public function merchant_put_link_webhook( $merchant_key, $link_id, $url, $event_types, $enabled = true ) {
+		return $this->post(
+			'/v1/links/' . rawurlencode( $link_id ) . '/webhook',
+			array(
+				'url'         => $url,
+				'event_types' => array_values( $event_types ),
+				'enabled'     => (bool) $enabled,
+			),
+			$this->merchant_headers( $merchant_key ),
+			'PUT'
+		);
+	}
+
+	/**
+	 * Rotate the link's webhook signing secret. Plaintext comes back once.
+	 *
+	 * @param string $merchant_key xm_live_* key.
+	 * @param string $link_id      Pay link id.
+	 * @return array|WP_Error ``{webhook_secret}``.
+	 */
+	public function merchant_rotate_link_webhook_secret( $merchant_key, $link_id ) {
+		return $this->post(
+			'/v1/links/' . rawurlencode( $link_id ) . '/webhook/rotate-secret',
+			array(),
+			$this->merchant_headers( $merchant_key )
+		);
+	}
+
+	private function merchant_headers( $merchant_key ) {
+		return array( 'Authorization' => 'Bearer ' . $merchant_key );
+	}
+
+	// ------------------------------------------------------------------
 	// Internal HTTP helpers
 	// ------------------------------------------------------------------
 

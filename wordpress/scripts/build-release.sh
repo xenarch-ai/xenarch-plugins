@@ -32,6 +32,7 @@ cp "$PLUGIN_DIR/readme.txt"    "$STAGE_DIR/"
 cp "$PLUGIN_DIR/LICENSE"       "$STAGE_DIR/"
 cp "$PLUGIN_DIR/uninstall.php" "$STAGE_DIR/"
 cp -r "$PLUGIN_DIR/includes"   "$STAGE_DIR/includes"
+mkdir -p "$STAGE_DIR/assets" && cp -r "$PLUGIN_DIR/assets/js" "$STAGE_DIR/assets/js"
 
 mkdir -p "$STAGE_DIR/admin-ui/dist"
 cp -r "$PLUGIN_DIR/admin-ui/dist/"* "$STAGE_DIR/admin-ui/dist/"

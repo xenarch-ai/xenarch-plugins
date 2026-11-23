@@ -109,6 +109,8 @@ class Xenarch_Admin {
 			'settings'  => $this->get_initial_settings(),
 			'pluginUrl' => XENARCH_PLUGIN_URL,
 			'version'   => XENARCH_VERSION,
+			// XEN-681: show the WooCommerce Checkout tab.
+			'wooActive' => class_exists( 'WooCommerce' ),
 		);
 		echo '<div class="wrap xenarch-wrap">';
 		echo '<div class="xenarch-page-container">';

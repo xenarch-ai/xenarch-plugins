@@ -37,3 +37,10 @@ delete_option( 'xenarch_bot_categories' );
 delete_option( 'xenarch_bot_overrides' );
 delete_option( 'xenarch_wallet_type' );
 delete_option( 'xenarch_wallet_network' );
+
+// XEN-681: WooCommerce checkout.
+delete_option( 'xenarch_woo_link_id' );
+delete_option( 'xenarch_woo_pay_to' );
+delete_option( 'xenarch_woo_merchant_key' );
+delete_option( 'xenarch_woo_webhook_secret' );
+delete_option( 'woocommerce_xenarch_settings' );

@@ -8,6 +8,7 @@ export interface XenarchAdmin {
   settings: Settings
   pluginUrl: string
   version: string
+  wooActive?: boolean
 }
 
 export interface Settings {
@@ -100,4 +101,21 @@ export interface CategoryBreakdownItem {
 
 export interface CategoryBreakdownResponse {
   categories: CategoryBreakdownItem[]
+}
+
+// XEN-681 — WooCommerce "Crypto: USDC" checkout. Plugin-local status from
+// /xenarch/v1/woo. Never carries the merchant key or webhook secret.
+export interface WooStatus {
+  woo_active: boolean
+  currency: string
+  currency_ok: boolean
+  connected: boolean
+  enabled: boolean
+  title: string
+  link_id: string
+  link_url: string
+  pay_to: string
+  key_preview: string
+  webhook_url: string
+  dashboard_url: string
 }

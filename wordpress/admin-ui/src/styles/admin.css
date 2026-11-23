@@ -303,6 +303,7 @@ w3m-button, w3m-connect-button, w3m-account-button {
 #xenarch-admin .unit { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--xn-muted); }
 
 #xenarch-admin input[type="text"],
+#xenarch-admin input[type="password"],
 #xenarch-admin input[type="number"] {
   background: var(--xn-input-bg); border: 1px solid var(--xn-input-border);
   border-radius: var(--xn-radius-md); color: var(--xn-fg);
@@ -310,10 +311,12 @@ w3m-button, w3m-connect-button, w3m-account-button {
   padding: 8px 12px; height: 38px; box-sizing: border-box;
 }
 #xenarch-admin input[type="text"]:focus,
+#xenarch-admin input[type="password"]:focus,
 #xenarch-admin input[type="number"]:focus { outline: none; border-color: var(--xn-input-focus); }
 #xenarch-admin input::placeholder { color: var(--xn-muted); }
 #xenarch-admin input.price { width: 80px; text-align: right; }
 #xenarch-admin input.path { flex: 1; }
+#xenarch-admin input.wide { flex: 1; min-width: 0; }
 #xenarch-admin input.token-input { width: 100%; height: 42px; font-size: 12.5px; }
 
 #xenarch-admin .rule {
@@ -663,3 +666,11 @@ w3m-button, w3m-connect-button, w3m-account-button {
   border-radius: var(--xn-radius-card); padding: 32px 24px; text-align: center;
   color: var(--xn-secondary);
 }
+
+/* XEN-681 — Checkout tab notes */
+#xenarch-admin .woo-note {
+  font-size: 12px; color: var(--xn-secondary); margin-top: 10px; line-height: 1.5;
+}
+#xenarch-admin .woo-note a { text-decoration: underline; }
+#xenarch-admin .woo-steps { margin: 0 0 16px 18px; padding: 0; font-size: 13px; color: var(--xn-secondary); line-height: 1.7; }
+#xenarch-admin .woo-steps a { text-decoration: underline; }
