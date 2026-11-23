@@ -185,6 +185,9 @@ Xenarch complements Cloudflare's x402 pay-per-crawl tooling. Both use the same x
 
 == Changelog ==
 
+= 1.12.0 =
+* New: WooCommerce payment option "Crypto: USDC". Buyers pay the order total in USDC on Base from their own wallet, straight to your wallet, on the Xenarch pay page. The order moves to Processing on its own when the payment lands (signed webhook, amount checked against the order total; underpaid orders go on-hold). Set it up under Settings → /xenarch → Checkout with a merchant key and a reusable open-amount pay link. Works with the classic and the block checkout. (XEN-681)
+
 = 1.7.4 =
 * Fix: payment-proof verify() now distinguishes transport errors from 4xx platform responses. Previously any wp_error path was treated as "platform unreachable, fail open" — but the Xenarch API helper also returns a wp_error for legitimate 4xx rejections (e.g. duplicate gate-tx pair pre-XEN-386). Fail-open on 4xx silently served content without the platform recording the payment, causing the seller-side activity feed to under-report real revenue. Now: 4xx → fail closed (cache 'invalid' for 60s); 5xx / transport → fail open (cache 'valid' for 60s). (XEN-386)
 

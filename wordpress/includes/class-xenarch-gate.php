@@ -345,6 +345,15 @@ class Xenarch_Gate {
 			return $response;
 		}
 
+		// XEN-681: the platform's payment webhook is a machine client by
+		// definition (httpx UA) and must never be charged. It authenticates
+		// with its own HMAC signature in Xenarch_Woo_Webhook. Matched on the
+		// route, so it works with and without pretty permalinks.
+		if ( is_a( $request, 'WP_REST_Request' )
+			&& '/' . Xenarch_Rest::NAMESPACE . '/woo/webhook' === $request->get_route() ) {
+			return $response;
+		}
+
 		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '/';
 		if ( 0 === strpos( $request_uri, '/.well-known/' ) || '/pay.json' === $request_uri ) {
 			return $response;

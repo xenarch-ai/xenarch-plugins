@@ -3,7 +3,7 @@
  * Plugin Name: Xenarch
  * Plugin URI:  https://xenarch.com/wordpress
  * Description: Monetize AI bot traffic on your WordPress site. Xenarch detects AI agents and charges micropayments for content access via the x402 protocol.
- * Version:     1.11.0
+ * Version:     1.12.0
  * Author:      Xenarch
  * Author URI:  https://xenarch.com
  * License:     GPL-2.0+
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'XENARCH_VERSION', '1.11.0' );
+define( 'XENARCH_VERSION', '1.12.0' );
 define( 'XENARCH_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'XENARCH_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'XENARCH_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
@@ -80,6 +80,10 @@ require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-gate.php';
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-gate-response.php';
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-discovery.php';
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-rest.php';
+require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-woo.php';
+
+// XEN-681: WooCommerce checkout (HPOS + Checkout Blocks compatibility).
+add_action( 'before_woocommerce_init', array( 'Xenarch_Woo', 'declare_compatibility' ) );
 
 /**
  * Activation hook. Post-XEN-380 the plugin is a thin window into the
@@ -135,6 +139,9 @@ function xenarch_init() {
 	new Xenarch_Gate();
 	new Xenarch_Discovery();
 	new Xenarch_Rest();
+
+	// XEN-681: "Crypto: USDC" WooCommerce payment option (no-op without WooCommerce).
+	Xenarch_Woo::init();
 }
 add_action( 'plugins_loaded', 'xenarch_init' );
 
