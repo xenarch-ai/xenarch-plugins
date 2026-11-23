@@ -125,7 +125,7 @@ export function App() {
   }
 
   const tabs = visibleTabs(features, settings.has_site)
-  const tab: Tab = activeTab && tabs.includes(activeTab) ? activeTab : tabs[0]
+  const tab: Tab = activeTab && tabs.includes(activeTab) ? activeTab : (tabs[0] ?? 'features')
 
   return (
     <div className="xenarch-app">
