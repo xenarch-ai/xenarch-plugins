@@ -67,8 +67,8 @@ AI bots scrape your Joomla site for free. Xenarch detects 135+ AI crawlers, sort
 <h3>What You Get</h3>
 
 <ul>
-  <li><strong>Non-custodial payments</strong> — Every micropayment goes directly to your wallet through a smart contract on Base. Xenarch never holds your funds, not even for a second.</li>
-  <li><strong>0% platform fee</strong> — The smart contract is immutable. 100% of what the bot pays goes to you.</li>
+  <li><strong>Non-custodial</strong> — Every payment goes directly to your wallet on Base. Xenarch never holds your funds.</li>
+  <li><strong>1% per payment</strong> — Xenarch bills you monthly.</li>
   <li><strong>Cash out to your bank</strong> — Created a wallet through the extension? Cash out USDC to your bank account anytime via Coinbase Offramp. You see fees and the exact payout amount before confirming.</li>
   <li><strong>x402 protocol</strong> — Built on the open x402 standard (HTTP 402 + USDC on Base), backed by the x402 Foundation with Coinbase, Cloudflare, Google, and Visa. Compatible with Cloudflare's pay-per-crawl tooling.</li>
   <li><strong>Flexible pricing</strong> — Set a default price per page, then add URL-specific rules. Charge $0.01 for premium articles, $0.003 for blog posts, or make /public/ pages free. Micropayments start at $0.001.</li>
@@ -225,7 +225,7 @@ Version 1.0.0 — April 2026
 - Dark and light theme support in admin UI
 - HTTP 402 payment gate with x402 protocol support
 - USDC micropayments on Base L2
-- Non-custodial — payments route directly to publisher wallet via smart contract
-- 0% platform fee
+- Non-custodial: USDC goes straight to publisher wallets
+- Publishers pay 1% per payment
 - Joomla package: com_xenarch component + plg_system_xenarch + plg_webservices_xenarch
 ```

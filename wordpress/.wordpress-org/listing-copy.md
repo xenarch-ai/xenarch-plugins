@@ -54,7 +54,7 @@ Everything is ready in under 60 seconds.
 == Why Xenarch ==
 
 * **Non-custodial** — Payments settle as a direct USDC transfer from the agent wallet to your wallet on Base. No intermediary contract. Xenarch never holds your funds.
-* **0% platform fee** — What the agent pays is what you receive. The contract is immutable.
+* **1% per payment** — The agent's payment lands in your wallet, and Xenarch bills you 1% monthly.
 * **Cash out to your bank** — Created a wallet with Xenarch? Cash out USDC to your bank account anytime via Coinbase Offramp. See fees before you confirm.
 * **x402 Protocol** — Built on the open x402 standard (HTTP 402 + USDC on Base), backed by Coinbase, Cloudflare, Google, and Visa via the x402 Foundation.
 * **Pay-per-crawl pricing** — Set your price per page. Micropayments from $0.001 per request. No subscriptions, no minimums.
@@ -180,7 +180,7 @@ No. Fully non-custodial. Payments settle as a direct USDC transfer on Base, rout
 
 = Is there a platform fee? =
 
-Zero. 0%, structurally. Xenarch is not in the payment flow — 100% of every payment lands in your wallet.
+Yes, you pay Xenarch 1% of each payment, billed monthly. Every payment lands in your wallet in full. Xenarch never holds the funds.
 
 = Does this work with robots.txt? =
 
