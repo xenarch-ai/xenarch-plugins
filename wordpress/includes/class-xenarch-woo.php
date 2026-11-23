@@ -52,8 +52,10 @@ class Xenarch_Woo {
 	/**
 	 * Hook everything. Called on plugins_loaded; a no-op without WooCommerce
 	 * except the admin REST status route, which reports "not installed".
+	 *
+	 * @param bool $offer_option Register the payment option (XEN-684 feature switch).
 	 */
-	public static function init() {
+	public static function init( $offer_option = true ) {
 		add_action( 'rest_api_init', array( __CLASS__, 'register_routes' ) );
 
 		if ( ! class_exists( 'WC_Payment_Gateway' ) ) {
@@ -62,6 +64,12 @@ class Xenarch_Woo {
 		require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-woo-gateway.php';
 		require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-woo-webhook.php';
 
+		// XEN-684: crypto checkout switched off → the payment option isn't
+		// registered (classic or Blocks checkout). The webhook route above
+		// stays so an order paid before the switch still completes.
+		if ( ! $offer_option ) {
+			return;
+		}
 		add_filter( 'woocommerce_payment_gateways', array( __CLASS__, 'add_gateway' ) );
 		add_action( 'woocommerce_blocks_payment_method_type_registration', array( __CLASS__, 'register_blocks' ) );
 	}

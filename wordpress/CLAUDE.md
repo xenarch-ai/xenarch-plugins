@@ -10,6 +10,16 @@ Mockups live in `mockups/`:
 
 Three tabs: **Earnings** | **Settings** | **Status**.
 
+### Features switch (XEN-684, v1.13.0)
+
+Two switches, `xenarch_feature_gating` and `xenarch_feature_checkout` (`'1'`/`'0'`), managed by `includes/class-xenarch-features.php` and the **Features** tab (always last).
+
+- Never written = not chosen yet → a fresh install shows the first-run chooser (WooCommerce active + no site token → checkout preselected only). Until chosen, runtime behaves like v1.12.0.
+- Upgrades from an older version are adopted with both on (`xenarch_run_upgrade_migrations`).
+- Gating off: `Xenarch_Gate` and `Xenarch_Discovery` aren't constructed (no 402s, no detection, no pay.json/xenarch.md); Earnings/Settings/Status tabs hidden. Platform gating settings are untouched, so switching back restores them.
+- Checkout off: the WooCommerce gateway/Blocks method isn't registered and the Checkout tab is hidden. Connection options and the webhook route stay.
+- The header tagline comes from `Xenarch_Features::tagline()` and the React app rewrites `#xenarch-page-subtitle` on change.
+
 ### Onboarding (no wallet configured)
 
 The wallet IS the registration. No email, no password, no API keys.

@@ -7,6 +7,7 @@ import type {
   GatedCategories,
   PricingRule,
   WooStatus,
+  Features,
 } from './types'
 
 function getConfig() {
@@ -139,4 +140,9 @@ export function connectWoo(body: { merchant_key: string; link: string }): Promis
 
 export function disconnectWoo(): Promise<WooStatus> {
   return apiFetch<WooStatus>('/woo/disconnect', { method: 'POST' })
+}
+
+// XEN-684 — Features switch.
+export function saveFeatures(body: { gating?: boolean; checkout?: boolean }): Promise<Features> {
+  return apiFetch<Features>('/features', { method: 'POST', body: JSON.stringify(body) })
 }

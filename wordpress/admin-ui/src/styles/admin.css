@@ -674,3 +674,6 @@ w3m-button, w3m-connect-button, w3m-account-button {
 #xenarch-admin .woo-note a { text-decoration: underline; }
 #xenarch-admin .woo-steps { margin: 0 0 16px 18px; padding: 0; font-size: 13px; color: var(--xn-secondary); line-height: 1.7; }
 #xenarch-admin .woo-steps a { text-decoration: underline; }
+
+/* XEN-684 — Features switch: a toggle that can't be used right now. */
+#xenarch-admin .toggle.is-disabled { opacity: 0.5; cursor: not-allowed; }

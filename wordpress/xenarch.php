@@ -3,7 +3,7 @@
  * Plugin Name: Xenarch
  * Plugin URI:  https://xenarch.com/wordpress
  * Description: Monetize AI bot traffic on your WordPress site. Xenarch detects AI agents and charges micropayments for content access via the x402 protocol.
- * Version:     1.12.0
+ * Version:     1.13.0
  * Author:      Xenarch
  * Author URI:  https://xenarch.com
  * License:     GPL-2.0+
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'XENARCH_VERSION', '1.12.0' );
+define( 'XENARCH_VERSION', '1.13.0' );
 define( 'XENARCH_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'XENARCH_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'XENARCH_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
@@ -52,6 +52,10 @@ if ( ! function_exists( 'xenarch_bypass_cache_for_payment_replay' ) ) {
 			&& empty( $_SERVER['HTTP_X_XENARCH_GATE_ID'] ) ) {
 			return;
 		}
+		// XEN-684: bot gating switched off → leave caching alone.
+		if ( function_exists( 'get_option' ) && '0' === (string) get_option( 'xenarch_feature_gating', '1' ) ) {
+			return;
+		}
 		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
 			define( 'DONOTCACHEPAGE', true );
 		}
@@ -81,6 +85,7 @@ require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-gate-response.php';
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-discovery.php';
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-rest.php';
 require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-woo.php';
+require_once XENARCH_PLUGIN_DIR . 'includes/class-xenarch-features.php';
 
 // XEN-681: WooCommerce checkout (HPOS + Checkout Blocks compatibility).
 add_action( 'before_woocommerce_init', array( 'Xenarch_Woo', 'declare_compatibility' ) );
@@ -117,8 +122,11 @@ function xenarch_activate() {
 	// wp_xenarch_bot_log table from <=1.8.0 is dropped by
 	// xenarch_run_upgrade_migrations on the next plugins_loaded.
 
-	$discovery = new Xenarch_Discovery();
-	$discovery->add_rewrite_rules();
+	// XEN-684: discovery URLs exist only while bot gating is on.
+	if ( Xenarch_Features::gating() ) {
+		$discovery = new Xenarch_Discovery();
+		$discovery->add_rewrite_rules();
+	}
 	flush_rewrite_rules();
 }
 register_activation_hook( __FILE__, 'xenarch_activate' );
@@ -136,12 +144,21 @@ function xenarch_init() {
 	// Frontend l.js loading — disabled until cdn.xenarch.dev is live.
 	// new Xenarch_Frontend();
 
-	new Xenarch_Gate();
-	new Xenarch_Discovery();
+	// XEN-684: with bot gating switched off nothing gating-related is
+	// hooked — no 402s, no bot-detection calls, no discovery docs — so the
+	// site behaves as if gating were never installed.
+	if ( Xenarch_Features::gating() ) {
+		new Xenarch_Gate();
+		new Xenarch_Discovery();
+	}
 	new Xenarch_Rest();
+	Xenarch_Features::init();
 
-	// XEN-681: "Crypto: USDC" WooCommerce payment option (no-op without WooCommerce).
-	Xenarch_Woo::init();
+	// XEN-681: "Crypto: USDC" WooCommerce payment option (no-op without
+	// WooCommerce). XEN-684: the option is only registered while the
+	// checkout feature is on; the admin routes and the webhook stay, so
+	// the connection is kept and in-flight orders still get marked paid.
+	Xenarch_Woo::init( Xenarch_Features::checkout() );
 }
 add_action( 'plugins_loaded', 'xenarch_init' );
 
@@ -156,9 +173,16 @@ add_action( 'plugins_loaded', 'xenarch_init' );
  * users yet) we hard-drop without a deprecation cycle.
  */
 function xenarch_run_upgrade_migrations() {
-	$installed = get_option( 'xenarch_installed_version', '0.0.0' );
+	$installed_raw = get_option( 'xenarch_installed_version', false );
+	$installed     = false === $installed_raw ? '0.0.0' : $installed_raw;
 	if ( version_compare( $installed, XENARCH_VERSION, '>=' ) ) {
 		return;
+	}
+	// XEN-684: an install that predates the Features switch keeps both
+	// features on (no surprise change). A fresh install has no stored
+	// version and no site token, and gets the first-run chooser instead.
+	if ( false !== $installed_raw || '' !== (string) get_option( 'xenarch_site_token', '' ) ) {
+		Xenarch_Features::adopt_existing_install();
 	}
 	global $wpdb;
 	$table = $wpdb->prefix . 'xenarch_bot_log';
