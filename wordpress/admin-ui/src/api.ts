@@ -130,7 +130,11 @@ export function fetchWoo(): Promise<WooStatus> {
   return apiFetch<WooStatus>('/woo')
 }
 
-export function saveWoo(body: { enabled?: boolean; title?: string }): Promise<WooStatus> {
+export function saveWoo(body: {
+  enabled?: boolean
+  title?: string
+  networks?: Record<string, string[]>
+}): Promise<WooStatus> {
   return apiFetch<WooStatus>('/woo', { method: 'POST', body: JSON.stringify(body) })
 }
 

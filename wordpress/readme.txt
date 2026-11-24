@@ -4,7 +4,7 @@ Tags: ai bot detection, ai scraping, ai crawlers, paywall, micropayments
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.13.0
+Stable tag: 1.14.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -184,6 +184,12 @@ Xenarch complements Cloudflare's x402 pay-per-crawl tooling. Both use the same x
 7. Terminal showing HTTP 402 response with x-payment headers and JSON gate payload.
 
 == Changelog ==
+
+= 1.14.0 =
+* New: buyers can pay in USDC or USDT on Ethereum and BNB Chain, as well as USDC on Base. Turn each one on under Settings → /xenarch → Checkout → Networks; Xenarch checks your receiving address can take payments there.
+* New: the pay page has a "My wallet" tab (finds a balance that covers the order across networks, with each network fee) and an "Exchange" tab (an exact amount to send from an exchange, with a QR code).
+* New: a payment that arrives short (the buyer's exchange kept its withdrawal fee) puts the order on hold with both amounts in the note, so you can ask for the rest or refund.
+* New: the order-received page shows the payment: amount, network, transaction and time.
 
 = 1.13.0 =
 * New: Features switch under Settings → /xenarch → Features. Turn "Bot gating" and "Crypto checkout (WooCommerce)" on or off on their own. A new install asks which you want; with WooCommerce active and no bot gating set up it suggests checkout only. Screens of a feature that is off are hidden and the header adapts.

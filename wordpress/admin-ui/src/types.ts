@@ -129,4 +129,7 @@ export interface WooStatus {
   key_preview: string
   webhook_url: string
   dashboard_url: string
+  // XEN-678: networks/coins on beyond USDC on Base, as the platform confirmed.
+  networks: Record<string, string[]>
+  network_choices: Array<{ key: string; name: string; coins: string[] }>
 }

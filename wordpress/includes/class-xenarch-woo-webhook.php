@@ -7,8 +7,9 @@
  *   1. HMAC check of ``X-Xenarch-Signature`` (t.body, ±300 s) with the
  *      link's webhook secret → 401 on failure.
  *   2. ``link_id`` must be the connected link and ``data.to`` its merchant
- *      wallet. The link is USDC on Base (checked at connect), and the
- *      platform only books USDC Transfers to that wallet on Base.
+ *      wallet. XEN-678: ``data.network`` / ``data.token`` say where it was
+ *      paid (USDC on Base, or USDC/USDT on a network the store turned on);
+ *      amounts are 6-decimal units of that dollar coin either way.
  *   3. ``data.client_reference_id`` = ``wc:<order id>:<order key>`` → the
  *      order must exist, use this gateway and carry that key.
  *   4. Amount: ``value_micro_usdc`` (what actually moved on-chain) must be
@@ -74,13 +75,20 @@ class Xenarch_Woo_Webhook {
 			return self::reply( 200, 'ignored_wrong_recipient' );
 		}
 
+		$network = isset( $data['network'] ) ? (string) $data['network'] : 'base';
+		$token   = isset( $data['token'] ) ? strtoupper( (string) $data['token'] ) : 'USDC';
+		if ( ! isset( Xenarch_Woo::NETWORKS[ $network ] ) || ! in_array( $token, Xenarch_Woo::NETWORKS[ $network ][1], true ) ) {
+			// A network/coin this plugin doesn't know: never book it blind.
+			return self::reply( 200, 'ignored_network' );
+		}
+
 		list( $order_id, $order_key ) = $ref;
 		$lock = 'xenarch_woo_order_' . $order_id;
 		if ( ! self::lock( $lock ) ) {
 			return self::reply( 503, 'busy' ); // Platform retries.
 		}
 		try {
-			return self::apply( $order_id, $order_key, $tx, $value );
+			return self::apply( $order_id, $order_key, $tx, $value, $network, $token );
 		} finally {
 			self::unlock( $lock );
 		}
@@ -89,7 +97,8 @@ class Xenarch_Woo_Webhook {
 	/**
 	 * Book one verified transfer onto its order.
 	 */
-	private static function apply( $order_id, $order_key, $tx, $value ) {
+	private static function apply( $order_id, $order_key, $tx, $value, $network = 'base', $token = 'USDC' ) {
+		$where = sprintf( '%s on %s', $token, Xenarch_Woo::network_name( $network ) );
 		$order = wc_get_order( $order_id );
 		if ( ! $order || ! hash_equals( (string) $order->get_order_key(), $order_key ) ) {
 			return self::reply( 200, 'ignored_unknown_order' );
@@ -123,7 +132,7 @@ class Xenarch_Woo_Webhook {
 			$order->add_order_note(
 				sprintf(
 					/* translators: 1: tx hash */
-					__( 'Xenarch: a USDC payment arrived (tx %1$s) but this order is not in USD, so it was not marked paid. Check it by hand.', 'xenarch' ),
+					__( 'Xenarch: a dollar-coin payment arrived (tx %1$s) but this order is not in USD, so it was not marked paid. Check it by hand.', 'xenarch' ),
 					$tx
 				)
 			);
@@ -131,7 +140,7 @@ class Xenarch_Woo_Webhook {
 		}
 		$paid_str = Xenarch_Woo::micro_to_decimal( $value );
 		$due_str  = Xenarch_Woo::micro_to_decimal( $order_micro );
-		$tx_link  = 'https://basescan.org/tx/' . $tx;
+		$tx_link  = Xenarch_Woo::explorer_url( $network, $tx );
 
 		$order->add_meta_data( Xenarch_Woo::META_TX, $tx, false );
 
@@ -141,14 +150,20 @@ class Xenarch_Woo_Webhook {
 			$order->add_order_note(
 				sprintf(
 					/* translators: 1: amount, 2: tx hash, 3: explorer link */
-					__( 'Xenarch: another USDC payment of %1$s arrived after this order was already paid (tx %2$s, %3$s). Refund it from your wallet if needed.', 'xenarch' ),
-					$paid_str,
+					__( 'Xenarch: another payment of %1$s arrived after this order was already paid (tx %2$s, %3$s). Refund it from your wallet if needed.', 'xenarch' ),
+					$paid_str . ' ' . $where,
 					$tx,
 					$tx_link
 				)
 			);
 			return self::reply( 200, 'extra_payment' );
 		}
+
+		// XEN-678: what the order-received receipt shows.
+		$order->update_meta_data( '_xenarch_network', $network );
+		$order->update_meta_data( '_xenarch_token', $token );
+		$order->update_meta_data( '_xenarch_paid_micro', (string) $value );
+		$order->update_meta_data( '_xenarch_paid_at', (string) time() );
 
 		if ( $value >= $order_micro ) {
 			// payment_complete() saves the tx meta together with the status,
@@ -164,8 +179,8 @@ class Xenarch_Woo_Webhook {
 				$order->add_order_note(
 					sprintf(
 						/* translators: 1: amount, 2: order status, 3: tx hash */
-						__( 'Xenarch: received %1$s USDC on Base, but the order is %2$s so it was not marked paid. Tx %3$s', 'xenarch' ),
-						$paid_str,
+						__( 'Xenarch: received %1$s, but the order is %2$s so it was not marked paid. Tx %3$s', 'xenarch' ),
+						$paid_str . ' ' . $where,
 						$order->get_status(),
 						$tx
 					)
@@ -178,8 +193,8 @@ class Xenarch_Woo_Webhook {
 			$order->add_order_note(
 				sprintf(
 					/* translators: 1: amount paid, 2: amount due, 3: tx hash, 4: explorer link */
-					__( 'Xenarch: paid %1$s USDC on Base (order total %2$s). Tx %3$s — %4$s', 'xenarch' ),
-					$paid_str,
+					__( 'Xenarch: paid %1$s (order total %2$s). Tx %3$s — %4$s', 'xenarch' ),
+					$paid_str . ' ' . $where,
 					$due_str,
 					$tx,
 					$tx_link
@@ -190,8 +205,8 @@ class Xenarch_Woo_Webhook {
 
 		$note = sprintf(
 			/* translators: 1: amount paid, 2: amount due, 3: tx hash, 4: explorer link */
-			__( 'Xenarch: underpaid. Received %1$s USDC on Base, order total is %2$s. Tx %3$s — %4$s', 'xenarch' ),
-			$paid_str,
+			__( 'Xenarch: underpaid. Received %1$s, order total is %2$s. The buyer\'s exchange probably kept its withdrawal fee: ask for the rest or refund. Tx %3$s — %4$s', 'xenarch' ),
+			$paid_str . ' ' . $where,
 			$due_str,
 			$tx,
 			$tx_link

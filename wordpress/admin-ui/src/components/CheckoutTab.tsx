@@ -80,6 +80,28 @@ export function CheckoutTab() {
     setSaving(false)
   }, [title, apply])
 
+  // XEN-678: USDC/USDT on more networks. The platform checks the receiving
+  // address can take payments on each one, so a refusal comes back here.
+  const [netSaving, setNetSaving] = useState<string | null>(null)
+  const [netMsg, setNetMsg] = useState<string | null>(null)
+  const toggleNetwork = useCallback(async (net: string, coin: string) => {
+    if (!woo || netSaving) return
+    const cur = { ...(woo.networks || {}) }
+    const coins = new Set(cur[net] || [])
+    if (coins.has(coin)) coins.delete(coin)
+    else coins.add(coin)
+    if (coins.size) cur[net] = [...coins]
+    else delete cur[net]
+    setNetSaving(`${net}:${coin}`)
+    setNetMsg(null)
+    try {
+      apply(await api.saveWoo({ networks: cur }))
+    } catch (e) {
+      setNetMsg(e instanceof Error ? e.message : 'Save failed.')
+    }
+    setNetSaving(null)
+  }, [woo, netSaving, apply])
+
   const disconnect = useCallback(async () => {
     setDisconnecting(true)
     setSaveMsg(null)
@@ -268,6 +290,37 @@ export function CheckoutTab() {
             </button>
             {saveMsg ? <span className="muted">{saveMsg}</span> : null}
           </div>
+
+          <div className="section-head" style={{ marginTop: 24 }}>
+            <div className="section-title">Networks</div>
+            <div className="section-desc">USDC on Base is always on. Buyers can also pay from a wallet or an exchange on these.</div>
+          </div>
+          {(woo.network_choices || []).map((n) =>
+            n.coins.map((coin) => {
+              const on = !!woo.networks?.[n.key]?.includes(coin)
+              const busy = netSaving === `${n.key}:${coin}`
+              return (
+                <div className="master" key={`${n.key}:${coin}`}>
+                  <div className="left">
+                    <div className="master-label">{coin} on {n.name}</div>
+                    <div className="master-desc">{busy ? 'Saving…' : on ? 'Offered at checkout.' : 'Off.'}</div>
+                  </div>
+                  <div
+                    className={`toggle${on ? '' : ' off'}`}
+                    role="switch"
+                    aria-checked={on}
+                    aria-label={`${coin} on ${n.name}`}
+                    tabIndex={0}
+                    onClick={() => void toggleNetwork(n.key, coin)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); void toggleNetwork(n.key, coin) } }}
+                  >
+                    <div className="dot" />
+                  </div>
+                </div>
+              )
+            }),
+          )}
+          {netMsg ? <div className="onboarding-error">{netMsg}</div> : null}
 
           <div className="woo-note">
             Your logo and brand colour on the pay page come from your Xenarch profile.{' '}
