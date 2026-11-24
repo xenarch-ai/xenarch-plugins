@@ -201,6 +201,22 @@ class Xenarch_Woo {
 		return self::DEFAULT_TITLE;
 	}
 
+	/** XEN-678: "USDC" or "USDC or USDT", from what the store takes. */
+	public static function coins_label() {
+		foreach ( self::networks() as $coins ) {
+			if ( in_array( 'USDT', $coins, true ) ) {
+				return 'USDC or USDT';
+			}
+		}
+		return 'USDC';
+	}
+
+	/** XEN-678: the buyer-facing line under the payment option. */
+	public static function buyer_description() {
+		/* translators: %s: USDC, or USDC or USDT */
+		return sprintf( __( 'Pay in %s from your own wallet or an exchange. You will be taken to a secure Xenarch page to pay.', 'xenarch' ), self::coins_label() );
+	}
+
 	/** XEN-678: { network: [coins] } beyond Base USDC, as last confirmed. */
 	public static function networks() {
 		$v   = get_option( self::OPT_NETWORKS, array() );

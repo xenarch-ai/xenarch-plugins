@@ -39,8 +39,8 @@ final class Xenarch_Woo_Blocks extends AbstractPaymentMethodType {
 	public function get_payment_method_data() {
 		return array(
 			'title'       => Xenarch_Woo::title(),
-			'description' => __( 'Pay in USDC on Base from your own wallet. You will be taken to a secure Xenarch page to pay.', 'xenarch' ),
-			'button'      => __( 'Pay with USDC', 'xenarch' ),
+			'description' => Xenarch_Woo::buyer_description(),
+			'button'      => __( 'Pay with crypto', 'xenarch' ),
 			'supports'    => array( 'products' ),
 		);
 	}

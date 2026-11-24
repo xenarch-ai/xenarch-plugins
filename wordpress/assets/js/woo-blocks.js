@@ -28,7 +28,7 @@
 		edit: el( Content ),
 		canMakePayment: function () { return true; },
 		ariaLabel: title,
-		placeOrderButtonLabel: decode( data.button || 'Pay with USDC' ),
+		placeOrderButtonLabel: decode( data.button || 'Pay with crypto' ),
 		supports: { features: data.supports || [ 'products' ] }
 	} );
 } )();
