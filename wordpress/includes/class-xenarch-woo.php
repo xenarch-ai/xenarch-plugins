@@ -45,6 +45,18 @@ class Xenarch_Woo {
 	const META_TX          = '_xenarch_tx_hash';
 	const REF_PREFIX       = 'wc';
 	const DEFAULT_TITLE    = 'Crypto: USDC';
+	// XEN-678: networks and coins the store takes beyond USDC on Base, as the
+	// platform last confirmed them: { network: [ 'USDC', 'USDT' ] }.
+	const OPT_NETWORKS     = 'xenarch_woo_networks';
+	/**
+	 * XEN-678: what a store can turn on, in the order the checkout lists it.
+	 * name, coins, explorer tx URL (sprintf %s).
+	 */
+	const NETWORKS = array(
+		'base'     => array( 'Base', array( 'USDC' ), 'https://basescan.org/tx/%s' ),
+		'ethereum' => array( 'Ethereum', array( 'USDC', 'USDT' ), 'https://etherscan.io/tx/%s' ),
+		'bnb'      => array( 'BNB Chain', array( 'USDC', 'USDT' ), 'https://bscscan.com/tx/%s' ),
+	);
 
 	/** Webhook events the receiver handles. */
 	const EVENTS = array( 'payment.confirmed', 'payment.underpaid', 'payment.overpaid' );
@@ -141,7 +153,59 @@ class Xenarch_Woo {
 	public static function title() {
 		$s     = self::gateway_settings();
 		$title = isset( $s['title'] ) ? trim( (string) $s['title'] ) : '';
-		return '' !== $title ? $title : self::DEFAULT_TITLE;
+		if ( '' !== $title ) {
+			return $title;
+		}
+		// XEN-678: the demo's label once USDT is on.
+		foreach ( self::networks() as $coins ) {
+			if ( in_array( 'USDT', $coins, true ) ) {
+				return 'Crypto: USDC or USDT';
+			}
+		}
+		return self::DEFAULT_TITLE;
+	}
+
+	/** XEN-678: { network: [coins] } beyond Base USDC, as last confirmed. */
+	public static function networks() {
+		$v   = get_option( self::OPT_NETWORKS, array() );
+		$out = array();
+		if ( ! is_array( $v ) ) {
+			return $out;
+		}
+		foreach ( $v as $key => $coins ) {
+			if ( isset( self::NETWORKS[ $key ] ) && 'base' !== $key && is_array( $coins ) ) {
+				$ok = array_values( array_intersect( self::NETWORKS[ $key ][1], $coins ) );
+				if ( $ok ) {
+					$out[ $key ] = $ok;
+				}
+			}
+		}
+		return $out;
+	}
+
+	/** Mirror the platform's accepted_networks into the local option. */
+	private static function store_networks( $accepted ) {
+		$out = array();
+		if ( is_array( $accepted ) ) {
+			foreach ( $accepted as $key => $spec ) {
+				if ( isset( self::NETWORKS[ $key ], $spec['tokens'] ) && is_array( $spec['tokens'] ) ) {
+					$out[ $key ] = array_values( array_intersect( self::NETWORKS[ $key ][1], $spec['tokens'] ) );
+				}
+			}
+		}
+		self::set_private_option( self::OPT_NETWORKS, $out );
+		return $out;
+	}
+
+	/** "Ethereum", "BNB Chain"; Base for anything unknown. */
+	public static function network_name( $key ) {
+		return isset( self::NETWORKS[ $key ] ) ? self::NETWORKS[ $key ][0] : 'Base';
+	}
+
+	/** Explorer link for a tx on a network. */
+	public static function explorer_url( $key, $tx ) {
+		$fmt = isset( self::NETWORKS[ $key ] ) ? self::NETWORKS[ $key ][2] : self::NETWORKS['base'][2];
+		return sprintf( $fmt, rawurlencode( $tx ) );
 	}
 
 	/** USDC is a dollar token: the option is only offered in a USD store. */
@@ -334,6 +398,8 @@ class Xenarch_Woo {
 			'amount'              => rtrim( rtrim( self::micro_to_decimal( (int) $micro ), '0' ), '.' ),
 			'client_reference_id' => self::build_reference( $order->get_id(), $order->get_order_key() ),
 			'return_url'          => $order->get_checkout_order_received_url(),
+			// XEN-678: "Change payment method" on the pay page.
+			'cancel_url'          => $order->get_checkout_payment_url(),
 		);
 		return self::pay_base_url() . '/l/' . rawurlencode( self::link_id() ) . '?' . http_build_query( $args, '', '&', PHP_QUERY_RFC3986 );
 	}
@@ -403,6 +469,17 @@ class Xenarch_Woo {
 			'key_preview'   => '' !== $key ? substr( $key, 0, 8 ) . '…' . substr( $key, -4 ) : '',
 			'webhook_url'   => self::webhook_url(),
 			'dashboard_url' => self::dashboard_url(),
+			'networks'      => (object) self::networks(),
+			'network_choices' => array_map(
+				function ( $key ) {
+					return array(
+						'key'   => $key,
+						'name'  => self::NETWORKS[ $key ][0],
+						'coins' => self::NETWORKS[ $key ][1],
+					);
+				},
+				array_values( array_diff( array_keys( self::NETWORKS ), array( 'base' ) ) )
+			),
 		);
 	}
 
@@ -419,6 +496,36 @@ class Xenarch_Woo {
 				return self::error( 'not_connected', 'Connect a pay link before turning the option on.', 400 );
 			}
 			$settings['enabled'] = $body['enabled'] ? 'yes' : 'no';
+		}
+		if ( isset( $body['networks'] ) ) {
+			// XEN-678: the platform is the source of truth (it checks the
+			// receiving address can take payments on each network); store what
+			// it confirms.
+			if ( ! self::is_connected() ) {
+				return self::error( 'not_connected', 'Connect a pay link first.', 400 );
+			}
+			$want = array();
+			if ( is_array( $body['networks'] ) ) {
+				foreach ( $body['networks'] as $key => $coins ) {
+					$key = (string) $key;
+					if ( ! isset( self::NETWORKS[ $key ] ) || 'base' === $key || ! is_array( $coins ) ) {
+						continue;
+					}
+					$ok = array_values( array_intersect( self::NETWORKS[ $key ][1], array_map( 'strval', $coins ) ) );
+					if ( $ok ) {
+						$want[ $key ] = array( 'tokens' => $ok );
+					}
+				}
+			}
+			$res = ( new Xenarch_Api() )->merchant_put_link_networks(
+				(string) get_option( self::OPT_MERCHANT_KEY, '' ),
+				self::link_id(),
+				$want
+			);
+			if ( is_wp_error( $res ) ) {
+				return self::error( 'networks', $res->get_error_message(), 400 );
+			}
+			self::store_networks( isset( $res['accepted_networks'] ) ? $res['accepted_networks'] : array() );
 		}
 		if ( isset( $body['title'] ) ) {
 			$title = sanitize_text_field( (string) $body['title'] );
@@ -481,6 +588,9 @@ class Xenarch_Woo {
 		self::set_private_option( self::OPT_SECRET, $rot['webhook_secret'] );
 		self::set_private_option( self::OPT_LINK_ID, $link_id );
 		self::set_private_option( self::OPT_PAY_TO, strtolower( self::read_lit( $link['params'], 'to' ) ) );
+		// XEN-678: mirror what the link already takes (best effort).
+		$nets = $api->merchant_get_link_networks( $key, $link_id );
+		self::store_networks( ! is_wp_error( $nets ) && isset( $nets['accepted_networks'] ) ? $nets['accepted_networks'] : array() );
 
 		return new WP_REST_Response( self::snapshot(), 200 );
 	}
@@ -498,7 +608,7 @@ class Xenarch_Woo {
 		$settings            = self::gateway_settings();
 		$settings['enabled'] = 'no';
 		update_option( self::OPT_GATEWAY, $settings );
-		foreach ( array( self::OPT_MERCHANT_KEY, self::OPT_SECRET, self::OPT_LINK_ID, self::OPT_PAY_TO ) as $opt ) {
+		foreach ( array( self::OPT_MERCHANT_KEY, self::OPT_SECRET, self::OPT_LINK_ID, self::OPT_PAY_TO, self::OPT_NETWORKS ) as $opt ) {
 			delete_option( $opt );
 		}
 		return new WP_REST_Response( self::snapshot(), 200 );

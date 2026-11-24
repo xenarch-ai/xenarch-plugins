@@ -337,6 +337,38 @@ class Xenarch_Api {
 		);
 	}
 
+	/**
+	 * XEN-678 — which networks and coins the link takes beyond Base USDC
+	 * (whole-state replace on the platform; {} = Base only).
+	 *
+	 * @param string $merchant_key xm_live_* key.
+	 * @param string $link_id      Pay link id.
+	 * @param array  $networks     { network: { tokens: [ 'USDC', 'USDT' ] } }.
+	 * @return array|WP_Error ``{accepted_networks, networks}``.
+	 */
+	public function merchant_put_link_networks( $merchant_key, $link_id, $networks ) {
+		return $this->post(
+			'/v1/links/' . rawurlencode( $link_id ) . '/networks',
+			array( 'networks' => empty( $networks ) ? new stdClass() : $networks ),
+			$this->merchant_headers( $merchant_key ),
+			'PUT'
+		);
+	}
+
+	/**
+	 * XEN-678 — the link's accepted networks as the platform has them.
+	 *
+	 * @param string $merchant_key xm_live_* key.
+	 * @param string $link_id      Pay link id.
+	 * @return array|WP_Error
+	 */
+	public function merchant_get_link_networks( $merchant_key, $link_id ) {
+		return $this->get(
+			'/v1/links/' . rawurlencode( $link_id ) . '/networks',
+			$this->merchant_headers( $merchant_key )
+		);
+	}
+
 	private function merchant_headers( $merchant_key ) {
 		return array( 'Authorization' => 'Bearer ' . $merchant_key );
 	}

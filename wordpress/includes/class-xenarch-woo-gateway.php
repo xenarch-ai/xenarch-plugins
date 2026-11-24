@@ -108,6 +108,40 @@ class Xenarch_Woo_Gateway extends WC_Payment_Gateway {
 	 *
 	 * @param int $order_id Order id.
 	 */
+	/**
+	 * XEN-678: the payment receipt on the order-received page, as the demo's
+	 * "Payment" card: amount, network, transaction, time.
+	 *
+	 * @param WC_Order $order Order.
+	 * @param string   $tx    Transaction hash.
+	 */
+	private static function receipt( $order, $tx ) {
+		$network = (string) $order->get_meta( '_xenarch_network' );
+		$network = '' !== $network ? $network : 'base';
+		$token   = (string) $order->get_meta( '_xenarch_token' );
+		$token   = '' !== $token ? $token : 'USDC';
+		$micro   = (string) $order->get_meta( '_xenarch_paid_micro' );
+		$at      = (int) $order->get_meta( '_xenarch_paid_at' );
+		$amount  = ctype_digit( $micro ) ? preg_replace( '/(\.\d{2}\d*?)0+$/', '$1', Xenarch_Woo::micro_to_decimal( (int) $micro ) ) : '';
+		$rows    = array();
+		if ( '' !== $amount ) {
+			$rows[] = array( __( 'Amount', 'xenarch' ), esc_html( $amount . ' ' . $token ) );
+		}
+		$rows[] = array( __( 'Network', 'xenarch' ), esc_html( Xenarch_Woo::network_name( $network ) ) );
+		$rows[] = array(
+			__( 'Transaction', 'xenarch' ),
+			'<a href="' . esc_url( Xenarch_Woo::explorer_url( $network, $tx ) ) . '" target="_blank" rel="noopener noreferrer"><code>' . esc_html( substr( $tx, 0, 6 ) . '…' . substr( $tx, -4 ) ) . '</code></a>',
+		);
+		if ( $at > 0 ) {
+			$rows[] = array( __( 'Paid', 'xenarch' ), esc_html( wp_date( get_option( 'date_format' ) . ', ' . get_option( 'time_format' ), $at ) ) );
+		}
+		echo '<section class="xenarch-woo-paid"><h2>' . esc_html__( 'Payment', 'xenarch' ) . '</h2><table class="woocommerce-table shop_table"><tbody>';
+		foreach ( $rows as $r ) {
+			echo '<tr><th scope="row">' . esc_html( $r[0] ) . '</th><td>' . $r[1] . '</td></tr>'; // phpcs:ignore WordPress.Security.EscapeOutput -- escaped above.
+		}
+		echo '</tbody></table><p class="xenarch-woo-by">' . esc_html__( 'Paid from your wallet or exchange, straight to the store.', 'xenarch' ) . ' <a href="https://xenarch.com" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Payments by /xenarch', 'xenarch' ) . '</a></p></section>';
+	}
+
 	public function thankyou( $order_id ) {
 		$order = wc_get_order( $order_id );
 		if ( ! $order ) {
@@ -116,18 +150,18 @@ class Xenarch_Woo_Gateway extends WC_Payment_Gateway {
 		if ( $order->is_paid() ) {
 			$tx = $order->get_transaction_id();
 			if ( $tx ) {
-				echo '<p class="xenarch-woo-paid">' . esc_html__( 'Paid in USDC on Base.', 'xenarch' ) . ' <a href="' . esc_url( 'https://basescan.org/tx/' . $tx ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'View transaction', 'xenarch' ) . '</a></p>';
+				self::receipt( $order, $tx );
 			}
 			return;
 		}
 		if ( $order->has_status( 'on-hold' ) ) {
-			echo '<p class="xenarch-woo-onhold">' . esc_html__( 'We received a payment that is less than the order total. The store will contact you.', 'xenarch' ) . '</p>';
+			echo '<p class="xenarch-woo-onhold">' . esc_html__( 'We received a payment that is less than the order total. The store has your order on hold and will email you about the missing amount.', 'xenarch' ) . '</p>';
 			return;
 		}
 		if ( ! $order->has_status( 'pending' ) ) {
 			return;
 		}
-		echo '<p class="xenarch-woo-waiting">' . esc_html__( 'Waiting for your USDC payment to confirm on Base. This page refreshes on its own.', 'xenarch' ) . '</p>';
+		echo '<p class="xenarch-woo-waiting">' . esc_html__( 'Waiting for your payment to confirm. This page refreshes on its own.', 'xenarch' ) . '</p>';
 		// Up to ~2 minutes of 6-second refreshes per order, then stop.
 		$key = 'xenarch_woo_wait_' . (int) $order_id;
 		echo '<script>(function(){try{var k=' . wp_json_encode( $key ) . ',n=parseInt(sessionStorage.getItem(k)||"0",10);if(n<20){sessionStorage.setItem(k,String(n+1));setTimeout(function(){location.reload();},6000);}}catch(e){}})();</script>';
