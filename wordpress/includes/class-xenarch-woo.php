@@ -63,6 +63,8 @@ class Xenarch_Woo {
 		'bnb'      => array( 'BNB Chain', array( 'USDC', 'USDT' ), 'https://bscscan.com/tx/%s' ),
 		// Phase 2: USDT only (no USDC on Tron), exchange tab only.
 		'tron'     => array( 'Tron', array( 'USDT' ), 'https://tronscan.org/#/transaction/%s' ),
+		// XEN-678 phase 3: USDT here is Tether's USDT0 on Monad.
+		'monad'    => array( 'Monad', array( 'USDC', 'USDT' ), 'https://monadscan.com/tx/%s' ),
 	);
 
 	/** Webhook events the receiver handles. */
