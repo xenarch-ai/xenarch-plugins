@@ -5,6 +5,10 @@ import * as api from '../api'
 // XEN-681 — WooCommerce "Crypto: USDC" checkout settings. The merchant key
 // and the webhook secret stay in PHP; this tab only ever sees previews.
 
+// XEN-678 phase 2: a mainnet Tron address's shape (T + 33 base58 chars).
+// The platform checks its checksum.
+const TRON_ADDRESS = /^T[1-9A-HJ-NP-Za-km-z]{33}$/
+
 function short(addr: string): string {
   return addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : ''
 }
@@ -84,6 +88,9 @@ export function CheckoutTab() {
   // address can take payments on each one, so a refusal comes back here.
   const [netSaving, setNetSaving] = useState<string | null>(null)
   const [netMsg, setNetMsg] = useState<string | null>(null)
+  // Tron pays the store's own T-address, so turning it on needs one.
+  const [tronAddr, setTronAddr] = useState('')
+  const [tronEditing, setTronEditing] = useState(false)
   const toggleNetwork = useCallback(async (net: string, coin: string) => {
     if (!woo || netSaving) return
     const cur = { ...(woo.networks || {}) }
@@ -92,6 +99,11 @@ export function CheckoutTab() {
     else coins.add(coin)
     if (coins.size) cur[net] = [...coins]
     else delete cur[net]
+    if (net === 'tron' && coins.size && !woo.tron_address) {
+      setTronEditing(true)
+      setNetMsg('Enter your Tron (TRC-20) receiving address first.')
+      return
+    }
     setNetSaving(`${net}:${coin}`)
     setNetMsg(null)
     try {
@@ -101,6 +113,27 @@ export function CheckoutTab() {
     }
     setNetSaving(null)
   }, [woo, netSaving, apply])
+
+  const saveTronAddress = useCallback(async () => {
+    if (!woo || netSaving) return
+    const addr = tronAddr.trim()
+    if (!TRON_ADDRESS.test(addr)) {
+      setNetMsg('That is not a Tron address. It starts with T and has 34 characters.')
+      return
+    }
+    // Saving the address also turns USDT on Tron on.
+    const cur = { ...(woo.networks || {}), tron: ['USDT'] }
+    setNetSaving('tron:address')
+    setNetMsg(null)
+    try {
+      apply(await api.saveWoo({ networks: cur, tron_address: addr }))
+      setTronEditing(false)
+      setTronAddr('')
+    } catch (e) {
+      setNetMsg(e instanceof Error ? e.message : 'Save failed.')
+    }
+    setNetSaving(null)
+  }, [woo, netSaving, tronAddr, apply])
 
   const disconnect = useCallback(async () => {
     setDisconnecting(true)
@@ -320,6 +353,46 @@ export function CheckoutTab() {
               )
             }),
           )}
+          {(woo.network_choices || []).some((n) => n.key === 'tron') ? (
+            !tronEditing && woo.tron_address ? (
+              <div className="row">
+                <label>Tron address</label>
+                <code title={woo.tron_address}>{short(woo.tron_address)}</code>
+                <button className="btn secondary" onClick={() => { setTronAddr(woo.tron_address); setTronEditing(true); setNetMsg(null) }}>
+                  Change
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="row">
+                  <label htmlFor="xn-woo-tron">Tron address</label>
+                  <input
+                    id="xn-woo-tron"
+                    type="text"
+                    className="wide"
+                    placeholder="T… (your TRC-20 USDT receiving address)"
+                    spellCheck={false}
+                    autoComplete="off"
+                    maxLength={34}
+                    value={tronAddr}
+                    onChange={(e) => { setTronAddr(e.target.value); setNetMsg(null) }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && tronAddr.trim()) void saveTronAddress() }}
+                  />
+                </div>
+                <div className="actions">
+                  <button className="btn primary" onClick={saveTronAddress} disabled={!tronAddr.trim() || netSaving !== null}>
+                    {netSaving === 'tron:address' ? 'Saving…' : 'Save and take USDT on Tron'}
+                  </button>
+                  {woo.tron_address ? (
+                    <button className="btn secondary" onClick={() => { setTronEditing(false); setTronAddr(''); setNetMsg(null) }}>
+                      Cancel
+                    </button>
+                  ) : null}
+                  <span className="muted">Buyers send USDT (TRC-20) to it from an exchange.</span>
+                </div>
+              </>
+            )
+          ) : null}
           {netMsg ? <div className="onboarding-error">{netMsg}</div> : null}
 
           <div className="woo-note">

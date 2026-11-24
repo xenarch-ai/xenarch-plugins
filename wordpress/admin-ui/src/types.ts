@@ -132,4 +132,7 @@ export interface WooStatus {
   // XEN-678: networks/coins on beyond USDC on Base, as the platform confirmed.
   networks: Record<string, string[]>
   network_choices: Array<{ key: string; name: string; coins: string[] }>
+  // XEN-678 phase 2: the store's Tron (T…) receiving address, as the
+  // platform last confirmed it ('' = none). USDT on Tron pays it.
+  tron_address: string
 }
