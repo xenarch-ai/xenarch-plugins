@@ -22,17 +22,17 @@ class Xenarch_Woo_Gateway extends WC_Payment_Gateway {
 
 	public function __construct() {
 		$this->id                 = Xenarch_Woo::GATEWAY_ID;
-		$this->method_title       = __( 'Xenarch: USDC on Base', 'xenarch' );
-		$this->method_description = __( 'Buyers pay in USDC on Base from their own wallet, straight to your wallet. The order moves to Processing when the payment lands.', 'xenarch' );
+		$this->method_title       = __( 'Xenarch: USDC and USDT', 'xenarch' );
+		$this->method_description = __( 'Buyers pay in USDC or USDT from their own wallet or an exchange, straight to your wallet. The order moves to Processing when the payment lands, or On hold when it arrives short.', 'xenarch' );
 		$this->has_fields         = false;
 		$this->supports           = array( 'products' );
-		$this->order_button_text  = __( 'Pay with USDC', 'xenarch' );
+		$this->order_button_text  = __( 'Pay with crypto', 'xenarch' );
 
 		$this->init_form_fields();
 		$this->init_settings();
 
 		$this->title       = Xenarch_Woo::title();
-		$this->description = __( 'Pay in USDC on Base from your own wallet. You will be taken to a secure Xenarch page to pay.', 'xenarch' );
+		$this->description = Xenarch_Woo::buyer_description();
 		$this->enabled     = Xenarch_Woo::is_enabled() ? 'yes' : 'no';
 
 		add_action( 'woocommerce_thankyou_' . $this->id, array( $this, 'thankyou' ) );
