@@ -26,6 +26,8 @@
  *   xenarch_woo_pay_to            the link's merchant wallet (lowercase)
  *   xenarch_woo_merchant_key      xm_live_* key       (secret, never echoed)
  *   xenarch_woo_webhook_secret    link webhook secret (secret, never echoed)
+ *   xenarch_woo_tron_address      the store's Tron (T…) receiving address,
+ *                                 as the platform last confirmed it (XEN-678)
  *
  * @package Xenarch
  */
@@ -48,6 +50,9 @@ class Xenarch_Woo {
 	// XEN-678: networks and coins the store takes beyond USDC on Base, as the
 	// platform last confirmed them: { network: [ 'USDC', 'USDT' ] }.
 	const OPT_NETWORKS     = 'xenarch_woo_networks';
+	// XEN-678 phase 2: Tron pays the store's own T-address, not the EVM
+	// wallet. Base58 is case-sensitive: never lowercased.
+	const OPT_TRON_ADDRESS = 'xenarch_woo_tron_address';
 	/**
 	 * XEN-678: what a store can turn on, in the order the checkout lists it.
 	 * name, coins, explorer tx URL (sprintf %s).
@@ -56,6 +61,8 @@ class Xenarch_Woo {
 		'base'     => array( 'Base', array( 'USDC' ), 'https://basescan.org/tx/%s' ),
 		'ethereum' => array( 'Ethereum', array( 'USDC', 'USDT' ), 'https://etherscan.io/tx/%s' ),
 		'bnb'      => array( 'BNB Chain', array( 'USDC', 'USDT' ), 'https://bscscan.com/tx/%s' ),
+		// Phase 2: USDT only (no USDC on Tron), exchange tab only.
+		'tron'     => array( 'Tron', array( 'USDT' ), 'https://tronscan.org/#/transaction/%s' ),
 	);
 
 	/** Webhook events the receiver handles. */
@@ -136,6 +143,35 @@ class Xenarch_Woo {
 		return strtolower( (string) get_option( self::OPT_PAY_TO, '' ) );
 	}
 
+	/** XEN-678: the store's Tron address as last confirmed ('' = none). */
+	public static function tron_address() {
+		return trim( (string) get_option( self::OPT_TRON_ADDRESS, '' ) );
+	}
+
+	/** A mainnet Tron address's shape: T + 33 base58 characters. The
+	 *  platform checks the base58check checksum. */
+	public static function looks_like_tron_address( $addr ) {
+		return is_string( $addr ) && 1 === preg_match( '/^T[1-9A-HJ-NP-Za-km-z]{33}$/', $addr );
+	}
+
+	/**
+	 * The address a webhook's payment must have gone to, written as that
+	 * network writes it: the EVM wallet lowercased, the Tron address as is.
+	 */
+	public static function pay_to_for( $network ) {
+		return 'tron' === $network ? self::tron_address() : self::pay_to();
+	}
+
+	/** A tx hash in the form a network writes it ('' when malformed). */
+	public static function normalize_tx( $network, $tx ) {
+		$tx = strtolower( trim( (string) $tx ) );
+		if ( 'tron' === $network ) {
+			$tx = ( 0 === strpos( $tx, '0x' ) ) ? substr( $tx, 2 ) : $tx;
+			return preg_match( '/^[0-9a-f]{64}$/', $tx ) ? $tx : '';
+		}
+		return preg_match( '/^0x[0-9a-f]{64}$/', $tx ) ? $tx : '';
+	}
+
 	public static function webhook_secret() {
 		return (string) get_option( self::OPT_SECRET, '' );
 	}
@@ -206,6 +242,11 @@ class Xenarch_Woo {
 			foreach ( $accepted as $key => $spec ) {
 				if ( isset( self::NETWORKS[ $key ], $spec['tokens'] ) && is_array( $spec['tokens'] ) ) {
 					$out[ $key ] = array_values( array_intersect( self::NETWORKS[ $key ][1], $spec['tokens'] ) );
+				}
+				// Keep the confirmed Tron address, also after Tron is switched
+				// off, so switching it back on doesn't ask for it again.
+				if ( 'tron' === $key && isset( $spec['pay_to'] ) && self::looks_like_tron_address( (string) $spec['pay_to'] ) ) {
+					self::set_private_option( self::OPT_TRON_ADDRESS, (string) $spec['pay_to'] );
 				}
 			}
 		}
@@ -482,6 +523,7 @@ class Xenarch_Woo {
 			'link_id'       => $link,
 			'link_url'      => '' !== $link ? self::pay_base_url() . '/l/' . $link : '',
 			'pay_to'        => self::pay_to(),
+			'tron_address'  => self::tron_address(),
 			'key_preview'   => '' !== $key ? substr( $key, 0, 8 ) . '…' . substr( $key, -4 ) : '',
 			'webhook_url'   => self::webhook_url(),
 			'dashboard_url' => self::dashboard_url(),
@@ -521,6 +563,7 @@ class Xenarch_Woo {
 				return self::error( 'not_connected', 'Connect a pay link first.', 400 );
 			}
 			$want = array();
+			$tron = isset( $body['tron_address'] ) ? trim( (string) $body['tron_address'] ) : self::tron_address();
 			if ( is_array( $body['networks'] ) ) {
 				foreach ( $body['networks'] as $key => $coins ) {
 					$key = (string) $key;
@@ -530,6 +573,13 @@ class Xenarch_Woo {
 					$ok = array_values( array_intersect( self::NETWORKS[ $key ][1], array_map( 'strval', $coins ) ) );
 					if ( $ok ) {
 						$want[ $key ] = array( 'tokens' => $ok );
+						if ( 'tron' === $key ) {
+							// Tron pays the store's own T-address.
+							if ( ! self::looks_like_tron_address( $tron ) ) {
+								return self::error( 'tron_address', 'Enter your Tron (TRC-20) receiving address. It starts with T and has 34 characters.', 400 );
+							}
+							$want[ $key ]['pay_to'] = $tron;
+						}
 					}
 				}
 			}
@@ -624,7 +674,7 @@ class Xenarch_Woo {
 		$settings            = self::gateway_settings();
 		$settings['enabled'] = 'no';
 		update_option( self::OPT_GATEWAY, $settings );
-		foreach ( array( self::OPT_MERCHANT_KEY, self::OPT_SECRET, self::OPT_LINK_ID, self::OPT_PAY_TO, self::OPT_NETWORKS ) as $opt ) {
+		foreach ( array( self::OPT_MERCHANT_KEY, self::OPT_SECRET, self::OPT_LINK_ID, self::OPT_PAY_TO, self::OPT_NETWORKS, self::OPT_TRON_ADDRESS ) as $opt ) {
 			delete_option( $opt );
 		}
 		return new WP_REST_Response( self::snapshot(), 200 );

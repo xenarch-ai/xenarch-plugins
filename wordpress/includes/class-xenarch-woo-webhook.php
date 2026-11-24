@@ -63,23 +63,28 @@ class Xenarch_Woo_Webhook {
 			return self::reply( 200, 'ignored_reference' );
 		}
 
-		$tx    = isset( $data['tx_hash'] ) ? strtolower( (string) $data['tx_hash'] ) : '';
-		$to    = isset( $data['to'] ) ? strtolower( (string) $data['to'] ) : '';
-		$value = isset( $data['value_micro_usdc'] ) ? $data['value_micro_usdc'] : null;
-		if ( ! preg_match( '/^0x[0-9a-f]{64}$/', $tx ) || ! ( is_int( $value ) || ( is_string( $value ) && ctype_digit( $value ) ) ) ) {
-			return self::reply( 400, 'bad_payload' );
-		}
-		$value = (int) $value;
-		if ( '' === Xenarch_Woo::pay_to() || ! hash_equals( Xenarch_Woo::pay_to(), $to ) ) {
-			// Signed by our secret yet paid elsewhere: never book it.
-			return self::reply( 200, 'ignored_wrong_recipient' );
-		}
-
 		$network = isset( $data['network'] ) ? (string) $data['network'] : 'base';
 		$token   = isset( $data['token'] ) ? strtoupper( (string) $data['token'] ) : 'USDC';
 		if ( ! isset( Xenarch_Woo::NETWORKS[ $network ] ) || ! in_array( $token, Xenarch_Woo::NETWORKS[ $network ][1], true ) ) {
 			// A network/coin this plugin doesn't know: never book it blind.
 			return self::reply( 200, 'ignored_network' );
+		}
+
+		// XEN-678: each network writes hashes and addresses its own way. EVM:
+		// 0x hex, compared lowercase. Tron: 64 hex without 0x, and a base58
+		// T-address compared exactly (base58 is case-sensitive).
+		$tx    = Xenarch_Woo::normalize_tx( $network, isset( $data['tx_hash'] ) ? $data['tx_hash'] : '' );
+		$to    = isset( $data['to'] ) ? trim( (string) $data['to'] ) : '';
+		$to    = 'tron' === $network ? $to : strtolower( $to );
+		$value = isset( $data['value_micro_usdc'] ) ? $data['value_micro_usdc'] : null;
+		if ( '' === $tx || ! ( is_int( $value ) || ( is_string( $value ) && ctype_digit( $value ) ) ) ) {
+			return self::reply( 400, 'bad_payload' );
+		}
+		$value  = (int) $value;
+		$pay_to = Xenarch_Woo::pay_to_for( $network );
+		if ( '' === $pay_to || ! hash_equals( $pay_to, $to ) ) {
+			// Signed by our secret yet paid elsewhere: never book it.
+			return self::reply( 200, 'ignored_wrong_recipient' );
 		}
 
 		list( $order_id, $order_key ) = $ref;

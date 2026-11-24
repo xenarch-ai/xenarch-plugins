@@ -27,3 +27,7 @@ jobs:
       # XEN-684: Features switch helpers.
       - name: PHP unit tests (features)
         run: php tests/php/features-test.php
+
+      # XEN-678 phase 2: Tron helpers of the WooCommerce gateway.
+      - name: PHP unit tests (Woo Tron)
+        run: php tests/php/woo-tron-test.php

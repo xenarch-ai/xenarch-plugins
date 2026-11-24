@@ -4,7 +4,7 @@ Tags: ai bot detection, ai scraping, ai crawlers, paywall, micropayments
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.14.0
+Stable tag: 1.15.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -184,6 +184,10 @@ Xenarch complements Cloudflare's x402 pay-per-crawl tooling. Both use the same x
 7. Terminal showing HTTP 402 response with x-payment headers and JSON gate payload.
 
 == Changelog ==
+
+= 1.15.0 =
+* New: buyers can pay in USDT on Tron (TRC-20) from an exchange. Turn on "USDT on Tron" under Settings → /xenarch → Checkout → Networks and enter your Tron receiving address (it starts with T); Xenarch checks it.
+* The order note and the order-received page link Tron payments to Tronscan.
 
 = 1.14.0 =
 * New: buyers can pay in USDC or USDT on Ethereum and BNB Chain, as well as USDC on Base. Turn each one on under Settings → /xenarch → Checkout → Networks; Xenarch checks your receiving address can take payments there.

@@ -134,6 +134,7 @@ export function saveWoo(body: {
   enabled?: boolean
   title?: string
   networks?: Record<string, string[]>
+  tron_address?: string
 }): Promise<WooStatus> {
   return apiFetch<WooStatus>('/woo', { method: 'POST', body: JSON.stringify(body) })
 }
