@@ -1,6 +1,6 @@
 // XEN-714: what the store's checkout takes, in words, from the networks it
-// has turned on (WooStatus.networks) plus USDC on Base, which is always on.
-// "USDC on Base, Ethereum and BNB Chain, and USDT on Tron".
+// has turned on (WooStatus.networks) plus Base USDC, which is always on.
+// e.g. "USDC on Base, Ethereum and BNB Chain, and USDT on Tron". // parity-guard: allow example of the generated line
 import type { WooStatus } from './types'
 
 type Takes = Pick<WooStatus, 'networks' | 'network_choices'>
@@ -25,7 +25,7 @@ export function takenByCoin(w: Takes | null | undefined): Array<{ coin: string; 
   }).filter((g) => g.networks.length > 0)
 }
 
-/** "USDC on Base and Ethereum, and USDT on Tron". */
+/** "USDC on Base and Ethereum, and USDT on Tron". */ // parity-guard: allow example of the generated line
 export function takesLine(w: Takes | null | undefined, opts: { evmOnly?: boolean } = {}): string {
   const groups = takenByCoin(w)
     .map((g) => ({ coin: g.coin, networks: opts.evmOnly ? g.networks.filter((n) => n !== 'Tron') : g.networks }))
