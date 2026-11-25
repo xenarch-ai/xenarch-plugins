@@ -210,7 +210,7 @@ class Xenarch_Woo_Webhook {
 
 		$note = sprintf(
 			/* translators: 1: amount paid, 2: amount due, 3: tx hash, 4: explorer link */
-			__( 'Xenarch: underpaid. Received %1$s, order total is %2$s. The buyer\'s exchange probably kept its withdrawal fee: ask for the rest or refund. Tx %3$s — %4$s', 'xenarch' ),
+			__( 'Xenarch: underpaid. Received %1$s, order total is %2$s. Less than the order total arrived (a wallet or exchange may have deducted a fee): ask for the rest or refund. Tx %3$s — %4$s', 'xenarch' ),
 			$paid_str . ' ' . $where,
 			$due_str,
 			$tx,
