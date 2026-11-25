@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { WooStatus } from '../types'
 import * as api from '../api'
+import { coinsLine, takesLine, takesTron } from '../takes'
 
 // XEN-681 — WooCommerce "Crypto: USDC" checkout settings. The merchant key
 // and the webhook secret stay in PHP; this tab only ever sees previews.
@@ -154,7 +155,7 @@ export function CheckoutTab() {
       <div className="section">
         <div className="section-head">
           <div className="section-title">Checkout</div>
-          <div className="section-desc">Install and activate WooCommerce to take USDC payments at checkout.</div>
+          <div className="section-desc">Install and activate WooCommerce to take USDC and USDT payments at checkout.</div>
         </div>
       </div>
     )
@@ -170,15 +171,15 @@ export function CheckoutTab() {
         <div className="section-head">
           <div className="section-title">Crypto checkout</div>
           <div className="section-desc">
-            Buyers pay the order total in USDC on Base from their own wallet, straight to your wallet.
-            The order moves to Processing on its own when the payment lands.
+            Buyers pay the order total in {takesLine(woo)}, from their own wallet or an exchange, straight
+            to your wallet. The order moves to Processing on its own when the payment lands.
           </div>
         </div>
 
         {!woo.currency_ok ? (
           <div className="onboarding-error" style={{ marginBottom: 16 }}>
-            Your store currency is {woo.currency || 'not set'}. USDC is a dollar token, so the option only
-            shows when the store currency is USD.
+            Your store currency is {woo.currency || 'not set'}. USDC and USDT are dollar tokens, so the option
+            only shows when the store currency is USD.
           </div>
         ) : null}
 
@@ -201,8 +202,14 @@ export function CheckoutTab() {
             </div>
             <div className="data-row">
               <span className="data-key">pays to</span>
-              <span className="data-val">{short(woo.pay_to)} · USDC on Base</span>
+              <span className="data-val">{short(woo.pay_to)} · {takesLine(woo, { evmOnly: true })}</span>
             </div>
+            {takesTron(woo) && woo.tron_address ? (
+              <div className="data-row">
+                <span className="data-key">pays to (Tron)</span>
+                <span className="data-val">{short(woo.tron_address)} · USDT on Tron</span>
+              </div>
+            ) : null}
             <div className="data-row">
               <span className="data-key">merchant key</span>
               <span className="data-val">{woo.key_preview}</span>
@@ -290,7 +297,7 @@ export function CheckoutTab() {
 
           <div className="master">
             <div className="left">
-              <div className="master-label">Offer USDC at checkout</div>
+              <div className="master-label">Offer {coinsLine(woo)} at checkout</div>
               <div className="master-desc">Shows the option on the WooCommerce checkout page.</div>
             </div>
             <div
