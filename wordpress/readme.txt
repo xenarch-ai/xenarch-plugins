@@ -4,7 +4,7 @@ Tags: ai bot detection, ai scraping, ai crawlers, paywall, micropayments
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.16.0
+Stable tag: 1.16.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -184,6 +184,10 @@ Xenarch complements Cloudflare's x402 pay-per-crawl tooling. Both use the same x
 7. Terminal showing HTTP 402 response with x-payment headers and JSON gate payload.
 
 == Changelog ==
+
+= 1.16.1 =
+* The Checkout tab, the Features switch and the admin header now name the coins and networks your store actually takes, and show your Tron receiving address on its own row.
+* The note on an order that arrives short no longer blames the buyer's exchange: buyers can pay from any wallet with Send to address, so it says a wallet or exchange may have deducted a fee.
 
 = 1.16.0 =
 * New: buyers can pay in USDC or USDT (Tether's USDT0) on Monad, from a wallet or an exchange. Turn them on under Settings → /xenarch → Checkout → Networks.
