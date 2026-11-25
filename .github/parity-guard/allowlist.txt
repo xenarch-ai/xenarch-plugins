@@ -1,0 +1,33 @@
+# Parity guard allowlist (XEN-716). One glob per line, matched against the
+# repo-relative path (fnmatch: `*` also crosses `/`). Only parts that are
+# Base-only BY DESIGN belong here; everything else names a payment's coin,
+# network and explorer from the networks registry (GET /v1/networks).
+
+# The guard itself and the rule's documentation.
+.github/parity-guard/*
+.github/workflows/parity-guard.yml
+CLAUDE.md
+*/CLAUDE.md
+
+# Tests and test sites.
+tests/*
+*/test/*
+*/test-site/*
+
+# Bot gating and x402 payments: USDC on Base by design (EIP-3009). Covers
+# the Cloudflare Worker, the Joomla plugin and the WordPress gate classes.
+cloudflare/*
+joomla/*
+wordpress/includes/class-xenarch-gate.php
+wordpress/includes/class-xenarch-gate-response.php
+wordpress/includes/class-xenarch-payment-proof.php
+wordpress/includes/class-xenarch-bot-detect.php
+wordpress/includes/class-xenarch-browser-proof.php
+wordpress/includes/class-xenarch-discovery.php
+
+# Store listing copy and the plugin readme (gating is Base-only by design;
+# checkout copy follows Information/copy facts).
+wordpress/.wordpress-org/*
+wordpress/readme.txt
+README.md
+*/README.md
