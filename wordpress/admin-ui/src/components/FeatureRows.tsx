@@ -57,7 +57,7 @@ export function FeatureRows({ gating, checkout, wooActive, busy = false, onToggl
         label="Crypto checkout (WooCommerce)"
         desc={
           wooActive
-            ? 'Let buyers pay the order total in USDC on Base at your WooCommerce checkout.'
+            ? 'Let buyers pay the order total in USDC or USDT at your WooCommerce checkout.'
             : 'Needs WooCommerce. Install and activate WooCommerce to turn this on.'
         }
         on={checkout && wooActive}
