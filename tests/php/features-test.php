@@ -71,8 +71,8 @@ run_test(
 	'tagline follows the features that are on',
 	function () {
 		assert_same( 'Charge the bots that take. Let through the ones that help.', Xenarch_Features::tagline_for( true, false ), 'Gating only keeps the v1.12 tagline.' );
-		assert_same( 'Take USDC payments at your WooCommerce checkout.', Xenarch_Features::tagline_for( false, true ), 'Checkout only never mentions bots.' );
-		assert_same( 'Charge the bots that take, and take USDC at checkout.', Xenarch_Features::tagline_for( true, true ), 'Both.' );
+		assert_same( 'Take USDC and USDT payments at your WooCommerce checkout.', Xenarch_Features::tagline_for( false, true ), 'Checkout only never mentions bots.' );
+		assert_same( 'Charge the bots that take, and take USDC and USDT at checkout.', Xenarch_Features::tagline_for( true, true ), 'Both.' );
 		assert_same( 'Bot gating and crypto checkout for WordPress.', Xenarch_Features::tagline_for( false, false ), 'Neither.' );
 	}
 );
